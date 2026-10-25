@@ -25,6 +25,11 @@
 //
 // Build: tools/XeSpeakers/build.sh (clang, no Xcode, ad-hoc signed). Install: /Library/Audio/Plug-Ins/HAL.
 // Own code (no BlackHole source copied); the object model follows Apple's AudioServerPlugIn.h documentation.
+//
+// 0.9.1: second backend. When the AudShim kext is not loaded, the plug-in uses the CS8409HDA kext (Dell Vostro 3520:
+// Intel HDA controller + Cirrus CS8409, tools/CS8409HDA), which implements the same driver-mode interface (connection
+// type, methods 5-7, rings, ops) but has no hardware gain on the speaker path: there the volume and mute are applied in
+// software while writing the ring, with a ~5 ms ramp (gSoftGain). With AudShim nothing changes.
 #include <CoreAudio/AudioServerPlugIn.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
@@ -37,7 +42,7 @@
 #include <os/log.h>
 #include "../AudShim/AudShimDrv.h"
 
-#define XS_VERSION "0.9.0"
+#define XS_VERSION "0.9.1"
 #define kDeviceUID "XeSpeakers_InternalSpeakers_UID"
 #define kModelUID "XeSpeakers_RT1316x2_Model"
 #define kDeviceName "Alto-falantes internos"
@@ -83,6 +88,10 @@ static UInt32 gIOCount = 0;
 static Float32 gMaxDb = -6.0f;               // = -cap dB reported by the kext
 static Float32 gScalar = kDefaultScalar;
 static bool gMute = false;
+// 0.9.1: CS8409HDA backend (no hardware gain): volume/mute applied in DoIOOperation
+static bool gSoftGain = false;
+static volatile Float32 gSoftTarget = 0.0f;  // linear gain the IO thread ramps to (written under gLock)
+static Float32 gSoftCur = 0.0f;              // current linear gain (IO thread; reset in StartIO before IO runs)
 // microphones (0.9.0)
 static bool gMicPublished = false;           // kext interface >= 9
 static volatile int32_t *gCRing = NULL;      // mapped capture ring (read-only)
@@ -127,6 +136,10 @@ static Float32 dbToScalar(Float32 db) {
 
 // gLock held
 static void sendVolume(void) {
+    if (gSoftGain) {   // CS8409HDA: no gain in the hardware, DoIOOperation ramps to this target
+        gSoftTarget = (gMute || gScalar <= 0.0f) ? 0.0f : powf(10.0f, scalarToDb(gScalar) / 20.0f);
+        return;
+    }
     uint64_t o[16];
     uint32_t q16 = 0;
     if (gScalar > 0.0f) {
@@ -285,6 +298,13 @@ static OSStatus Initialize(AudioServerPlugInDriverRef drv, AudioServerPlugInHost
     gTicksPerFrame = gTicksPerSec / kRate;
     loadControls();
     io_service_t svc = IOServiceGetMatchingService(MACH_PORT_NULL, IOServiceMatching("AudShim"));
+    if (!svc) {   // 0.9.1: Dell Vostro 3520 (CS8409HDA kext): same interface, software volume
+        svc = IOServiceGetMatchingService(MACH_PORT_NULL, IOServiceMatching("CS8409HDA"));
+        if (svc) {
+            gSoftGain = true;
+            os_log(gLog, "XeSpeakers " XS_VERSION ": using the CS8409HDA kext (software volume)");
+        }
+    }
     if (!svc) { os_log_error(gLog, "XeSpeakers " XS_VERSION ": AudShim kext not loaded: no device"); return kAudioHardwareNoError; }
     CFTypeRef v = IORegistryEntryCreateCFProperty(svc, CFSTR("AudShimInterface"), NULL, 0);
     SInt32 iface = 0;
@@ -789,6 +809,7 @@ static OSStatus StartIO(AudioServerPlugInDriverRef d, AudioObjectID dev, UInt32 
         } else {
             if (o[5] && o[6] <= 20) gMaxDb = -(Float32)o[6];
             // (no volume IPC here: START already ramped the PGA to the last value sent with sendVolume)
+            if (gSoftGain) { sendVolume(); gSoftCur = 0.0f; }   // CS8409HDA: ramp up from silence
             gAnchored = false;
             gSeed++;
         }
@@ -903,10 +924,23 @@ static OSStatus DoIOOperation(AudioServerPlugInDriverRef d, AudioObjectID dev, A
     Float64 t = ci->mOutputTime.mSampleTime;
     if (t < 0) return kAudioHardwareNoError;
     uint64_t pos = (uint64_t)t % kRingFrames;
-    for (UInt32 i = 0; i < frames; i++) {
-        volatile int32_t *f = ring + 2 * ((pos + i) % kRingFrames);
-        f[0] = toS32(src[2 * i]);
-        f[1] = toS32(src[2 * i + 1]);
+    if (!gSoftGain) {
+        for (UInt32 i = 0; i < frames; i++) {
+            volatile int32_t *f = ring + 2 * ((pos + i) % kRingFrames);
+            f[0] = toS32(src[2 * i]);
+            f[1] = toS32(src[2 * i + 1]);
+        }
+    } else {
+        // CS8409HDA: volume/mute in software, one-pole ramp per frame (time constant 250 frames ~ 5 ms)
+        Float32 g = gSoftCur, tgt = gSoftTarget;
+        for (UInt32 i = 0; i < frames; i++) {
+            g += (tgt - g) * 0.004f;
+            volatile int32_t *f = ring + 2 * ((pos + i) % kRingFrames);
+            f[0] = toS32(src[2 * i] * g);
+            f[1] = toS32(src[2 * i + 1] * g);
+        }
+        if (fabsf(g - tgt) < 1e-5f) g = tgt;
+        gSoftCur = g;
     }
     // stale-data guard (see header). Written-but-unplayed data spans at most ~2 IO buffers + the safety offset
     // behind the end of this write; the cleared span must stay clear of it (it wraps around the ring).

@@ -39,6 +39,7 @@
 	<key>AudioServerPlugIn_IOKitUserClients</key>
 	<array>
 		<string>AudShimUserClient</string>
+		<string>CS8409HDAUserClient</string>
 	</array>
 </dict>
 </plist>
