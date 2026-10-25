@@ -1019,6 +1019,41 @@ static thread_call_t gFbtTc = nullptr;
 static volatile uint32_t gFbtTries = 0, gFbtSeen = 0, gFbtOnline = 0, gFbtAlready = 0, gFbtBuilt = 0, gFbtRet = 0xffff;
 static volatile uint32_t gFbtH = 0, gFbtV = 0, gFbtDone = 0;
 
+// xe (24/10) portmode: AppleIntelPort::probePortState(), no ramo HPD-high, chama port->vtable[0x190] e passa o
+// resultado a setPortMode(). Esse slot (índice 50, "probePortMode") é PURO em AppleIntelPortHAL e
+// AppleIntelPortHALDiags (fica 0 -> __cxa_pure_virtual) neste binário TGL, então quando o painel reporta HPD alto
+// cedo no boot o macOS dá panic "__cxa_pure_virtual" (WindowServer, enableController). Substituímos o slot por este
+// stub, que devolve um PortMode fixo (0 = igual ao ramo HPD-low, que chama setPortMode(0)). Só roda nos boots que
+// hoje dão panic (o slot nunca é chamado nos boots bons), então é inócuo quando não é preciso. Reversível com
+// -ngreennoportmode; valor ajustável com ngreenportmode=N (0..4).
+static uint32_t gPortModeVal = 0;
+static volatile uint32_t gPortStubHits = 0;
+static uint32_t xePortModeStub(void *) {
+	uint32_t n = ++gPortStubHits;
+	if (n <= 16) SYSLOG("ngreen", "portmode: slot virtual puro de probePortState interceptado (hit #%u); devolvendo %u", n, gPortModeVal);
+	return gPortModeVal;
+}
+// Troca o slot 50 (byte 0x10 do header RTTI + 0x190) da vtable da classe pelo stub, na janela de carga do kext.
+static void patchPortModeVtable(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+	PE_parse_boot_argn("ngreenportmode", &gPortModeVal, sizeof(gPortModeVal));
+	if (gPortModeVal > 4) gPortModeVal = 0;
+	static const char *vt[] = { "__ZTV17AppleIntelPortHAL", "__ZTV22AppleIntelPortHALDiags" };
+	for (auto *sym : vt) {
+		mach_vm_address_t v = patcher.solveSymbol(index, sym, address, size);
+		patcher.clearError();
+		if (!v) { SYSLOG("ngreen", "portmode: %s não encontrado", sym); continue; }
+		auto *slot = reinterpret_cast<uintptr_t *>(v + 0x10 + 0x190);
+		if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS) {
+			SYSLOG("ngreen", "portmode: setKernelWriting falhou para %s", sym);
+			continue;
+		}
+		uintptr_t before = *slot;
+		*slot = reinterpret_cast<uintptr_t>(xePortModeStub);
+		MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+		SYSLOG("ngreen", "portmode: %s slot 50 0x%llx -> stub (devolve %u)", sym, (unsigned long long)before, gPortModeVal);
+	}
+}
+
 static void fbTimingsWorker(thread_call_param_t, thread_call_param_t) {
 	gFbtTries++;
 	bool done = false;
@@ -1032,12 +1067,31 @@ static void fbTimingsWorker(thread_call_param_t, thread_call_param_t) {
 					if (getMember<uint8_t>(fb, 0x1e0) == 0) continue;
 					gFbtOnline = 1;
 					if (getMember<void *>(fb, 0x4260) != nullptr) { gFbtAlready = 1; done = true; break; }
-					// xe (19/10): hwCRTCToIODetailedTimingInformation divide por p->0x164, com
-					// p = *(fb + (fb->0x3fd8 != -1 ? 0x4a08 : 0x49f0)). Cedo no boot isso ainda vale 0 -> KERNEL PANIC
-					// "divide error" (boot 23:56). Só chama quando o divisor já existe; senão tenta de novo em 50 ms.
+					// xe (19/10, revisto 24/10): hwCRTCToIODetailedTimingInformation faz divq pelo registrador de timing
+					// VIVO do transcoder (não pelo campo em cache). A guarda antiga lia pp->0x164 (o valor em cache) e
+					// deixava passar quando o campo estava não-zero mas o registrador vivo ainda era 0 -> KERNEL PANIC
+					// "divide error" (FB 0x6c0c7). Aqui replicamos EXATAMENTE a origem do divisor da função e só a
+					// chamamos quando esse valor já é não-zero; senão tentamos de novo em 50 ms.
+					//   p   = *(fb + (fb->0x3fd8 != -1 ? 0x4a08 : 0x49f0))
+					//   r8  = p->0x3648 ; v = r8 ? r8->0x548->0x8 : (sem refresh)
+					//   v==0 -> divisor = ReadRegister32(0x60044 + (0xf   << 12))   (transcoder EDP)
+					//   v==1 -> divisor = ReadRegister32(0x60044 + (p->0x3640 << 12))
+					//   v>=2 -> a função não relê registrador: divisor = p->0x164 (cache)
 					{
 						auto *pp = getMember<uint8_t *>(fb, getMember<int32_t>(fb, 0x3fd8) != -1 ? 0x4a08 : 0x49f0);
-						if (!pp || *reinterpret_cast<volatile uint32_t *>(pp + 0x164) == 0) continue;
+						if (!pp) continue;
+						uint32_t divisor;
+						auto *r8 = getMember<uint8_t *>(pp, 0x3648);
+						if (r8) {
+							auto *s = getMember<uint8_t *>(r8, 0x548);
+							uint32_t v = s ? getMember<uint32_t>(s, 0x8) : 0;
+							if (v == 0)      divisor = NGreen::callback->readReg32(0x60044u + (0xfu << 12));
+							else if (v == 1) divisor = NGreen::callback->readReg32(0x60044u + (getMember<uint32_t>(pp, 0x3640) << 12));
+							else             divisor = *reinterpret_cast<volatile uint32_t *>(pp + 0x164);
+						} else {
+							divisor = *reinterpret_cast<volatile uint32_t *>(pp + 0x164);
+						}
+						if (divisor == 0) continue;   // chamar agora seria divisão por zero
 					}
 					IODetailedTimingInformationV2 t;
 					bzero(&t, sizeof(t));
@@ -1393,6 +1447,11 @@ bool Gen11::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
 			}
 		}
 		gOrgGcdm = this->ogetCurrentDisplayMode; gOrgGpi = this->ogetPixelInformation; gOrgVdm = this->ovalidateDisplayMode;
+		// xe (24/10) portmode: evita o panic __cxa_pure_virtual de AppleIntelPort::probePortState (slot 50 puro).
+		// Ligado por padrão; desligue com -ngreennoportmode.
+		if (!checkKernelArgument("-ngreennoportmode")) {
+			patchPortModeVtable(patcher, index, address, size);
+		}
 		SYSLOG("ngreen", "TGL FB routes applied (fixbootmode: getCurrentDisplayMode org=0x%llx, arg=%d)",
 			   (unsigned long long)this->ogetCurrentDisplayMode, (int)checkKernelArgument("-ngreenfixbootmode"));
 		
