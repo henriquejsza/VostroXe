@@ -1,0 +1,1937 @@
+     0.000  --- azx_pcm_open: stream_tag: 1
+     0.006  01 SET_POWER_STATE                0x00 -> 0x00000000   D0
+     0.152  22 SET_POWER_STATE                0x03 -> 0x00000000   D3
+     0.217  23 SET_POWER_STATE                0x03 -> 0x00000000   D3
+     0.279  01 GET_POWER_STATE                0x00 -> 0x00000000   set D0 actual D0
+     0.341  24 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.404  25 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.466  26 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.529  27 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.591  28 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.654  29 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.716  2a SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.779  2b SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.841  2c SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.904  2d SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.966  2e SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.029  2f SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.091  30 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.155  31 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.216  32 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.279  33 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.341  34 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.404  35 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.466  36 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.529  37 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.591  38 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.654  39 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.716  3a SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.779  3b SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.841  3c SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.904  3d SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.966  3e SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.029  3f SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.091  40 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.154  41 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.217  42 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.279  43 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.341  44 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.404  45 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.467  01 SET_GPIO_WAKE_MASK             0x18 -> 0x00000000
+     2.529  47 SET_PROC_STATE                 0x01 -> 0x00000000
+     2.591  47 SET_COEF_INDEX                 0x0002 -> 0x00000000   [index DEV_CFG3]
+     2.654  COEF DEV_CFG3              [0x02] <- 0x0080
+     2.716  47 SET_COEF_INDEX                 0x005b -> 0x00000000   [index I2C_CTRL]
+     2.780  COEF I2C_CTRL              [0x5b] <- 0x0200
+     2.843  2c SET_PIN_WIDGET_CONTROL         0x40 -> 0x00000000
+     2.906  24 SET_PIN_WIDGET_CONTROL         0x40 -> 0x00000000
+     2.967  44 SET_PIN_WIDGET_CONTROL         0x20 -> 0x00000000
+     3.030  34 SET_PIN_WIDGET_CONTROL         0x20 -> 0x00000000
+     3.092  22 GET_POWER_STATE                0x00 -> 0x00000033   set D3 actual D3
+     3.167  22 SET_AMP_GAIN_MUTE              0x503f -> 0x00000000
+     3.238  22 SET_AMP_GAIN_MUTE              0x603f -> 0x00000000
+     3.300  24 SET_PIN_WIDGET_CONTROL         0x40 -> 0x00000000
+     3.362  24 SET_UNSOLICITED_ENABLE         0x81 -> 0x00000000
+     3.425  2c SET_PIN_WIDGET_CONTROL         0x40 -> 0x00000000
+     3.488  34 SET_PIN_WIDGET_CONTROL         0x20 -> 0x00000000
+     3.550  34 SET_UNSOLICITED_ENABLE         0x82 -> 0x00000000
+     3.613  44 SET_AMP_GAIN_MUTE              0x5002 -> 0x00000000
+     3.675  44 SET_AMP_GAIN_MUTE              0x6002 -> 0x00000000
+     3.738  44 SET_PIN_WIDGET_CONTROL         0x20 -> 0x00000000
+     3.801  01 SET_GPIO_MASK                  0x3f -> 0x00000000
+     3.862  01 SET_GPIO_DIRECTION             0x22 -> 0x00000000
+     3.925  01 SET_GPIO_DATA                  0x13 -> 0x00000000
+     3.987  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+     4.050  COEF DEV_CFG1              [0x00] <- 0xb008
+     4.112  47 SET_COEF_INDEX                 0x0001 -> 0x00000000   [index DEV_CFG2]
+     4.175  COEF DEV_CFG2              [0x01] <- 0x0002
+     4.237  47 SET_COEF_INDEX                 0x0002 -> 0x00000000   [index DEV_CFG3]
+     4.300  COEF DEV_CFG3              [0x02] <- 0x0a80
+     4.362  47 SET_COEF_INDEX                 0x0019 -> 0x00000000   [index ASP1_A_TX_CTRL1]
+     4.425  COEF ASP1_A_TX_CTRL1       [0x19] <- 0x0800
+     4.487  47 SET_COEF_INDEX                 0x001a -> 0x00000000   [index ASP1_A_TX_CTRL2]
+     4.550  COEF ASP1_A_TX_CTRL2       [0x1a] <- 0x0820
+     4.612  47 SET_COEF_INDEX                 0x0029 -> 0x00000000   [index ASP2_A_TX_CTRL1]
+     4.675  COEF ASP2_A_TX_CTRL1       [0x29] <- 0x0800
+     4.737  47 SET_COEF_INDEX                 0x002a -> 0x00000000   [index ASP2_A_TX_CTRL2]
+     4.800  COEF ASP2_A_TX_CTRL2       [0x2a] <- 0x2800
+     4.862  47 SET_COEF_INDEX                 0x0039 -> 0x00000000   [index ASP1_A_RX_CTRL1]
+     4.925  COEF ASP1_A_RX_CTRL1       [0x39] <- 0x0800
+     4.987  47 SET_COEF_INDEX                 0x003a -> 0x00000000   [index ASP1_A_RX_CTRL2]
+     5.050  COEF ASP1_A_RX_CTRL2       [0x3a] <- 0x0800
+     5.112  47 SET_COEF_INDEX                 0x0003 -> 0x00000000   [index ASP1_CLK_CTRL1]
+     5.174  COEF ASP1_CLK_CTRL1        [0x03] <- 0x8000
+     5.237  47 SET_COEF_INDEX                 0x0004 -> 0x00000000   [index ASP1_CLK_CTRL2]
+     5.300  COEF ASP1_CLK_CTRL2        [0x04] <- 0x28ff
+     5.362  47 SET_COEF_INDEX                 0x0005 -> 0x00000000   [index ASP1_CLK_CTRL3]
+     5.425  COEF ASP1_CLK_CTRL3        [0x05] <- 0x0062
+     5.487  47 SET_COEF_INDEX                 0x0006 -> 0x00000000   [index ASP2_CLK_CTRL1]
+     5.550  COEF ASP2_CLK_CTRL1        [0x06] <- 0x801f
+     5.612  47 SET_COEF_INDEX                 0x0007 -> 0x00000000   [index ASP2_CLK_CTRL2]
+     5.675  COEF ASP2_CLK_CTRL2        [0x07] <- 0x283f
+     5.738  47 SET_COEF_INDEX                 0x0008 -> 0x00000000   [index ASP2_CLK_CTRL3]
+     5.800  COEF ASP2_CLK_CTRL3        [0x08] <- 0x805c
+     5.862  47 SET_COEF_INDEX                 0x0009 -> 0x00000000   [index DMIC_CFG]
+     5.925  COEF DMIC_CFG              [0x09] <- 0x0023
+     5.988  47 SET_COEF_INDEX                 0x000a -> 0x00000000   [index BEEP_CFG]
+     6.050  COEF BEEP_CFG              [0x0a] <- 0x0000
+     6.112  47 SET_COEF_INDEX                 0x0001 -> 0x00000000   [index DEV_CFG2]
+     6.175  COEF DEV_CFG2              [0x01] <- 0x0062
+     6.237  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+     6.300  COEF DEV_CFG1              [0x00] <- 0x9008
+     6.362  47 SET_COEF_INDEX                 0x0068 -> 0x00000000   [index PRE_SCALE_ATTN2]
+     6.425  COEF PRE_SCALE_ATTN2       [0x68] <- 0x0000
+     6.487  47 SET_COEF_INDEX                 0x0082 -> 0x00000000   [index PAD_CFG_SLW_RATE_CTRL]
+     6.550  COEF PAD_CFG_SLW_RATE_CTRL [0x82] <- 0xfc03
+     6.612  47 SET_COEF_INDEX                 0x00c0 -> 0x00000000   [index TEST_MODE]
+     6.675  COEF TEST_MODE             [0xc0] <- 0x9999
+     6.738  47 SET_COEF_INDEX                 0x00c5 -> 0x00000000   [index GPIO_HYSTERESIS]
+     6.800  COEF GPIO_HYSTERESIS       [0xc5] <- 0x0000
+     6.862  47 SET_COEF_INDEX                 0x00c0 -> 0x00000000   [index TEST_MODE]
+     6.925  COEF TEST_MODE             [0xc0] <- 0x0000
+     6.988  01 GET_GPIO_DATA                  0x00 -> 0x00000013
+     7.050  01 SET_GPIO_DATA                  0x33 -> 0x00000000
+    22.176  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+    22.324  COEF DEV_CFG1              [0x00] -> 0x9008
+    22.463  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+    22.590  COEF DEV_CFG1              [0x00] <- 0x9008
+    22.689  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    22.798  COEF I2C_QWRITE            [0x5d] <- 0x0010
+    22.897  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    22.975  COEF I2C_STS               [0x5c] -> 0x0000
+    24.782  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    24.855  COEF I2C_STS               [0x5c] -> 0x0038
+    24.904  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    24.966  COEF I2C_QWRITE            [0x5d] <- 0x10b0
+    25.029  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    25.092  COEF I2C_STS               [0x5c] -> 0x0000
+    26.752  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    26.839  COEF I2C_STS               [0x5c] -> 0x0038
+    26.839  I2C 0x00 W 0x1010 I2C_TIMEOUT                = 0xb0
+    26.904  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    26.966  COEF I2C_QWRITE            [0x5d] <- 0x001d
+    27.029  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    27.091  COEF I2C_STS               [0x5c] -> 0x0000
+    28.746  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    28.817  COEF I2C_STS               [0x5c] -> 0x0038
+    28.883  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    28.946  COEF I2C_QWRITE            [0x5d] <- 0x0100
+    29.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    29.070  COEF I2C_STS               [0x5c] -> 0x0000
+    30.753  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    30.847  COEF I2C_STS               [0x5c] -> 0x0038
+    30.847  I2C 0x00 W 0x1d01 ADC_CTL                    = 0x00
+    30.904  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    30.966  COEF I2C_QWRITE            [0x5d] <- 0x0206
+    31.029  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    31.091  COEF I2C_STS               [0x5c] -> 0x0000
+    32.757  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    32.826  COEF I2C_STS               [0x5c] -> 0x0038
+    32.826  I2C 0x00 W 0x1d02                            = 0x06
+    32.884  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    32.946  COEF I2C_QWRITE            [0x5d] <- 0x039f
+    33.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    33.070  COEF I2C_STS               [0x5c] -> 0x0000
+    34.724  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    34.779  COEF I2C_STS               [0x5c] -> 0x0038
+    34.779  I2C 0x00 W 0x1d03 ADC_VOLUME                 = 0x9f
+    34.841  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    34.904  COEF I2C_QWRITE            [0x5d] <- 0x0011
+    34.966  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    35.029  COEF I2C_STS               [0x5c] -> 0x0000
+    36.744  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    36.800  COEF I2C_STS               [0x5c] -> 0x0038
+    36.863  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    36.925  COEF I2C_QWRITE            [0x5d] <- 0x0701
+    36.987  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    37.050  COEF I2C_STS               [0x5c] -> 0x0000
+    38.747  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    38.817  COEF I2C_STS               [0x5c] -> 0x0038
+    38.817  I2C 0x00 W 0x1107 OSC_SWITCH                 = 0x01
+    38.883  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    38.945  COEF I2C_QWRITE            [0x5d] <- 0x0010
+    39.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    39.071  COEF I2C_STS               [0x5c] -> 0x0000
+    40.760  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    40.850  COEF I2C_STS               [0x5c] -> 0x0038
+    40.908  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    40.970  COEF I2C_QWRITE            [0x5d] <- 0x0902
+    41.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    41.092  COEF I2C_STS               [0x5c] -> 0x0000
+    42.748  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    42.814  COEF I2C_STS               [0x5c] -> 0x0038
+    42.814  I2C 0x00 W 0x1009 MCLK_CTL                   = 0x02
+    42.884  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    42.946  COEF I2C_QWRITE            [0x5d] <- 0x0703
+    43.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    43.071  COEF I2C_STS               [0x5c] -> 0x0000
+    44.749  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    44.835  COEF I2C_STS               [0x5c] -> 0x0038
+    44.835  I2C 0x00 W 0x1007 SRC_CTL                    = 0x03
+    44.904  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    44.966  COEF I2C_QWRITE            [0x5d] <- 0x0012
+    45.032  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    45.092  COEF I2C_STS               [0x5c] -> 0x0000
+    46.738  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    46.814  COEF I2C_STS               [0x5c] -> 0x0038
+    46.883  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    46.946  COEF I2C_QWRITE            [0x5d] <- 0x0100
+    47.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    47.071  COEF I2C_STS               [0x5c] -> 0x0000
+    48.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    48.814  COEF I2C_STS               [0x5c] -> 0x0038
+    48.814  I2C 0x00 W 0x1201 MCLK_SRC_SEL               = 0x00
+    48.883  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    48.946  COEF I2C_QWRITE            [0x5d] <- 0x0813
+    49.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    49.071  COEF I2C_STS               [0x5c] -> 0x0000
+    50.739  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    50.814  COEF I2C_STS               [0x5c] -> 0x0038
+    50.814  I2C 0x00 W 0x1208 ASP_FRM_CFG                = 0x13
+    50.883  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    50.946  COEF I2C_QWRITE            [0x5d] <- 0x05ff
+    51.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    51.074  COEF I2C_STS               [0x5c] -> 0x0000
+    52.744  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    52.814  COEF I2C_STS               [0x5c] -> 0x0038
+    52.814  I2C 0x00 W 0x1205 FSYNC_P_LOWER              = 0xff
+    52.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    52.946  COEF I2C_QWRITE            [0x5d] <- 0x0600
+    53.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    53.071  COEF I2C_STS               [0x5c] -> 0x0000
+    54.754  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    54.821  COEF I2C_STS               [0x5c] -> 0x0038
+    54.821  I2C 0x00 W 0x1206 FSYNC_P_UPPER              = 0x00
+    54.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    54.946  COEF I2C_QWRITE            [0x5d] <- 0x0720
+    55.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    55.071  COEF I2C_STS               [0x5c] -> 0x0000
+    56.721  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    56.798  COEF I2C_STS               [0x5c] -> 0x0038
+    56.798  I2C 0x00 W 0x1207 ASP_CLK_CFG                = 0x20
+    56.880  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    56.946  COEF I2C_QWRITE            [0x5d] <- 0x020d
+    57.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    57.071  COEF I2C_STS               [0x5c] -> 0x0000
+    58.741  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    58.815  COEF I2C_STS               [0x5c] -> 0x0038
+    58.815  I2C 0x00 W 0x1202 SPDIF_CLK_CFG              = 0x0d
+    58.883  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    58.946  COEF I2C_QWRITE            [0x5d] <- 0x002a
+    59.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    59.071  COEF I2C_STS               [0x5c] -> 0x0000
+    60.743  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    60.814  COEF I2C_STS               [0x5c] -> 0x0038
+    60.883  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    60.946  COEF I2C_QWRITE            [0x5d] <- 0x0202
+    61.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    61.071  COEF I2C_STS               [0x5c] -> 0x0000
+    62.738  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    62.814  COEF I2C_STS               [0x5c] -> 0x0038
+    62.814  I2C 0x00 W 0x2a02 ASP_RX_DAI0_CH1_AP_RES     = 0x02
+    62.883  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    62.945  COEF I2C_QWRITE            [0x5d] <- 0x0300
+    63.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    63.071  COEF I2C_STS               [0x5c] -> 0x0000
+    64.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    64.815  COEF I2C_STS               [0x5c] -> 0x0038
+    64.815  I2C 0x00 W 0x2a03 ASP_RX_DAI0_CH1_BIT_MSB    = 0x00
+    64.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    64.949  COEF I2C_QWRITE            [0x5d] <- 0x0400
+    65.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    65.071  COEF I2C_STS               [0x5c] -> 0x0000
+    66.737  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    66.818  COEF I2C_STS               [0x5c] -> 0x0038
+    66.818  I2C 0x00 W 0x2a04 ASP_RX_DAI0_CH1_BIT_LSB    = 0x00
+    66.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    66.949  COEF I2C_QWRITE            [0x5d] <- 0x0502
+    67.016  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    67.074  COEF I2C_STS               [0x5c] -> 0x0000
+    68.741  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    68.818  COEF I2C_STS               [0x5c] -> 0x0038
+    68.818  I2C 0x00 W 0x2a05 ASP_RX_DAI0_CH2_AP_RES     = 0x02
+    68.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    68.949  COEF I2C_QWRITE            [0x5d] <- 0x0600
+    69.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    69.075  COEF I2C_STS               [0x5c] -> 0x0000
+    70.852  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    70.993  COEF I2C_STS               [0x5c] -> 0x0038
+    70.993  I2C 0x00 W 0x2a06 ASP_RX_DAI0_CH2_BIT_MSB    = 0x00
+    71.120  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    71.248  COEF I2C_QWRITE            [0x5d] <- 0x0720
+    71.356  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    71.461  COEF I2C_STS               [0x5c] -> 0x0000
+    72.724  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    72.837  COEF I2C_STS               [0x5c] -> 0x0038
+    72.837  I2C 0x00 W 0x2a07 ASP_RX_DAI0_CH2_BIT_LSB    = 0x20
+    72.910  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    72.971  COEF I2C_QWRITE            [0x5d] <- 0x0802
+    73.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    73.095  COEF I2C_STS               [0x5c] -> 0x0000
+    74.751  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    74.835  COEF I2C_STS               [0x5c] -> 0x0038
+    74.835  I2C 0x00 W 0x2a08 ASP_RX_DAI0_CH3_AP_RES     = 0x02
+    74.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    74.949  COEF I2C_QWRITE            [0x5d] <- 0x0900
+    75.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    75.074  COEF I2C_STS               [0x5c] -> 0x0000
+    76.746  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    76.824  COEF I2C_STS               [0x5c] -> 0x0038
+    76.824  I2C 0x00 W 0x2a09 ASP_RX_DAI0_CH3_BIT_MSB    = 0x00
+    76.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    76.949  COEF I2C_QWRITE            [0x5d] <- 0x0a80
+    77.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    77.074  COEF I2C_STS               [0x5c] -> 0x0000
+    78.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    78.822  COEF I2C_STS               [0x5c] -> 0x0038
+    78.822  I2C 0x00 W 0x2a0a ASP_RX_DAI0_CH3_BIT_LSB    = 0x80
+    78.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    78.949  COEF I2C_QWRITE            [0x5d] <- 0x0b02
+    79.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    79.074  COEF I2C_STS               [0x5c] -> 0x0000
+    80.754  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    80.844  COEF I2C_STS               [0x5c] -> 0x0038
+    80.844  I2C 0x00 W 0x2a0b ASP_RX_DAI0_CH4_AP_RES     = 0x02
+    80.908  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    80.970  COEF I2C_QWRITE            [0x5d] <- 0x0c00
+    81.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    81.095  COEF I2C_STS               [0x5c] -> 0x0000
+    82.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    82.821  COEF I2C_STS               [0x5c] -> 0x0038
+    82.821  I2C 0x00 W 0x2a0c ASP_RX_DAI0_CH4_BIT_MSB    = 0x00
+    82.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    82.950  COEF I2C_QWRITE            [0x5d] <- 0x0da0
+    83.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    83.074  COEF I2C_STS               [0x5c] -> 0x0000
+    84.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    84.805  COEF I2C_STS               [0x5c] -> 0x0038
+    84.805  I2C 0x00 W 0x2a0d ASP_RX_DAI0_CH4_BIT_LSB    = 0xa0
+    84.866  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    84.928  COEF I2C_QWRITE            [0x5d] <- 0x010c
+    84.991  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    85.054  COEF I2C_STS               [0x5c] -> 0x0000
+    86.743  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    86.822  COEF I2C_STS               [0x5c] -> 0x0038
+    86.822  I2C 0x00 W 0x2a01 ASP_RX_DAI0_EN             = 0x0c
+    86.908  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    86.969  COEF I2C_QWRITE            [0x5d] <- 0x0029
+    87.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    87.095  COEF I2C_STS               [0x5c] -> 0x0000
+    88.744  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    88.821  COEF I2C_STS               [0x5c] -> 0x0038
+    88.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    88.949  COEF I2C_QWRITE            [0x5d] <- 0x0201
+    89.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    89.074  COEF I2C_STS               [0x5c] -> 0x0000
+    90.749  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    90.838  COEF I2C_STS               [0x5c] -> 0x0038
+    90.838  I2C 0x00 W 0x2902 ASP_TX_CH_EN               = 0x01
+    90.908  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    90.970  COEF I2C_QWRITE            [0x5d] <- 0x0302
+    91.032  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    91.095  COEF I2C_STS               [0x5c] -> 0x0000
+    92.744  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    92.822  COEF I2C_STS               [0x5c] -> 0x0038
+    92.822  I2C 0x00 W 0x2903 ASP_TX_CH_AP_RES           = 0x02
+    92.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    92.949  COEF I2C_QWRITE            [0x5d] <- 0x0400
+    93.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    93.071  COEF I2C_STS               [0x5c] -> 0x0000
+    94.748  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    94.838  COEF I2C_STS               [0x5c] -> 0x0038
+    94.838  I2C 0x00 W 0x2904 ASP_TX_CH1_BIT_MSB         = 0x00
+    94.908  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    94.970  COEF I2C_QWRITE            [0x5d] <- 0x0500
+    95.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    95.095  COEF I2C_STS               [0x5c] -> 0x0000
+    96.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    96.804  COEF I2C_STS               [0x5c] -> 0x0038
+    96.804  I2C 0x00 W 0x2905 ASP_TX_CH1_BIT_LSB         = 0x00
+    96.866  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    96.929  COEF I2C_QWRITE            [0x5d] <- 0x0101
+    96.991  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    97.053  COEF I2C_STS               [0x5c] -> 0x0000
+    98.743  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    98.823  COEF I2C_STS               [0x5c] -> 0x0038
+    98.823  I2C 0x00 W 0x2901 ASP_TX_SZ_EN               = 0x01
+    98.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+    98.950  COEF I2C_QWRITE            [0x5d] <- 0x0011
+    99.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+    99.074  COEF I2C_STS               [0x5c] -> 0x0000
+   100.743  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   100.822  COEF I2C_STS               [0x5c] -> 0x0038
+   100.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   100.949  COEF I2C_QWRITE            [0x5d] <- 0x010a
+   101.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   101.075  COEF I2C_STS               [0x5c] -> 0x0000
+   102.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   102.822  COEF I2C_STS               [0x5c] -> 0x0038
+   102.822  I2C 0x00 W 0x1101 PWR_CTL1                   = 0x0a
+   102.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   102.950  COEF I2C_QWRITE            [0x5d] <- 0x0284
+   103.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   103.074  COEF I2C_STS               [0x5c] -> 0x0000
+   104.757  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   104.831  COEF I2C_STS               [0x5c] -> 0x0038
+   104.831  I2C 0x00 W 0x1102 PWR_CTL2                   = 0x84
+   104.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   104.949  COEF I2C_QWRITE            [0x5d] <- 0x0023
+   105.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   105.075  COEF I2C_STS               [0x5c] -> 0x0000
+   106.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   106.823  COEF I2C_STS               [0x5c] -> 0x0038
+   106.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   106.949  COEF I2C_QWRITE            [0x5d] <- 0x013f
+   107.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   107.074  COEF I2C_STS               [0x5c] -> 0x0000
+   108.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   108.822  COEF I2C_STS               [0x5c] -> 0x0038
+   108.822  I2C 0x00 W 0x2301 MIXER_CHA_VOL              = 0x3f
+   108.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   108.949  COEF I2C_QWRITE            [0x5d] <- 0x033f
+   109.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   109.074  COEF I2C_STS               [0x5c] -> 0x0000
+   110.750  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   110.833  COEF I2C_STS               [0x5c] -> 0x0038
+   110.833  I2C 0x00 W 0x2303 MIXER_CHB_VOL              = 0x3f
+   110.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   110.945  COEF I2C_QWRITE            [0x5d] <- 0x023f
+   111.007  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   111.070  COEF I2C_STS               [0x5c] -> 0x0000
+   112.743  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   112.822  COEF I2C_STS               [0x5c] -> 0x0038
+   112.822  I2C 0x00 W 0x2302 MIXER_ADC_VOL              = 0x3f
+   112.886  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   112.949  COEF I2C_QWRITE            [0x5d] <- 0x0020
+   113.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   113.074  COEF I2C_STS               [0x5c] -> 0x0000
+   114.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   114.822  COEF I2C_STS               [0x5c] -> 0x0038
+   114.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   114.949  COEF I2C_QWRITE            [0x5d] <- 0x010d
+   115.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   115.074  COEF I2C_STS               [0x5c] -> 0x0000
+   116.746  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   116.825  COEF I2C_STS               [0x5c] -> 0x0038
+   116.825  I2C 0x00 W 0x2001 HP_CTL                     = 0x0d
+   116.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   116.949  COEF I2C_QWRITE            [0x5d] <- 0x001b
+   117.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   117.075  COEF I2C_STS               [0x5c] -> 0x0000
+   118.746  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   118.836  COEF I2C_STS               [0x5c] -> 0x0038
+   118.908  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   118.970  COEF I2C_QWRITE            [0x5d] <- 0x75b6
+   119.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   119.096  COEF I2C_STS               [0x5c] -> 0x0000
+   120.719  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   120.783  COEF I2C_STS               [0x5c] -> 0x0038
+   120.783  I2C 0x00 W 0x1b75 MIC_DET_CTL1               = 0xb6
+   120.846  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   120.908  COEF I2C_QWRITE            [0x5d] <- 0x73c2
+   120.970  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   121.033  COEF I2C_STS               [0x5c] -> 0x0000
+   122.749  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   122.843  COEF I2C_STS               [0x5c] -> 0x0038
+   122.843  I2C 0x00 W 0x1b73 TIPSENSE_CTL               = 0xc2
+   122.908  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   122.970  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   123.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   123.096  COEF I2C_STS               [0x5c] -> 0x0000
+   124.743  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   124.822  COEF I2C_STS               [0x5c] -> 0x0038
+   124.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   124.949  COEF I2C_QWRITE            [0x5d] <- 0x2901
+   125.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   125.074  COEF I2C_STS               [0x5c] -> 0x0000
+   126.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   126.822  COEF I2C_STS               [0x5c] -> 0x0038
+   126.822  I2C 0x00 W 0x1129 HS_CLAMP_DISABLE           = 0x01
+   126.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   126.949  COEF I2C_QWRITE            [0x5d] <- 0x21f3
+   127.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   127.074  COEF I2C_STS               [0x5c] -> 0x0000
+   128.744  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   128.809  COEF I2C_STS               [0x5c] -> 0x0038
+   128.809  I2C 0x00 W 0x1121 HS_SWITCH_CTL              = 0xf3
+   128.866  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   128.929  COEF I2C_QWRITE            [0x5d] <- 0x0320
+   128.991  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   129.053  COEF I2C_STS               [0x5c] -> 0x0000
+   130.749  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   130.845  COEF I2C_STS               [0x5c] -> 0x0038
+   130.845  I2C 0x00 W 0x1103 PWR_CTL3                   = 0x20
+   130.908  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   130.971  COEF I2C_QWRITE            [0x5d] <- 0x0500
+   131.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   131.095  COEF I2C_STS               [0x5c] -> 0x0000
+   132.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   132.823  COEF I2C_STS               [0x5c] -> 0x0038
+   132.823  I2C 0x00 W 0x1105 RSENSE_CTL2                = 0x00
+   132.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   132.949  COEF I2C_QWRITE            [0x5d] <- 0x1200
+   133.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   133.074  COEF I2C_STS               [0x5c] -> 0x0000
+   134.744  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   134.809  COEF I2C_STS               [0x5c] -> 0x0038
+   134.809  I2C 0x00 W 0x1112 RSENSE_CTL3                = 0x00
+   134.867  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   134.929  COEF I2C_QWRITE            [0x5d] <- 0x1380
+   134.991  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   135.053  COEF I2C_STS               [0x5c] -> 0x0000
+   136.743  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   136.805  COEF I2C_STS               [0x5c] -> 0x0038
+   136.805  I2C 0x00 W 0x1113 TSENSE_CTL                 = 0x80
+   136.866  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   136.929  COEF I2C_QWRITE            [0x5d] <- 0x001c
+   136.991  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   137.054  COEF I2C_STS               [0x5c] -> 0x0000
+   138.745  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   138.822  COEF I2C_STS               [0x5c] -> 0x0038
+   138.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   138.949  COEF I2C_QWRITE            [0x5d] <- 0x03c0
+   139.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   139.074  COEF I2C_STS               [0x5c] -> 0x0000
+   140.745  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   140.821  COEF I2C_STS               [0x5c] -> 0x0038
+   140.821  I2C 0x00 W 0x1c03 HS_BIAS_CTL                = 0xc0
+   140.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   140.949  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   141.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   141.075  COEF I2C_STS               [0x5c] -> 0x0000
+   142.745  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   142.840  COEF I2C_STS               [0x5c] -> 0x0038
+   142.908  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   142.970  COEF I2C_QWRITE            [0x5d] <- 0x0102
+   143.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   143.095  COEF I2C_STS               [0x5c] -> 0x0000
+   144.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   144.822  COEF I2C_STS               [0x5c] -> 0x0038
+   144.822  I2C 0x00 W 0x1101 PWR_CTL1                   = 0x02
+   155.823  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   155.942  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   156.068  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   156.137  COEF I2C_STS               [0x5c] -> 0x0000
+   158.416  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   158.577  COEF I2C_STS               [0x5c] -> 0x0038
+   158.690  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   158.881  COEF I2C_QWRITE            [0x5d] <- 0x16ff
+   159.077  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   159.272  COEF I2C_STS               [0x5c] -> 0x0038
+   159.272  I2C 0x00 W 0x1316 ADC_OVFL_INT_MASK          = 0xff
+   159.471  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   159.583  COEF I2C_QWRITE            [0x5d] <- 0x17ff
+   159.689  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   159.810  COEF I2C_STS               [0x5c] -> 0x0000
+   161.747  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   161.943  COEF I2C_STS               [0x5c] -> 0x0038
+   161.943  I2C 0x00 W 0x1317 MIXER_INT_MASK             = 0xff
+   162.061  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   162.166  COEF I2C_QWRITE            [0x5d] <- 0x18ff
+   162.301  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   162.418  COEF I2C_STS               [0x5c] -> 0x0000
+   164.575  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   164.658  COEF I2C_STS               [0x5c] -> 0x0038
+   164.658  I2C 0x00 W 0x1318 SRC_INT_MASK               = 0xff
+   164.773  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   164.909  COEF I2C_QWRITE            [0x5d] <- 0x19ff
+   165.023  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   165.096  COEF I2C_STS               [0x5c] -> 0x0000
+   166.741  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   166.821  COEF I2C_STS               [0x5c] -> 0x0038
+   166.821  I2C 0x00 W 0x1319 ASP_RX_INT_MASK            = 0xff
+   166.946  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   167.012  COEF I2C_QWRITE            [0x5d] <- 0x1aff
+   167.074  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   167.137  COEF I2C_STS               [0x5c] -> 0x0000
+   168.744  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   168.825  COEF I2C_STS               [0x5c] -> 0x0038
+   168.825  I2C 0x00 W 0x131a ASP_TX_INT_MASK            = 0xff
+   168.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   168.949  COEF I2C_QWRITE            [0x5d] <- 0x1bff
+   169.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   169.074  COEF I2C_STS               [0x5c] -> 0x0000
+   170.739  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   170.803  COEF I2C_STS               [0x5c] -> 0x0038
+   170.803  I2C 0x00 W 0x131b CODEC_INT_MASK             = 0xff
+   170.867  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   170.928  COEF I2C_QWRITE            [0x5d] <- 0x1cff
+   170.990  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   171.053  COEF I2C_STS               [0x5c] -> 0x0000
+   172.752  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   172.845  COEF I2C_STS               [0x5c] -> 0x0038
+   172.845  I2C 0x00 W 0x131c SRCPL_INT_MASK             = 0xff
+   172.903  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   172.966  COEF I2C_QWRITE            [0x5d] <- 0x1eff
+   173.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   173.095  COEF I2C_STS               [0x5c] -> 0x0000
+   174.738  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   174.821  COEF I2C_STS               [0x5c] -> 0x0038
+   174.821  I2C 0x00 W 0x131e VPMON_INT_MASK             = 0xff
+   174.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   174.949  COEF I2C_QWRITE            [0x5d] <- 0x1fff
+   175.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   175.074  COEF I2C_STS               [0x5c] -> 0x0000
+   176.736  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   176.821  COEF I2C_STS               [0x5c] -> 0x0038
+   176.821  I2C 0x00 W 0x131f PLL_LOCK_INT_MASK          = 0xff
+   176.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   176.950  COEF I2C_QWRITE            [0x5d] <- 0x20ff
+   177.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   177.074  COEF I2C_STS               [0x5c] -> 0x0000
+   178.740  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   178.821  COEF I2C_STS               [0x5c] -> 0x0038
+   178.821  I2C 0x00 W 0x1320 TSRS_PLUG_INT_MASK         = 0xff
+   178.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   178.949  COEF I2C_QWRITE            [0x5d] <- 0x001b
+   179.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   179.074  COEF I2C_STS               [0x5c] -> 0x0000
+   180.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   180.827  COEF I2C_STS               [0x5c] -> 0x0038
+   180.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   180.949  COEF I2C_QWRITE            [0x5d] <- 0x79ff
+   181.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   181.074  COEF I2C_STS               [0x5c] -> 0x0000
+   182.743  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   182.821  COEF I2C_STS               [0x5c] -> 0x0038
+   182.821  I2C 0x00 W 0x1b79 DET_INT1_MASK              = 0xff
+   182.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   182.949  COEF I2C_QWRITE            [0x5d] <- 0x7aff
+   183.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   183.074  COEF I2C_STS               [0x5c] -> 0x0000
+   184.738  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   184.820  COEF I2C_STS               [0x5c] -> 0x0038
+   184.820  I2C 0x00 W 0x1b7a DET_INT2_MASK              = 0xff
+   184.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   184.950  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   185.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   185.074  COEF I2C_STS               [0x5c] -> 0x0000
+   186.740  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   186.820  COEF I2C_STS               [0x5c] -> 0x0038
+   186.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   186.949  COEF I2C_QREAD             [0x5e] <- 0x0800
+   187.013  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   187.074  COEF I2C_STS               [0x5c] -> 0x0000
+   188.738  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   188.821  COEF I2C_STS               [0x5c] -> 0x0038
+   188.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   188.949  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x01
+   189.012  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   189.074  COEF I2C_QREAD             [0x5e] <- 0x0900
+   189.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   189.200  COEF I2C_STS               [0x5c] -> 0x0000
+   190.737  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   190.820  COEF I2C_STS               [0x5c] -> 0x0038
+   190.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   190.949  I2C 0x00 R 0x1309 DET_INT_STATUS1            -> 0x60
+   191.012  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   191.074  COEF I2C_QREAD             [0x5e] <- 0x0a00
+   191.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   191.199  COEF I2C_STS               [0x5c] -> 0x0000
+   192.738  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   192.820  COEF I2C_STS               [0x5c] -> 0x0038
+   192.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   192.949  I2C 0x00 R 0x130a DET_INT_STATUS2            -> 0x00
+   193.012  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   193.074  COEF I2C_QREAD             [0x5e] <- 0x0f00
+   193.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   193.199  COEF I2C_STS               [0x5c] -> 0x0000
+   194.737  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   194.820  COEF I2C_STS               [0x5c] -> 0x0038
+   194.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   194.949  I2C 0x00 R 0x130f TSRS_PLUG_STATUS           -> 0x00
+   195.012  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   195.074  COEF I2C_QWRITE            [0x5d] <- 0x0020
+   195.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   195.199  COEF I2C_STS               [0x5c] -> 0x0000
+   196.738  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   196.820  COEF I2C_STS               [0x5c] -> 0x0038
+   196.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   196.949  COEF I2C_QREAD             [0x5e] <- 0x0100
+   197.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   197.074  COEF I2C_STS               [0x5c] -> 0x0000
+   198.736  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   198.826  COEF I2C_STS               [0x5c] -> 0x0038
+   198.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   198.949  I2C 0x00 R 0x2001 HP_CTL                     -> 0x0d
+   199.012  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   199.074  COEF I2C_QWRITE            [0x5d] <- 0x0101
+   199.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   199.199  COEF I2C_STS               [0x5c] -> 0x0000
+   200.735  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   200.821  COEF I2C_STS               [0x5c] -> 0x0038
+   200.821  I2C 0x00 W 0x2001 HP_CTL                     = 0x01
+   200.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   200.949  COEF I2C_QWRITE            [0x5d] <- 0x001b
+   201.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   201.074  COEF I2C_STS               [0x5c] -> 0x0000
+   202.735  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   202.821  COEF I2C_STS               [0x5c] -> 0x0038
+   202.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   202.949  COEF I2C_QWRITE            [0x5d] <- 0x7020
+   203.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   203.075  COEF I2C_STS               [0x5c] -> 0x0000
+   204.745  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   204.832  COEF I2C_STS               [0x5c] -> 0x0038
+   204.832  I2C 0x00 W 0x1b70 HSBIAS_SC_AUTOCTL          = 0x20
+   204.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   204.949  COEF I2C_QWRITE            [0x5d] <- 0x71c1
+   205.011  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   205.074  COEF I2C_STS               [0x5c] -> 0x0000
+   206.735  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   206.821  COEF I2C_STS               [0x5c] -> 0x0038
+   206.821  I2C 0x00 W 0x1b71 WAKE_CTL                   = 0xc1
+   209.736  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   209.824  COEF I2C_QWRITE            [0x5d] <- 0x71c0
+   209.887  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   209.949  COEF I2C_STS               [0x5c] -> 0x0000
+   211.751  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   211.831  COEF I2C_STS               [0x5c] -> 0x0038
+   211.831  I2C 0x00 W 0x1b71 WAKE_CTL                   = 0xc0
+   211.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   211.949  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   212.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   212.074  COEF I2C_STS               [0x5c] -> 0x0000
+   213.735  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   213.820  COEF I2C_STS               [0x5c] -> 0x0038
+   213.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   213.949  COEF I2C_QREAD             [0x5e] <- 0x0f00
+   214.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   214.074  COEF I2C_STS               [0x5c] -> 0x0000
+   215.743  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   215.821  COEF I2C_STS               [0x5c] -> 0x0038
+   215.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   215.949  I2C 0x00 R 0x130f TSRS_PLUG_STATUS           -> 0x00
+   216.012  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   216.074  COEF I2C_QWRITE            [0x5d] <- 0x20f3
+   216.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   216.199  COEF I2C_STS               [0x5c] -> 0x0000
+   217.736  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   217.820  COEF I2C_STS               [0x5c] -> 0x0038
+   217.820  I2C 0x00 W 0x1320 TSRS_PLUG_INT_MASK         = 0xf3
+   217.888  01 SET_GPIO_UNSOLICITED_RSP_MASK  0x10 -> 0x00000000
+   217.949  01 SET_UNSOLICITED_ENABLE         0x80 -> 0x00000000
+   218.012  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   218.074  COEF I2C_QREAD             [0x5e] <- 0x0800
+   218.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   218.199  COEF I2C_STS               [0x5c] -> 0x0000
+   219.745  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   219.820  COEF I2C_STS               [0x5c] -> 0x0038
+   219.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   219.949  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+   220.012  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   220.074  COEF I2C_QWRITE            [0x5d] <- 0x001b
+   220.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   220.199  COEF I2C_STS               [0x5c] -> 0x0000
+   221.715  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   221.789  COEF I2C_STS               [0x5c] -> 0x0038
+   221.849  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   221.910  COEF I2C_QREAD             [0x5e] <- 0x7700
+   221.974  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   222.036  COEF I2C_STS               [0x5c] -> 0x0000
+   223.742  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   223.818  COEF I2C_STS               [0x5c] -> 0x0038
+   223.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   223.949  I2C 0x00 R 0x1b77 DET_STATUS1                -> 0x96
+   224.013  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   224.078  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   224.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   224.199  COEF I2C_STS               [0x5c] -> 0x0000
+   225.740  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   225.803  COEF I2C_STS               [0x5c] -> 0x0038
+   225.866  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   225.929  COEF I2C_QWRITE            [0x5d] <- 0x20ff
+   225.991  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   226.053  COEF I2C_STS               [0x5c] -> 0x0000
+   227.729  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   227.818  COEF I2C_STS               [0x5c] -> 0x0038
+   227.818  I2C 0x00 W 0x1320 TSRS_PLUG_INT_MASK         = 0xff
+   227.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   227.949  COEF I2C_QREAD             [0x5e] <- 0x0f00
+   228.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   228.074  COEF I2C_STS               [0x5c] -> 0x0000
+   229.717  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   229.788  COEF I2C_STS               [0x5c] -> 0x0038
+   229.849  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   229.911  I2C 0x00 R 0x130f TSRS_PLUG_STATUS           -> 0x00
+   229.970  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   230.032  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   230.095  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   230.158  COEF I2C_STS               [0x5c] -> 0x0000
+   231.729  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   231.819  COEF I2C_STS               [0x5c] -> 0x0038
+   231.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   231.949  COEF I2C_QWRITE            [0x5d] <- 0x0287
+   232.016  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   232.074  COEF I2C_STS               [0x5c] -> 0x0000
+   233.736  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   233.804  COEF I2C_STS               [0x5c] -> 0x0038
+   233.804  I2C 0x00 W 0x1102 PWR_CTL2                   = 0x87
+   233.866  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   233.928  COEF I2C_QWRITE            [0x5d] <- 0x001f
+   233.994  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   234.053  COEF I2C_STS               [0x5c] -> 0x0000
+   235.731  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   235.818  COEF I2C_STS               [0x5c] -> 0x0038
+   235.891  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   235.953  COEF I2C_QWRITE            [0x5d] <- 0x0686
+   236.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   236.074  COEF I2C_STS               [0x5c] -> 0x0000
+   237.737  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   237.820  COEF I2C_STS               [0x5c] -> 0x0038
+   237.820  I2C 0x00 W 0x1f06 DAC_CTL2                   = 0x86
+   237.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   237.949  COEF I2C_QWRITE            [0x5d] <- 0x001b
+   238.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   238.074  COEF I2C_STS               [0x5c] -> 0x0000
+   239.728  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   239.818  COEF I2C_STS               [0x5c] -> 0x0038
+   239.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   239.949  COEF I2C_QWRITE            [0x5d] <- 0x7407
+   240.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   240.074  COEF I2C_STS               [0x5c] -> 0x0000
+   241.734  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   241.818  COEF I2C_STS               [0x5c] -> 0x0038
+   241.818  I2C 0x00 W 0x1b74 MISC_DET_CTL               = 0x07
+   241.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   241.949  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   242.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   242.074  COEF I2C_STS               [0x5c] -> 0x0000
+   243.728  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   243.817  COEF I2C_STS               [0x5c] -> 0x0038
+   243.891  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   243.949  COEF I2C_QWRITE            [0x5d] <- 0x1bfd
+   244.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   244.074  COEF I2C_STS               [0x5c] -> 0x0000
+   245.738  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   245.818  COEF I2C_STS               [0x5c] -> 0x0038
+   245.818  I2C 0x00 W 0x131b CODEC_INT_MASK             = 0xfd
+   245.890  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   245.953  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   246.015  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   246.074  COEF I2C_STS               [0x5c] -> 0x0000
+   247.728  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   247.818  COEF I2C_STS               [0x5c] -> 0x0038
+   247.887  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   247.949  COEF I2C_QWRITE            [0x5d] <- 0x2080
+   248.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   248.074  COEF I2C_STS               [0x5c] -> 0x0000
+   249.714  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   249.783  COEF I2C_STS               [0x5c] -> 0x0038
+   249.783  I2C 0x00 W 0x1120 HSDET_CTL2                 = 0x80
+   270.948  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   271.088  COEF I2C_QWRITE            [0x5d] <- 0x1f77
+   271.235  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   271.374  COEF I2C_STS               [0x5c] -> 0x0038
+   271.374  I2C 0x00 W 0x111f HSDET_CTL1                 = 0x77
+   271.486  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   271.588  COEF I2C_QWRITE            [0x5d] <- 0x20c0
+   271.694  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   271.767  COEF I2C_STS               [0x5c] -> 0x0000
+   272.010  --- hda_unsol_event: [0000:00:1f.3:0] res=0x00000023, res_ex=0x00000010
+   273.748  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   273.918  COEF I2C_STS               [0x5c] -> 0x0038
+   273.918  I2C 0x00 W 0x1120 HSDET_CTL2                 = 0xc0
+   274.052  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   274.198  --- azx_pcm_hw_params: stream_tag: 1
+   274.219  --- azx_pcm_prepare: stream_tag: 1
+   274.175  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   274.298  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   274.369  0a GET_CONV                       0x00 -> 0x00000000
+   274.432  0a SET_CHANNEL_STREAMID           0x10 -> 0x00000000   stream 1 channel 0
+   274.492  COEF I2C_STS               [0x5c] -> 0x0038
+   274.554  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   274.617  0a GET_STREAM_FORMAT              0x0000 -> 0x00000000
+   274.680  COEF I2C_QREAD             [0x5e] <- 0x0800
+   274.741  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   274.803  COEF I2C_STS               [0x5c] -> 0x0000
+   275.093  --- hda_unsol_event: [0000:00:1f.3:0] res=0x00000033, res_ex=0x00000010
+   275.744  0a SET_STREAM_FORMAT              0x0041 -> 0x00000000   48000 Hz 32 bit 2 ch
+   275.830  02 GET_CONV                       0x00 -> 0x00000000
+   275.908  02 SET_CHANNEL_STREAMID           0x10 -> 0x00000000   stream 1 channel 0
+   275.971  02 GET_STREAM_FORMAT              0x0000 -> 0x00000000
+   276.731  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   276.815  COEF I2C_STS               [0x5c] -> 0x0038
+   276.886  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   276.949  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x02
+   277.012  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   277.074  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   277.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   277.199  COEF I2C_STS               [0x5c] -> 0x0000
+   277.739  02 SET_STREAM_FORMAT              0x0041 -> 0x00000000   48000 Hz 32 bit 2 ch
+   278.736  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   278.815  COEF I2C_STS               [0x5c] -> 0x0038
+   278.887  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   278.950  COEF I2C_QREAD             [0x5e] <- 0x2400
+   279.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   279.075  COEF I2C_STS               [0x5c] -> 0x0000
+   280.732  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   280.818  COEF I2C_STS               [0x5c] -> 0x0038
+   280.886  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   280.949  I2C 0x00 R 0x1124 HS_DET_STATUS              -> 0xc7
+   281.013  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   281.074  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   281.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   281.199  COEF I2C_STS               [0x5c] -> 0x0000
+   282.737  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   282.815  COEF I2C_STS               [0x5c] -> 0x0038
+   282.886  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   282.949  COEF I2C_QREAD             [0x5e] <- 0x0f00
+   283.012  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   283.074  COEF I2C_STS               [0x5c] -> 0x0000
+   284.720  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   284.793  COEF I2C_STS               [0x5c] -> 0x0038
+   284.866  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   284.928  I2C 0x00 R 0x130f TSRS_PLUG_STATUS           -> 0x00
+   285.014  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   285.107  COEF I2C_QWRITE            [0x5d] <- 0x0023
+   285.250  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   285.391  COEF I2C_STS               [0x5c] -> 0x0018
+   285.451  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   285.512  COEF I2C_QWRITE            [0x5d] <- 0x013f
+   285.574  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   285.637  COEF I2C_STS               [0x5c] -> 0x0000
+   286.744  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   286.828  COEF I2C_STS               [0x5c] -> 0x0038
+   286.828  I2C 0x00 W 0x2301 MIXER_CHA_VOL              = 0x3f
+   286.909  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   286.970  COEF I2C_QWRITE            [0x5d] <- 0x033f
+   287.033  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   287.095  COEF I2C_STS               [0x5c] -> 0x0000
+   288.735  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   288.821  COEF I2C_STS               [0x5c] -> 0x0038
+   288.821  I2C 0x00 W 0x2303 MIXER_CHB_VOL              = 0x3f
+   288.888  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   288.956  --- azx_pcm_trigger: [0:7] cmd=1
+   288.958  --- snd_hdac_stream_start: stream_tag: 1
+   288.949  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   289.006  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   289.073  COEF I2C_STS               [0x5c] -> 0x0000
+   290.720  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   290.795  COEF I2C_STS               [0x5c] -> 0x0038
+   290.865  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   290.927  COEF I2C_QWRITE            [0x5d] <- 0x1bff
+   290.990  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   291.053  COEF I2C_STS               [0x5c] -> 0x0000
+   292.720  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   292.795  COEF I2C_STS               [0x5c] -> 0x0038
+   292.795  I2C 0x00 W 0x131b CODEC_INT_MASK             = 0xff
+   292.866  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   292.927  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   292.990  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   293.053  COEF I2C_STS               [0x5c] -> 0x0000
+   294.720  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   294.794  COEF I2C_STS               [0x5c] -> 0x0038
+   294.865  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   294.927  COEF I2C_QWRITE            [0x5d] <- 0x2080
+   294.990  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   295.053  COEF I2C_STS               [0x5c] -> 0x0000
+   296.720  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   296.782  COEF I2C_STS               [0x5c] -> 0x0038
+   296.782  I2C 0x00 W 0x1120 HSDET_CTL2                 = 0x80
+   296.844  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   296.907  COEF I2C_QWRITE            [0x5d] <- 0x2040
+   296.970  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   297.032  COEF I2C_STS               [0x5c] -> 0x0000
+   298.730  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   298.818  COEF I2C_STS               [0x5c] -> 0x0038
+   298.818  I2C 0x00 W 0x1120 HSDET_CTL2                 = 0x40
+   298.886  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   298.949  COEF I2C_QWRITE            [0x5d] <- 0x1f2c
+   299.011  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   299.070  COEF I2C_STS               [0x5c] -> 0x0000
+   300.719  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   300.794  COEF I2C_STS               [0x5c] -> 0x0038
+   300.794  I2C 0x00 W 0x111f HSDET_CTL1                 = 0x2c
+   300.844  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   300.907  COEF I2C_QWRITE            [0x5d] <- 0x21a6
+   300.970  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   301.032  COEF I2C_STS               [0x5c] -> 0x0000
+   302.721  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   302.794  COEF I2C_STS               [0x5c] -> 0x0038
+   302.794  I2C 0x00 W 0x1121 HS_SWITCH_CTL              = 0xa6
+   326.911  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+   327.123  COEF DEV_CFG1              [0x00] -> 0x9008
+   327.295  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+   327.480  COEF DEV_CFG1              [0x00] <- 0x9000
+   410.000  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+   410.138  COEF DEV_CFG1              [0x00] -> 0x9000
+   410.370  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+   410.609  COEF DEV_CFG1              [0x00] <- 0x9008
+   410.678  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   410.813  COEF I2C_QREAD             [0x5e] <- 0x2400
+   411.053  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   411.267  COEF I2C_STS               [0x5c] -> 0x0038
+   411.323  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   411.386  I2C 0x00 R 0x1124 HS_DET_STATUS              -> 0xc3
+   411.450  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   411.511  COEF I2C_QWRITE            [0x5d] <- 0x2159
+   411.573  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   411.636  COEF I2C_STS               [0x5c] -> 0x0000
+   412.721  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   412.794  COEF I2C_STS               [0x5c] -> 0x0038
+   412.794  I2C 0x00 W 0x1121 HS_SWITCH_CTL              = 0x59
+   437.906  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+   437.992  COEF DEV_CFG1              [0x00] -> 0x9008
+   438.048  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+   438.116  COEF DEV_CFG1              [0x00] <- 0x9000
+   513.939  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+   514.090  COEF DEV_CFG1              [0x00] -> 0x9000
+   514.329  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+   514.383  COEF DEV_CFG1              [0x00] <- 0x9008
+   514.449  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   514.511  COEF I2C_QREAD             [0x5e] <- 0x2400
+   514.573  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   514.636  COEF I2C_STS               [0x5c] -> 0x0000
+   516.902  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   517.041  COEF I2C_STS               [0x5c] -> 0x0038
+   517.161  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+   517.371  I2C 0x00 R 0x1124 HS_DET_STATUS              -> 0xc3
+   517.428  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   517.490  COEF I2C_QWRITE            [0x5d] <- 0x21a6
+   517.553  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   517.615  COEF I2C_STS               [0x5c] -> 0x0000
+   518.711  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   518.794  COEF I2C_STS               [0x5c] -> 0x0038
+   518.794  I2C 0x00 W 0x1121 HS_SWITCH_CTL              = 0xa6
+   518.865  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   518.927  COEF I2C_QWRITE            [0x5d] <- 0x2000
+   518.990  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   519.053  COEF I2C_STS               [0x5c] -> 0x0000
+   520.709  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   520.794  COEF I2C_STS               [0x5c] -> 0x0038
+   520.794  I2C 0x00 W 0x1120 HSDET_CTL2                 = 0x00
+   520.865  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   520.933  COEF I2C_QWRITE            [0x5d] <- 0x1f77
+   520.987  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   521.053  COEF I2C_STS               [0x5c] -> 0x0000
+   522.708  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   522.794  COEF I2C_STS               [0x5c] -> 0x0038
+   522.794  I2C 0x00 W 0x111f HSDET_CTL1                 = 0x77
+   522.865  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   522.928  COEF I2C_QWRITE            [0x5d] <- 0x001f
+   522.990  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   523.053  COEF I2C_STS               [0x5c] -> 0x0000
+   524.739  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   524.801  COEF I2C_STS               [0x5c] -> 0x0038
+   524.862  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   524.926  COEF I2C_QWRITE            [0x5d] <- 0x0602
+   524.990  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   525.053  COEF I2C_STS               [0x5c] -> 0x0000
+   526.708  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   526.794  COEF I2C_STS               [0x5c] -> 0x0038
+   526.794  I2C 0x00 W 0x1f06 DAC_CTL2                   = 0x02
+   526.865  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   526.927  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   526.990  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   527.053  COEF I2C_STS               [0x5c] -> 0x0000
+   528.708  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   528.794  COEF I2C_STS               [0x5c] -> 0x0038
+   528.865  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+   528.920  COEF I2C_QWRITE            [0x5d] <- 0x20f3
+   528.990  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   529.053  COEF I2C_STS               [0x5c] -> 0x0000
+   530.708  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+   530.794  COEF I2C_STS               [0x5c] -> 0x0038
+   530.794  I2C 0x00 W 0x1320 TSRS_PLUG_INT_MASK         = 0xf3
+   530.847  2c SET_PIN_WIDGET_CONTROL         0x40 -> 0x00000000
+   553.056  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+   553.193  COEF DEV_CFG1              [0x00] -> 0x9008
+   553.319  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+   553.456  COEF DEV_CFG1              [0x00] <- 0x9000
+  2288.844  --- azx_pcm_trigger: [0:7] cmd=0
+  2288.850  --- snd_hdac_stream_stop: stream_tag: 1
+  2288.985  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  2289.118  COEF DEV_CFG1              [0x00] -> 0x9000
+  2289.242  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  2289.453  COEF DEV_CFG1              [0x00] <- 0x9008
+  2289.705  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+  2289.841  COEF I2C_QWRITE            [0x5d] <- 0x0023
+  2290.089  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  2290.311  COEF I2C_STS               [0x5c] -> 0x0038
+  2290.370  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+  2290.432  COEF I2C_QWRITE            [0x5d] <- 0x013f
+  2290.660  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  2290.800  COEF I2C_STS               [0x5c] -> 0x0038
+  2290.800  I2C 0x00 W 0x2301 MIXER_CHA_VOL              = 0x3f
+  2290.871  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+  2290.932  COEF I2C_QWRITE            [0x5d] <- 0x033f
+  2290.991  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  2291.053  COEF I2C_STS               [0x5c] -> 0x0000
+  2292.630  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  2292.703  COEF I2C_STS               [0x5c] -> 0x0038
+  2292.703  I2C 0x00 W 0x2303 MIXER_CHB_VOL              = 0x3f
+  2292.922  --- azx_pcm_close: stream_tag: 1
+  2316.958  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  2317.186  COEF DEV_CFG1              [0x00] -> 0x9008
+  2317.392  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  2317.617  COEF DEV_CFG1              [0x00] <- 0x9000
+  3385.530  --- azx_pcm_open: stream_tag: 1
+  3385.636  --- azx_pcm_hw_params: stream_tag: 1
+  3385.652  --- azx_pcm_prepare: stream_tag: 1
+  3385.709  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  3385.883  COEF DEV_CFG1              [0x00] -> 0x9000
+  3385.950  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  3386.012  COEF DEV_CFG1              [0x00] <- 0x9008
+  3386.075  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+  3386.137  COEF I2C_QWRITE            [0x5d] <- 0x013f
+  3386.199  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  3386.262  COEF I2C_STS               [0x5c] -> 0x0000
+  3387.588  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  3387.764  COEF I2C_STS               [0x5c] -> 0x0038
+  3387.764  I2C 0x00 W 0x2301 MIXER_CHA_VOL              = 0x3f
+  3387.885  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+  3388.001  COEF I2C_QWRITE            [0x5d] <- 0x033f
+  3388.074  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  3388.137  COEF I2C_STS               [0x5c] -> 0x0000
+  3389.578  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  3389.667  COEF I2C_STS               [0x5c] -> 0x0038
+  3389.667  I2C 0x00 W 0x2303 MIXER_CHB_VOL              = 0x3f
+  3389.808  --- azx_pcm_trigger: [0:7] cmd=1
+  3389.816  --- snd_hdac_stream_start: stream_tag: 1
+  3413.926  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  3414.061  COEF DEV_CFG1              [0x00] -> 0x9008
+  3414.181  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  3414.392  COEF DEV_CFG1              [0x00] <- 0x9000
+  4389.844  --- azx_pcm_trigger: [0:7] cmd=0
+  4389.850  --- snd_hdac_stream_stop: stream_tag: 1
+  4390.106  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  4390.331  COEF DEV_CFG1              [0x00] -> 0x9000
+  4390.480  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  4390.709  COEF DEV_CFG1              [0x00] <- 0x9008
+  4390.878  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+  4391.036  COEF I2C_QWRITE            [0x5d] <- 0x013f
+  4391.149  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  4391.274  COEF I2C_STS               [0x5c] -> 0x0000
+  4392.537  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  4392.624  COEF I2C_STS               [0x5c] -> 0x0038
+  4392.624  I2C 0x00 W 0x2301 MIXER_CHA_VOL              = 0x3f
+  4392.679  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+  4392.775  COEF I2C_QWRITE            [0x5d] <- 0x033f
+  4392.846  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  4392.908  COEF I2C_STS               [0x5c] -> 0x0000
+  4394.533  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+  4394.616  COEF I2C_STS               [0x5c] -> 0x0038
+  4394.616  I2C 0x00 W 0x2303 MIXER_CHB_VOL              = 0x3f
+  4394.708  --- azx_pcm_close: stream_tag: 1
+  4418.853  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  4419.090  COEF DEV_CFG1              [0x00] -> 0x9008
+  4419.313  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+  4419.560  COEF DEV_CFG1              [0x00] <- 0x9000
+ 14713.341  01 SET_GPIO_UNSOLICITED_RSP_MASK  0x00 -> 0x00000000
+ 14713.491  01 SET_UNSOLICITED_ENABLE         0x00 -> 0x00000000
+ 14713.585  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+ 14713.689  COEF DEV_CFG1              [0x00] -> 0x9000
+ 14713.796  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+ 14713.900  COEF DEV_CFG1              [0x00] <- 0x9008
+ 14714.002  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14714.135  COEF I2C_QWRITE            [0x5d] <- 0x001f
+ 14714.252  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14714.378  COEF I2C_STS               [0x5c] -> 0x0000
+ 14715.999  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14716.161  COEF I2C_STS               [0x5c] -> 0x0038
+ 14716.220  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14716.282  COEF I2C_QWRITE            [0x5d] <- 0x0602
+ 14716.344  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14716.408  COEF I2C_STS               [0x5c] -> 0x0000
+ 14717.995  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14718.059  COEF I2C_STS               [0x5c] -> 0x0038
+ 14718.059  I2C 0x00 W 0x1f06 DAC_CTL2                   = 0x02
+ 14718.116  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14718.178  COEF I2C_QWRITE            [0x5d] <- 0x0011
+ 14718.240  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14718.303  COEF I2C_STS               [0x5c] -> 0x0000
+ 14720.085  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14720.215  COEF I2C_STS               [0x5c] -> 0x0038
+ 14720.315  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14720.420  COEF I2C_QWRITE            [0x5d] <- 0x2900
+ 14720.534  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14720.630  COEF I2C_STS               [0x5c] -> 0x0000
+ 14721.997  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14722.097  COEF I2C_STS               [0x5c] -> 0x0038
+ 14722.097  I2C 0x00 W 0x1129 HS_CLAMP_DISABLE           = 0x00
+ 14722.157  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14722.219  COEF I2C_QWRITE            [0x5d] <- 0x0023
+ 14722.282  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14722.344  COEF I2C_STS               [0x5c] -> 0x0000
+ 14724.008  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14724.089  COEF I2C_STS               [0x5c] -> 0x0038
+ 14724.157  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14724.219  COEF I2C_QWRITE            [0x5d] <- 0x013f
+ 14724.282  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14724.344  COEF I2C_STS               [0x5c] -> 0x0000
+ 14725.987  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14726.067  COEF I2C_STS               [0x5c] -> 0x0038
+ 14726.067  I2C 0x00 W 0x2301 MIXER_CHA_VOL              = 0x3f
+ 14726.141  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14726.199  COEF I2C_QWRITE            [0x5d] <- 0x023f
+ 14726.261  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14726.324  COEF I2C_STS               [0x5c] -> 0x0000
+ 14727.973  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14728.032  COEF I2C_STS               [0x5c] -> 0x0038
+ 14728.032  I2C 0x00 W 0x2302 MIXER_ADC_VOL              = 0x3f
+ 14728.095  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14728.157  COEF I2C_QWRITE            [0x5d] <- 0x033f
+ 14728.219  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14728.282  COEF I2C_STS               [0x5c] -> 0x0000
+ 14729.992  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14730.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14730.066  I2C 0x00 W 0x2303 MIXER_CHB_VOL              = 0x3f
+ 14730.136  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14730.199  COEF I2C_QWRITE            [0x5d] <- 0x0020
+ 14730.261  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14730.324  COEF I2C_STS               [0x5c] -> 0x0000
+ 14731.987  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14732.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14732.137  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14732.199  COEF I2C_QWRITE            [0x5d] <- 0x010d
+ 14732.261  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14732.324  COEF I2C_STS               [0x5c] -> 0x0000
+ 14733.986  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14734.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14734.066  I2C 0x00 W 0x2001 HP_CTL                     = 0x0d
+ 14734.136  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14734.199  COEF I2C_QWRITE            [0x5d] <- 0x002a
+ 14734.261  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14734.324  COEF I2C_STS               [0x5c] -> 0x0000
+ 14735.985  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14736.084  COEF I2C_STS               [0x5c] -> 0x0038
+ 14736.157  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14736.219  COEF I2C_QWRITE            [0x5d] <- 0x0100
+ 14736.282  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14736.345  COEF I2C_STS               [0x5c] -> 0x0000
+ 14737.986  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14738.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14738.066  I2C 0x00 W 0x2a01 ASP_RX_DAI0_EN             = 0x00
+ 14738.136  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14738.198  COEF I2C_QWRITE            [0x5d] <- 0x0012
+ 14738.261  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14738.324  COEF I2C_STS               [0x5c] -> 0x0000
+ 14739.986  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14740.065  COEF I2C_STS               [0x5c] -> 0x0038
+ 14740.136  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14740.199  COEF I2C_QWRITE            [0x5d] <- 0x0700
+ 14740.261  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14740.323  COEF I2C_STS               [0x5c] -> 0x0000
+ 14742.002  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14742.086  COEF I2C_STS               [0x5c] -> 0x0038
+ 14742.086  I2C 0x00 W 0x1207 ASP_CLK_CFG                = 0x00
+ 14742.157  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14742.219  COEF I2C_QWRITE            [0x5d] <- 0x0011
+ 14742.282  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14742.344  COEF I2C_STS               [0x5c] -> 0x0000
+ 14743.986  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14744.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14744.136  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14744.199  COEF I2C_QWRITE            [0x5d] <- 0x01fe
+ 14744.261  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14744.324  COEF I2C_STS               [0x5c] -> 0x0000
+ 14745.988  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14746.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14746.066  I2C 0x00 W 0x1101 PWR_CTL1                   = 0xfe
+ 14746.137  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14746.198  COEF I2C_QWRITE            [0x5d] <- 0x028c
+ 14746.261  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14746.324  COEF I2C_STS               [0x5c] -> 0x0000
+ 14747.987  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14748.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14748.066  I2C 0x00 W 0x1102 PWR_CTL2                   = 0x8c
+ 14748.136  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14748.199  COEF I2C_QWRITE            [0x5d] <- 0x01ff
+ 14748.261  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14748.323  COEF I2C_STS               [0x5c] -> 0x0000
+ 14749.985  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14750.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14750.066  I2C 0x00 W 0x1101 PWR_CTL1                   = 0xff
+ 14751.987  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14752.069  COEF I2C_QWRITE            [0x5d] <- 0x0013
+ 14752.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14752.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14753.985  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14754.065  COEF I2C_STS               [0x5c] -> 0x0038
+ 14754.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14754.199  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14754.261  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14754.324  COEF I2C_STS               [0x5c] -> 0x0000
+ 14755.986  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14756.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14756.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14756.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14758.001  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14758.089  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14758.158  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14758.219  COEF I2C_STS               [0x5c] -> 0x0000
+ 14759.985  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14760.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14760.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14760.198  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14761.985  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14762.068  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14762.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14762.198  COEF I2C_STS               [0x5c] -> 0x0000
+ 14763.985  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14764.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14764.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14764.198  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14765.985  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14766.067  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14766.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14766.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14767.971  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14768.038  COEF I2C_STS               [0x5c] -> 0x0038
+ 14768.094  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14768.157  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14769.985  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14770.068  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14770.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14770.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14771.985  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14772.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14772.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14772.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14773.994  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14774.068  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14774.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14774.198  COEF I2C_STS               [0x5c] -> 0x0000
+ 14775.985  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14776.061  COEF I2C_STS               [0x5c] -> 0x0038
+ 14776.115  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14776.178  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14777.991  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14778.069  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14778.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14778.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14779.988  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14780.068  COEF I2C_STS               [0x5c] -> 0x0038
+ 14780.137  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14780.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14781.987  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14782.069  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14782.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14782.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14783.987  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14784.068  COEF I2C_STS               [0x5c] -> 0x0038
+ 14784.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14784.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14785.987  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14786.069  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14786.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14786.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14787.988  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14788.068  COEF I2C_STS               [0x5c] -> 0x0038
+ 14788.157  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14788.220  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14789.987  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14790.069  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14790.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14790.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14791.986  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14792.067  COEF I2C_STS               [0x5c] -> 0x0038
+ 14792.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14792.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14793.987  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14794.068  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14794.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14794.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14795.987  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14796.067  COEF I2C_STS               [0x5c] -> 0x0038
+ 14796.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14796.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14797.987  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14798.069  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14798.158  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14798.220  COEF I2C_STS               [0x5c] -> 0x0000
+ 14799.986  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14800.068  COEF I2C_STS               [0x5c] -> 0x0038
+ 14800.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14800.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14801.989  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14802.071  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14802.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14802.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14803.986  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14804.068  COEF I2C_STS               [0x5c] -> 0x0038
+ 14804.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14804.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14805.986  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14806.068  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14806.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14806.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14807.986  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14808.068  COEF I2C_STS               [0x5c] -> 0x0038
+ 14808.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14808.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14809.986  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14810.069  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14810.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14810.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14811.986  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14812.067  COEF I2C_STS               [0x5c] -> 0x0038
+ 14812.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14812.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14813.987  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14814.069  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14814.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14814.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14815.984  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14816.067  COEF I2C_STS               [0x5c] -> 0x0038
+ 14816.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14816.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14817.986  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14818.069  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14818.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14818.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14819.988  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14820.079  COEF I2C_STS               [0x5c] -> 0x0038
+ 14820.158  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14820.220  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14821.987  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14822.067  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14822.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14822.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14823.978  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14824.053  COEF I2C_STS               [0x5c] -> 0x0038
+ 14824.116  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14824.178  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14825.980  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14826.067  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14826.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14826.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14827.977  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14828.065  COEF I2C_STS               [0x5c] -> 0x0038
+ 14828.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14828.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14829.979  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14830.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14830.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14830.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14831.987  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14832.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14832.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14832.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14833.980  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14834.065  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14834.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14834.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14835.979  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14836.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14836.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14836.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14837.979  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14838.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14838.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14838.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14839.978  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14840.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14840.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14840.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14841.980  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14842.064  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14842.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14842.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14843.979  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14844.065  COEF I2C_STS               [0x5c] -> 0x0038
+ 14844.137  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14844.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14845.978  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14846.064  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14846.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14846.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14847.979  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14848.063  COEF I2C_STS               [0x5c] -> 0x0038
+ 14848.116  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14848.178  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14849.978  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14850.064  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14850.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14850.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14851.978  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14852.066  COEF I2C_STS               [0x5c] -> 0x0038
+ 14852.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14852.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14853.978  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14854.064  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14854.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14854.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14855.988  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14856.053  COEF I2C_STS               [0x5c] -> 0x0038
+ 14856.116  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14856.178  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14858.001  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14858.098  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14858.157  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14858.219  COEF I2C_STS               [0x5c] -> 0x0000
+ 14860.297  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14860.365  COEF I2C_STS               [0x5c] -> 0x0038
+ 14860.428  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14860.491  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14861.982  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14862.067  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14862.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14862.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14863.977  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14864.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14864.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14864.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14865.978  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14866.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14866.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14866.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14867.979  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14868.060  COEF I2C_STS               [0x5c] -> 0x0038
+ 14868.120  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14868.178  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14869.978  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14870.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14870.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14870.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14871.976  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14872.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14872.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14872.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14873.978  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14874.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14874.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14874.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14875.976  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14876.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14876.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14876.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14877.976  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14878.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14878.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14878.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14879.984  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14880.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14880.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14880.198  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14881.977  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14882.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14882.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14882.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14883.976  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14884.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14884.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14884.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14885.976  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14886.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14886.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14886.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14887.977  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14888.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14888.116  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14888.178  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14889.987  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14890.067  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14890.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14890.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14891.975  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14892.044  COEF I2C_STS               [0x5c] -> 0x0038
+ 14892.115  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14892.178  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14893.976  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14894.065  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14894.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14894.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14895.975  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14896.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14896.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14896.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14897.976  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14898.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14898.137  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14898.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14899.975  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14900.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14900.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14900.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14901.975  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14902.065  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14902.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14902.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14903.982  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14904.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14904.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14904.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14905.975  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14906.065  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14906.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14906.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14907.974  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14908.044  COEF I2C_STS               [0x5c] -> 0x0038
+ 14908.115  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14908.178  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14909.975  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14910.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14910.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14910.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14911.974  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14912.043  COEF I2C_STS               [0x5c] -> 0x0038
+ 14912.116  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14912.178  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14913.974  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14914.045  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14914.116  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14914.178  COEF I2C_STS               [0x5c] -> 0x0000
+ 14915.974  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14916.027  COEF I2C_STS               [0x5c] -> 0x0038
+ 14916.095  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14916.157  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14917.974  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14918.045  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14918.116  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14918.178  COEF I2C_STS               [0x5c] -> 0x0000
+ 14919.962  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14920.032  COEF I2C_STS               [0x5c] -> 0x0038
+ 14920.097  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14920.157  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14921.976  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14922.064  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14922.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14922.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14923.982  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14924.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14924.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14924.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14925.975  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14926.066  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14926.136  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14926.199  COEF I2C_STS               [0x5c] -> 0x0000
+ 14927.979  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14928.064  COEF I2C_STS               [0x5c] -> 0x0038
+ 14928.136  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14928.199  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x00
+ 14929.974  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14930.045  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 14930.115  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14930.178  COEF I2C_STS               [0x5c] -> 0x0000
+ 14931.973  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14932.044  COEF I2C_STS               [0x5c] -> 0x0038
+ 14932.115  47 SET_COEF_INDEX                 0x005e -> 0x00000000   [index I2C_QREAD]
+ 14932.178  I2C 0x00 R 0x1308 CODEC_STATUS               -> 0x01
+ 14932.241  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14932.303  COEF I2C_QWRITE            [0x5d] <- 0x0011
+ 14932.366  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14932.428  COEF I2C_STS               [0x5c] -> 0x0000
+ 14933.973  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14934.043  COEF I2C_STS               [0x5c] -> 0x0038
+ 14934.115  47 SET_COEF_INDEX                 0x005d -> 0x00000000   [index I2C_QWRITE]
+ 14934.178  COEF I2C_QWRITE            [0x5d] <- 0x029c
+ 14934.241  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14934.303  COEF I2C_STS               [0x5c] -> 0x0000
+ 14935.973  47 SET_COEF_INDEX                 0x005c -> 0x00000000   [index I2C_STS]
+ 14936.043  COEF I2C_STS               [0x5c] -> 0x0038
+ 14936.043  I2C 0x00 W 0x1102 PWR_CTL2                   = 0x9c
+ 14936.116  01 GET_GPIO_DATA                  0x00 -> 0x00000033
+ 14936.178  01 SET_GPIO_DATA                  0x13 -> 0x00000000
+ 14936.241  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+ 14936.303  COEF DEV_CFG1              [0x00] -> 0x9008
+ 14936.365  47 SET_COEF_INDEX                 0x0000 -> 0x00000000   [index DEV_CFG1]
+ 14936.428  COEF DEV_CFG1              [0x00] <- 0x9000
+ 14936.491  24 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14936.553  25 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14936.616  26 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14936.678  27 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14936.740  28 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14936.803  29 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14936.865  2a SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14936.928  2b SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14936.990  2c SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.053  2d SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.116  2e SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.178  2f SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.240  30 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.303  31 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.365  32 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.428  33 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.491  34 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.553  35 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.615  36 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.678  37 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.741  38 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.803  39 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.865  3a SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.928  3b SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14937.991  3c SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14938.053  3d SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14938.115  3e SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14938.178  3f SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14938.240  40 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14938.303  41 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14938.365  42 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14938.428  43 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14938.491  44 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14938.553  45 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 14938.616  0a SET_CHANNEL_STREAMID           0x00 -> 0x00000000   stream 0 channel 0
+ 14938.678  0a SET_STREAM_FORMAT              0x0000 -> 0x00000000   48000 Hz 8 bit 1 ch
+ 14938.741  02 SET_CHANNEL_STREAMID           0x00 -> 0x00000000   stream 0 channel 0
+ 14938.803  02 SET_STREAM_FORMAT              0x0000 -> 0x00000000   48000 Hz 8 bit 1 ch
+ 14949.137  01 SET_POWER_STATE                0x03 -> 0x00000000   D3
+ 14949.251  22 SET_POWER_STATE                0x03 -> 0x00000000   D3
+ 14949.494  23 SET_POWER_STATE                0x03 -> 0x00000000   D3
+ 14949.553  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14950.980  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14954.118  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14957.182  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14960.203  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14963.228  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14965.354  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14967.389  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14970.253  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14972.354  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14974.337  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14976.254  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14978.267  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14980.257  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14982.258  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14984.249  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14986.261  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14988.250  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14990.993  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14993.251  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14995.073  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14997.104  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 14999.006  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15001.010  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15003.228  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15005.225  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15008.005  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15010.006  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15012.071  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15014.179  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15016.141  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15018.135  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15021.034  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15023.131  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15025.154  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15027.080  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15029.311  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15031.132  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15033.150  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15035.133  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15037.178  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15039.131  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15041.190  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15043.131  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15045.128  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15047.131  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15049.139  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15051.120  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15053.192  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15055.129  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15057.150  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15059.182  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15061.119  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15063.129  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15065.150  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15067.129  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15069.130  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15071.127  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15073.163  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15075.129  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15077.178  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15079.128  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15081.163  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15083.225  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15085.147  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15087.160  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15089.152  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15091.276  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15093.314  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15095.188  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15097.204  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15099.174  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15101.176  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15103.173  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15105.077  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15107.065  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15109.064  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15111.072  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15113.074  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15115.066  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15117.064  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15119.067  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15120.987  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15123.240  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15125.256  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15127.241  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15129.246  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15131.239  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15133.238  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15135.242  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15137.222  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15139.065  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15141.072  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15143.075  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15145.066  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15147.064  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15149.074  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15151.063  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15153.091  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15155.062  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15157.012  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15160.091  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15162.063  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15164.077  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15166.045  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15168.056  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15170.217  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15172.213  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15174.109  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15176.073  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15178.070  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15180.078  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15182.081  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15184.076  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15186.246  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15188.065  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15190.080  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15192.062  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15194.062  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15196.062  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15198.081  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15200.061  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15202.063  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15204.068  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15206.084  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15208.131  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15210.062  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15212.060  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15214.082  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15216.062  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15218.059  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15220.072  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15222.100  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15224.217  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15226.212  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15228.065  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15230.089  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15232.074  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15234.063  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15236.058  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15238.080  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15240.061  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15242.058  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15244.066  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15246.081  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15248.064  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15250.066  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15252.058  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15254.079  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15256.074  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15258.142  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15260.132  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15262.059  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15264.073  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15266.061  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15268.081  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15270.058  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15272.061  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15274.097  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15276.089  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15278.058  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15280.063  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15282.057  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15284.082  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15286.065  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15288.064  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15290.056  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15292.076  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15294.060  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15296.180  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15298.058  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15300.081  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15302.055  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15304.059  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15306.071  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15309.007  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15311.036  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15313.152  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15315.157  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15317.217  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15319.055  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15321.130  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15323.232  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15325.246  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15327.230  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15329.232  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15331.235  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15333.232  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15335.054  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15337.062  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15339.055  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15341.053  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15343.054  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15345.054  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15347.056  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15349.053  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15351.053  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15353.088  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15355.058  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15357.054  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15359.055  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15361.053  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15363.053  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15365.132  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15367.220  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15369.052  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15371.052  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15373.052  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15375.096  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15376.971  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15379.211  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15381.053  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15383.059  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15385.053  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15387.060  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15389.050  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15391.060  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15393.212  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15395.052  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15397.044  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15399.053  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15401.052  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15403.052  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15405.050  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15407.050  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15409.053  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15411.061  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15413.060  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15415.059  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15417.054  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15419.051  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15421.053  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15423.210  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15425.208  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15427.213  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15429.206  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15431.055  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15433.036  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15435.165  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15437.244  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15439.025  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15441.198  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15443.048  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15445.051  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15447.055  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0
+ 15449.061  01 GET_POWER_STATE                0x00 -> 0x00000003   set D3 actual D0

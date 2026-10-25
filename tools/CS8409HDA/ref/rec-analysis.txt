@@ -1,0 +1,4 @@
+no tone  ch0: 1 kHz   -71.2 dBFS,   5.5 dB above the nearby noise floor, total RMS  -31.1 dBFS
+no tone  ch1: 1 kHz   -71.2 dBFS,   5.5 dB above the nearby noise floor, total RMS  -31.1 dBFS
+tone     ch0: 1 kHz    -4.5 dBFS,  75.0 dB above the nearby noise floor, total RMS   -8.0 dBFS
+tone     ch1: 1 kHz    -4.5 dBFS,  75.0 dB above the nearby noise floor, total RMS   -8.0 dBFS

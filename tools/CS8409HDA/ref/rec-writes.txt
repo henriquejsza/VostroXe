@@ -1,0 +1,480 @@
+     0.000  --- azx_pcm_open: stream_tag: 1
+     0.007  01 SET_POWER_STATE                0x00 -> 0x00000000   D0
+     0.270  22 SET_POWER_STATE                0x03 -> 0x00000000   D3
+     0.394  23 SET_POWER_STATE                0x03 -> 0x00000000   D3
+     0.529  24 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.592  25 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.654  26 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.716  27 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.779  28 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.842  29 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.904  2a SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     0.967  2b SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.111  2c SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.175  2d SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.237  2e SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.300  2f SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.362  30 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.425  31 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.487  32 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.551  33 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.612  34 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.675  35 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.737  36 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.800  37 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.862  38 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.925  39 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     1.987  3a SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.050  3b SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.113  3c SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.175  3d SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.237  3e SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.300  3f SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.362  40 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.425  41 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.487  42 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.550  43 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.612  44 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.675  45 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+     2.739  01 SET_GPIO_WAKE_MASK             0x18 -> 0x00000000
+     2.800  47 SET_PROC_STATE                 0x01 -> 0x00000000
+     2.925  COEF DEV_CFG3              [0x02] <- 0x0080
+     3.072  COEF I2C_CTRL              [0x5b] <- 0x0200
+     3.136  2c SET_PIN_WIDGET_CONTROL         0x40 -> 0x00000000
+     3.200  24 SET_PIN_WIDGET_CONTROL         0x40 -> 0x00000000
+     3.259  44 SET_PIN_WIDGET_CONTROL         0x20 -> 0x00000000
+     3.321  34 SET_PIN_WIDGET_CONTROL         0x20 -> 0x00000000
+     3.459  22 SET_AMP_GAIN_MUTE              0x503f -> 0x00000000
+     3.529  22 SET_AMP_GAIN_MUTE              0x603f -> 0x00000000
+     3.593  24 SET_PIN_WIDGET_CONTROL         0x40 -> 0x00000000
+     3.654  24 SET_UNSOLICITED_ENABLE         0x81 -> 0x00000000
+     3.717  2c SET_PIN_WIDGET_CONTROL         0x40 -> 0x00000000
+     3.780  34 SET_PIN_WIDGET_CONTROL         0x20 -> 0x00000000
+     3.842  34 SET_UNSOLICITED_ENABLE         0x82 -> 0x00000000
+     3.905  44 SET_AMP_GAIN_MUTE              0x5002 -> 0x00000000
+     3.967  44 SET_AMP_GAIN_MUTE              0x6002 -> 0x00000000
+     4.029  44 SET_PIN_WIDGET_CONTROL         0x20 -> 0x00000000
+     4.093  01 SET_GPIO_MASK                  0x3f -> 0x00000000
+     4.154  01 SET_GPIO_DIRECTION             0x22 -> 0x00000000
+     4.216  01 SET_GPIO_DATA                  0x13 -> 0x00000000
+     4.341  COEF DEV_CFG1              [0x00] <- 0xb008
+     4.466  COEF DEV_CFG2              [0x01] <- 0x0002
+     4.592  COEF DEV_CFG3              [0x02] <- 0x0a80
+     4.716  COEF ASP1_A_TX_CTRL1       [0x19] <- 0x0800
+     4.841  COEF ASP1_A_TX_CTRL2       [0x1a] <- 0x0820
+     4.967  COEF ASP2_A_TX_CTRL1       [0x29] <- 0x0800
+     5.091  COEF ASP2_A_TX_CTRL2       [0x2a] <- 0x2800
+     5.216  COEF ASP1_A_RX_CTRL1       [0x39] <- 0x0800
+     5.341  COEF ASP1_A_RX_CTRL2       [0x3a] <- 0x0800
+     5.466  COEF ASP1_CLK_CTRL1        [0x03] <- 0x8000
+     5.591  COEF ASP1_CLK_CTRL2        [0x04] <- 0x28ff
+     5.717  COEF ASP1_CLK_CTRL3        [0x05] <- 0x0062
+     5.841  COEF ASP2_CLK_CTRL1        [0x06] <- 0x801f
+     5.967  COEF ASP2_CLK_CTRL2        [0x07] <- 0x283f
+     6.091  COEF ASP2_CLK_CTRL3        [0x08] <- 0x805c
+     6.217  COEF DMIC_CFG              [0x09] <- 0x0023
+     6.341  COEF BEEP_CFG              [0x0a] <- 0x0000
+     6.466  COEF DEV_CFG2              [0x01] <- 0x0062
+     6.591  COEF DEV_CFG1              [0x00] <- 0x9008
+     6.716  COEF PRE_SCALE_ATTN2       [0x68] <- 0x0000
+     6.841  COEF PAD_CFG_SLW_RATE_CTRL [0x82] <- 0xfc03
+     6.967  COEF TEST_MODE             [0xc0] <- 0x9999
+     7.092  COEF GPIO_HYSTERESIS       [0xc5] <- 0x0000
+     7.216  COEF TEST_MODE             [0xc0] <- 0x0000
+     7.341  01 SET_GPIO_DATA                  0x33 -> 0x00000000
+    22.406  COEF DEV_CFG1              [0x00] <- 0x9008
+    22.616  COEF I2C_QWRITE            [0x5d] <- 0x0010
+    24.394  COEF I2C_QWRITE            [0x5d] <- 0x10b0
+    26.064  I2C 0x00 W 0x1010 I2C_TIMEOUT                = 0xb0
+    26.192  COEF I2C_QWRITE            [0x5d] <- 0x001d
+    28.192  COEF I2C_QWRITE            [0x5d] <- 0x0100
+    30.054  I2C 0x00 W 0x1d01 ADC_CTL                    = 0x00
+    30.192  COEF I2C_QWRITE            [0x5d] <- 0x0206
+    32.062  I2C 0x00 W 0x1d02                            = 0x06
+    32.192  COEF I2C_QWRITE            [0x5d] <- 0x039f
+    34.042  I2C 0x00 W 0x1d03 ADC_VOLUME                 = 0x9f
+    34.171  COEF I2C_QWRITE            [0x5d] <- 0x0011
+    36.171  COEF I2C_QWRITE            [0x5d] <- 0x0701
+    38.042  I2C 0x00 W 0x1107 OSC_SWITCH                 = 0x01
+    38.171  COEF I2C_QWRITE            [0x5d] <- 0x0010
+    40.171  COEF I2C_QWRITE            [0x5d] <- 0x0902
+    42.043  I2C 0x00 W 0x1009 MCLK_CTL                   = 0x02
+    42.171  COEF I2C_QWRITE            [0x5d] <- 0x0703
+    44.050  I2C 0x00 W 0x1007 SRC_CTL                    = 0x03
+    44.170  COEF I2C_QWRITE            [0x5d] <- 0x0012
+    46.134  COEF I2C_QWRITE            [0x5d] <- 0x0100
+    48.066  I2C 0x00 W 0x1201 MCLK_SRC_SEL               = 0x00
+    48.193  COEF I2C_QWRITE            [0x5d] <- 0x0813
+    50.042  I2C 0x00 W 0x1208 ASP_FRM_CFG                = 0x13
+    50.171  COEF I2C_QWRITE            [0x5d] <- 0x05ff
+    52.043  I2C 0x00 W 0x1205 FSYNC_P_LOWER              = 0xff
+    52.171  COEF I2C_QWRITE            [0x5d] <- 0x0600
+    54.065  I2C 0x00 W 0x1206 FSYNC_P_UPPER              = 0x00
+    54.192  COEF I2C_QWRITE            [0x5d] <- 0x0720
+    56.063  I2C 0x00 W 0x1207 ASP_CLK_CFG                = 0x20
+    56.192  COEF I2C_QWRITE            [0x5d] <- 0x020d
+    58.025  I2C 0x00 W 0x1202 SPDIF_CLK_CFG              = 0x0d
+    58.150  COEF I2C_QWRITE            [0x5d] <- 0x002a
+    60.129  COEF I2C_QWRITE            [0x5d] <- 0x0202
+    62.073  I2C 0x00 W 0x2a02 ASP_RX_DAI0_CH1_AP_RES     = 0x02
+    62.192  COEF I2C_QWRITE            [0x5d] <- 0x0300
+    64.054  I2C 0x00 W 0x2a03 ASP_RX_DAI0_CH1_BIT_MSB    = 0x00
+    64.171  COEF I2C_QWRITE            [0x5d] <- 0x0400
+    66.063  I2C 0x00 W 0x2a04 ASP_RX_DAI0_CH1_BIT_LSB    = 0x00
+    66.192  COEF I2C_QWRITE            [0x5d] <- 0x0502
+    68.043  I2C 0x00 W 0x2a05 ASP_RX_DAI0_CH2_AP_RES     = 0x02
+    68.171  COEF I2C_QWRITE            [0x5d] <- 0x0600
+    70.042  I2C 0x00 W 0x2a06 ASP_RX_DAI0_CH2_BIT_MSB    = 0x00
+    70.171  COEF I2C_QWRITE            [0x5d] <- 0x0720
+    72.042  I2C 0x00 W 0x2a07 ASP_RX_DAI0_CH2_BIT_LSB    = 0x20
+    72.171  COEF I2C_QWRITE            [0x5d] <- 0x0802
+    74.042  I2C 0x00 W 0x2a08 ASP_RX_DAI0_CH3_AP_RES     = 0x02
+    74.171  COEF I2C_QWRITE            [0x5d] <- 0x0900
+    76.042  I2C 0x00 W 0x2a09 ASP_RX_DAI0_CH3_BIT_MSB    = 0x00
+    76.171  COEF I2C_QWRITE            [0x5d] <- 0x0a80
+    78.042  I2C 0x00 W 0x2a0a ASP_RX_DAI0_CH3_BIT_LSB    = 0x80
+    78.172  COEF I2C_QWRITE            [0x5d] <- 0x0b02
+    80.026  I2C 0x00 W 0x2a0b ASP_RX_DAI0_CH4_AP_RES     = 0x02
+    80.150  COEF I2C_QWRITE            [0x5d] <- 0x0c00
+    82.043  I2C 0x00 W 0x2a0c ASP_RX_DAI0_CH4_BIT_MSB    = 0x00
+    82.171  COEF I2C_QWRITE            [0x5d] <- 0x0da0
+    84.042  I2C 0x00 W 0x2a0d ASP_RX_DAI0_CH4_BIT_LSB    = 0xa0
+    84.171  COEF I2C_QWRITE            [0x5d] <- 0x010c
+    86.114  I2C 0x00 W 0x2a01 ASP_RX_DAI0_EN             = 0x0c
+    86.234  COEF I2C_QWRITE            [0x5d] <- 0x0029
+    88.171  COEF I2C_QWRITE            [0x5d] <- 0x0201
+    90.042  I2C 0x00 W 0x2902 ASP_TX_CH_EN               = 0x01
+    90.171  COEF I2C_QWRITE            [0x5d] <- 0x0302
+    92.042  I2C 0x00 W 0x2903 ASP_TX_CH_AP_RES           = 0x02
+    92.171  COEF I2C_QWRITE            [0x5d] <- 0x0400
+    94.042  I2C 0x00 W 0x2904 ASP_TX_CH1_BIT_MSB         = 0x00
+    94.171  COEF I2C_QWRITE            [0x5d] <- 0x0500
+    96.043  I2C 0x00 W 0x2905 ASP_TX_CH1_BIT_LSB         = 0x00
+    96.171  COEF I2C_QWRITE            [0x5d] <- 0x0101
+    98.046  I2C 0x00 W 0x2901 ASP_TX_SZ_EN               = 0x01
+    98.171  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   100.151  COEF I2C_QWRITE            [0x5d] <- 0x010a
+   102.043  I2C 0x00 W 0x1101 PWR_CTL1                   = 0x0a
+   102.171  COEF I2C_QWRITE            [0x5d] <- 0x0284
+   104.048  I2C 0x00 W 0x1102 PWR_CTL2                   = 0x84
+   104.171  COEF I2C_QWRITE            [0x5d] <- 0x0023
+   106.171  COEF I2C_QWRITE            [0x5d] <- 0x013f
+   108.042  I2C 0x00 W 0x2301 MIXER_CHA_VOL              = 0x3f
+   108.171  COEF I2C_QWRITE            [0x5d] <- 0x033f
+   110.040  I2C 0x00 W 0x2303 MIXER_CHB_VOL              = 0x3f
+   110.189  COEF I2C_QWRITE            [0x5d] <- 0x023f
+   112.042  I2C 0x00 W 0x2302 MIXER_ADC_VOL              = 0x3f
+   112.171  COEF I2C_QWRITE            [0x5d] <- 0x0020
+   114.172  COEF I2C_QWRITE            [0x5d] <- 0x010d
+   116.043  I2C 0x00 W 0x2001 HP_CTL                     = 0x0d
+   116.171  COEF I2C_QWRITE            [0x5d] <- 0x001b
+   118.171  COEF I2C_QWRITE            [0x5d] <- 0x75b6
+   120.045  I2C 0x00 W 0x1b75 MIC_DET_CTL1               = 0xb6
+   120.171  COEF I2C_QWRITE            [0x5d] <- 0x73c2
+   122.042  I2C 0x00 W 0x1b73 TIPSENSE_CTL               = 0xc2
+   122.171  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   124.171  COEF I2C_QWRITE            [0x5d] <- 0x2901
+   126.062  I2C 0x00 W 0x1129 HS_CLAMP_DISABLE           = 0x01
+   126.192  COEF I2C_QWRITE            [0x5d] <- 0x21f3
+   128.043  I2C 0x00 W 0x1121 HS_SWITCH_CTL              = 0xf3
+   128.171  COEF I2C_QWRITE            [0x5d] <- 0x0320
+   130.042  I2C 0x00 W 0x1103 PWR_CTL3                   = 0x20
+   130.171  COEF I2C_QWRITE            [0x5d] <- 0x0500
+   132.046  I2C 0x00 W 0x1105 RSENSE_CTL2                = 0x00
+   132.171  COEF I2C_QWRITE            [0x5d] <- 0x1200
+   134.043  I2C 0x00 W 0x1112 RSENSE_CTL3                = 0x00
+   134.171  COEF I2C_QWRITE            [0x5d] <- 0x1380
+   136.042  I2C 0x00 W 0x1113 TSENSE_CTL                 = 0x80
+   136.171  COEF I2C_QWRITE            [0x5d] <- 0x001c
+   138.171  COEF I2C_QWRITE            [0x5d] <- 0x03c0
+   140.047  I2C 0x00 W 0x1c03 HS_BIAS_CTL                = 0xc0
+   140.193  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   142.171  COEF I2C_QWRITE            [0x5d] <- 0x0102
+   144.042  I2C 0x00 W 0x1101 PWR_CTL1                   = 0x02
+   155.407  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   155.842  COEF I2C_QWRITE            [0x5d] <- 0x16ff
+   158.009  I2C 0x00 W 0x1316 ADC_OVFL_INT_MASK          = 0xff
+   158.133  COEF I2C_QWRITE            [0x5d] <- 0x17ff
+   160.062  I2C 0x00 W 0x1317 MIXER_INT_MASK             = 0xff
+   160.195  COEF I2C_QWRITE            [0x5d] <- 0x18ff
+   162.062  I2C 0x00 W 0x1318 SRC_INT_MASK               = 0xff
+   162.196  COEF I2C_QWRITE            [0x5d] <- 0x19ff
+   164.029  I2C 0x00 W 0x1319 ASP_RX_INT_MASK            = 0xff
+   164.154  COEF I2C_QWRITE            [0x5d] <- 0x1aff
+   166.045  I2C 0x00 W 0x131a ASP_TX_INT_MASK            = 0xff
+   166.175  COEF I2C_QWRITE            [0x5d] <- 0x1bff
+   168.030  I2C 0x00 W 0x131b CODEC_INT_MASK             = 0xff
+   168.162  COEF I2C_QWRITE            [0x5d] <- 0x1cff
+   168.440  I2C 0x00 W 0x131c SRCPL_INT_MASK             = 0xff
+   168.689  COEF I2C_QWRITE            [0x5d] <- 0x1eff
+   171.063  I2C 0x00 W 0x131e VPMON_INT_MASK             = 0xff
+   171.195  COEF I2C_QWRITE            [0x5d] <- 0x1fff
+   173.046  I2C 0x00 W 0x131f PLL_LOCK_INT_MASK          = 0xff
+   173.175  COEF I2C_QWRITE            [0x5d] <- 0x20ff
+   175.046  I2C 0x00 W 0x1320 TSRS_PLUG_INT_MASK         = 0xff
+   175.175  COEF I2C_QWRITE            [0x5d] <- 0x001b
+   177.175  COEF I2C_QWRITE            [0x5d] <- 0x79ff
+   179.046  I2C 0x00 W 0x1b79 DET_INT1_MASK              = 0xff
+   179.175  COEF I2C_QWRITE            [0x5d] <- 0x7aff
+   181.051  I2C 0x00 W 0x1b7a DET_INT2_MASK              = 0xff
+   181.175  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   183.175  COEF I2C_QREAD             [0x5e] <- 0x0800
+   185.300  COEF I2C_QREAD             [0x5e] <- 0x0900
+   187.300  COEF I2C_QREAD             [0x5e] <- 0x0a00
+   189.300  COEF I2C_QREAD             [0x5e] <- 0x0f00
+   191.300  COEF I2C_QWRITE            [0x5d] <- 0x0020
+   193.176  COEF I2C_QREAD             [0x5e] <- 0x0100
+   195.300  COEF I2C_QWRITE            [0x5d] <- 0x0101
+   197.046  I2C 0x00 W 0x2001 HP_CTL                     = 0x01
+   197.175  COEF I2C_QWRITE            [0x5d] <- 0x001b
+   199.175  COEF I2C_QWRITE            [0x5d] <- 0x7020
+   201.499  I2C 0x00 W 0x1b70 HSBIAS_SC_AUTOCTL          = 0x20
+   201.707  COEF I2C_QWRITE            [0x5d] <- 0x71c1
+   204.211  I2C 0x00 W 0x1b71 WAKE_CTL                   = 0xc1
+   207.205  COEF I2C_QWRITE            [0x5d] <- 0x71c0
+   209.190  I2C 0x00 W 0x1b71 WAKE_CTL                   = 0xc0
+   209.363  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   211.175  COEF I2C_QREAD             [0x5e] <- 0x0f00
+   213.300  COEF I2C_QWRITE            [0x5d] <- 0x20f3
+   215.049  I2C 0x00 W 0x1320 TSRS_PLUG_INT_MASK         = 0xf3
+   215.112  01 SET_GPIO_UNSOLICITED_RSP_MASK  0x10 -> 0x00000000
+   215.175  01 SET_UNSOLICITED_ENABLE         0x80 -> 0x00000000
+   215.300  COEF I2C_QREAD             [0x5e] <- 0x0800
+   217.300  COEF I2C_QWRITE            [0x5d] <- 0x001b
+   219.175  COEF I2C_QREAD             [0x5e] <- 0x7700
+   221.300  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   223.175  COEF I2C_QWRITE            [0x5d] <- 0x20ff
+   225.048  I2C 0x00 W 0x1320 TSRS_PLUG_INT_MASK         = 0xff
+   225.175  COEF I2C_QREAD             [0x5e] <- 0x0f00
+   227.300  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   229.133  COEF I2C_QWRITE            [0x5d] <- 0x0287
+   231.047  I2C 0x00 W 0x1102 PWR_CTL2                   = 0x87
+   231.175  COEF I2C_QWRITE            [0x5d] <- 0x001f
+   233.175  COEF I2C_QWRITE            [0x5d] <- 0x0686
+   235.046  I2C 0x00 W 0x1f06 DAC_CTL2                   = 0x86
+   235.175  COEF I2C_QWRITE            [0x5d] <- 0x001b
+   237.196  COEF I2C_QWRITE            [0x5d] <- 0x7407
+   239.047  I2C 0x00 W 0x1b74 MISC_DET_CTL               = 0x07
+   239.175  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   241.175  COEF I2C_QWRITE            [0x5d] <- 0x1bfd
+   243.057  I2C 0x00 W 0x131b CODEC_INT_MASK             = 0xfd
+   243.175  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   245.175  COEF I2C_QWRITE            [0x5d] <- 0x2080
+   247.047  I2C 0x00 W 0x1120 HSDET_CTL2                 = 0x80
+   269.676  COEF DEV_CFG1              [0x00] <- 0x9000
+   272.914  COEF DEV_CFG1              [0x00] <- 0x9008
+   273.305  COEF I2C_QWRITE            [0x5d] <- 0x1f77
+   273.605  I2C 0x00 W 0x111f HSDET_CTL1                 = 0x77
+   273.833  COEF I2C_QWRITE            [0x5d] <- 0x20c0
+   274.323  --- hda_unsol_event: [0000:00:1f.3:0] res=0x00000023, res_ex=0x00000010
+   276.074  I2C 0x00 W 0x1120 HSDET_CTL2                 = 0xc0
+   276.196  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   276.272  --- azx_pcm_hw_params: stream_tag: 1
+   276.287  --- azx_pcm_prepare: stream_tag: 1
+   276.468  22 SET_POWER_STATE                0x00 -> 0x00000000   D0
+   276.592  22 SET_POWER_STATE                0x00 -> 0x00000000   D0
+   276.717  22 SET_CHANNEL_STREAMID           0x10 -> 0x00000000   stream 1 channel 0
+   278.114  22 SET_STREAM_FORMAT              0x0041 -> 0x00000000   48000 Hz 32 bit 2 ch
+   278.237  COEF I2C_QREAD             [0x5e] <- 0x0800
+   278.652  --- hda_unsol_event: [0000:00:1f.3:0] res=0x00000033, res_ex=0x00000010
+   280.321  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   282.174  COEF I2C_QREAD             [0x5e] <- 0x2400
+   284.321  COEF I2C_QWRITE            [0x5d] <- 0x001d
+   286.175  COEF I2C_QWRITE            [0x5d] <- 0x039f
+   288.049  I2C 0x00 W 0x1d03 ADC_VOLUME                 = 0x9f
+   288.150  --- azx_pcm_trigger: [0:0] cmd=1
+   288.158  --- snd_hdac_stream_start: stream_tag: 1
+   288.173  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   290.174  COEF I2C_QREAD             [0x5e] <- 0x0f00
+   292.258  COEF I2C_QWRITE            [0x5d] <- 0x1bff
+   294.045  I2C 0x00 W 0x131b CODEC_INT_MASK             = 0xff
+   294.174  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   296.154  COEF I2C_QWRITE            [0x5d] <- 0x2080
+   298.041  I2C 0x00 W 0x1120 HSDET_CTL2                 = 0x80
+   298.175  COEF I2C_QWRITE            [0x5d] <- 0x2040
+   300.020  I2C 0x00 W 0x1120 HSDET_CTL2                 = 0x40
+   300.154  COEF I2C_QWRITE            [0x5d] <- 0x1f2c
+   302.041  I2C 0x00 W 0x111f HSDET_CTL1                 = 0x2c
+   302.174  COEF I2C_QWRITE            [0x5d] <- 0x21a6
+   304.030  I2C 0x00 W 0x1121 HS_SWITCH_CTL              = 0xa6
+   329.538  COEF DEV_CFG1              [0x00] <- 0x9000
+   406.329  COEF DEV_CFG1              [0x00] <- 0x9008
+   406.665  COEF I2C_QREAD             [0x5e] <- 0x2400
+   408.320  COEF I2C_QWRITE            [0x5d] <- 0x2159
+   410.021  I2C 0x00 W 0x1121 HS_SWITCH_CTL              = 0x59
+   434.827  COEF DEV_CFG1              [0x00] <- 0x9000
+   501.252  --- azx_pcm_open: stream_tag: 1
+   501.327  --- azx_pcm_hw_params: stream_tag: 1
+   501.335  --- azx_pcm_prepare: stream_tag: 1
+   501.545  0a SET_CHANNEL_STREAMID           0x10 -> 0x00000000   stream 1 channel 0
+   503.059  0a SET_STREAM_FORMAT              0x0041 -> 0x00000000   48000 Hz 32 bit 2 ch
+   503.257  02 SET_CHANNEL_STREAMID           0x10 -> 0x00000000   stream 1 channel 0
+   505.931  02 SET_STREAM_FORMAT              0x0041 -> 0x00000000   48000 Hz 32 bit 2 ch
+   506.258  COEF DEV_CFG1              [0x00] <- 0x9008
+   506.383  COEF I2C_QWRITE            [0x5d] <- 0x0023
+   508.386  COEF I2C_QWRITE            [0x5d] <- 0x013f
+   510.152  I2C 0x00 W 0x2301 MIXER_CHA_VOL              = 0x3f
+   510.373  COEF I2C_QWRITE            [0x5d] <- 0x033f
+   512.053  I2C 0x00 W 0x2303 MIXER_CHB_VOL              = 0x3f
+   512.173  --- azx_pcm_trigger: [0:7] cmd=1
+   512.174  --- snd_hdac_stream_start: stream_tag: 1
+   518.166  COEF I2C_QWRITE            [0x5d] <- 0x0011
+   520.133  COEF I2C_QREAD             [0x5e] <- 0x2400
+   522.278  COEF I2C_QWRITE            [0x5d] <- 0x21a6
+   524.023  I2C 0x00 W 0x1121 HS_SWITCH_CTL              = 0xa6
+   524.154  COEF I2C_QWRITE            [0x5d] <- 0x2000
+   526.021  I2C 0x00 W 0x1120 HSDET_CTL2                 = 0x00
+   526.153  COEF I2C_QWRITE            [0x5d] <- 0x1f77
+   528.021  I2C 0x00 W 0x111f HSDET_CTL1                 = 0x77
+   528.150  COEF I2C_QWRITE            [0x5d] <- 0x001f
+   530.153  COEF I2C_QWRITE            [0x5d] <- 0x0602
+   532.017  I2C 0x00 W 0x1f06 DAC_CTL2                   = 0x02
+   532.132  COEF I2C_QWRITE            [0x5d] <- 0x0013
+   534.237  COEF I2C_QWRITE            [0x5d] <- 0x20f3
+   536.021  I2C 0x00 W 0x1320 TSRS_PLUG_INT_MASK         = 0xf3
+   536.091  2c SET_PIN_WIDGET_CONTROL         0x40 -> 0x00000000
+   559.741  COEF DEV_CFG1              [0x00] <- 0x9000
+  3512.299  --- azx_pcm_trigger: [0:7] cmd=0
+  3512.302  --- snd_hdac_stream_stop: stream_tag: 1
+  3513.188  COEF DEV_CFG1              [0x00] <- 0x9008
+  3513.489  COEF I2C_QWRITE            [0x5d] <- 0x0023
+  3516.471  COEF I2C_QWRITE            [0x5d] <- 0x013f
+  3518.977  I2C 0x00 W 0x2301 MIXER_CHA_VOL              = 0x3f
+  3519.221  COEF I2C_QWRITE            [0x5d] <- 0x033f
+  3520.884  I2C 0x00 W 0x2303 MIXER_CHB_VOL              = 0x3f
+  3521.064  --- azx_pcm_close: stream_tag: 1
+  3545.413  COEF DEV_CFG1              [0x00] <- 0x9000
+  4289.292  --- azx_pcm_trigger: [0:0] cmd=0
+  4289.301  --- snd_hdac_stream_stop: stream_tag: 1
+  4289.968  COEF DEV_CFG1              [0x00] <- 0x9008
+  4290.398  COEF I2C_QWRITE            [0x5d] <- 0x001d
+  4292.175  COEF I2C_QWRITE            [0x5d] <- 0x039f
+  4293.854  I2C 0x00 W 0x1d03 ADC_VOLUME                 = 0x9f
+  4294.092  --- azx_pcm_close: stream_tag: 1
+  4316.620  COEF DEV_CFG1              [0x00] <- 0x9000
+ 16793.673  01 SET_GPIO_UNSOLICITED_RSP_MASK  0x00 -> 0x00000000
+ 16793.919  01 SET_UNSOLICITED_ENABLE         0x00 -> 0x00000000
+ 16794.347  COEF DEV_CFG1              [0x00] <- 0x9008
+ 16794.797  COEF I2C_QWRITE            [0x5d] <- 0x001f
+ 16796.342  COEF I2C_QWRITE            [0x5d] <- 0x0602
+ 16798.195  I2C 0x00 W 0x1f06 DAC_CTL2                   = 0x02
+ 16798.321  COEF I2C_QWRITE            [0x5d] <- 0x0011
+ 16800.342  COEF I2C_QWRITE            [0x5d] <- 0x2900
+ 16802.207  I2C 0x00 W 0x1129 HS_CLAMP_DISABLE           = 0x00
+ 16802.341  COEF I2C_QWRITE            [0x5d] <- 0x0023
+ 16804.320  COEF I2C_QWRITE            [0x5d] <- 0x013f
+ 16806.231  I2C 0x00 W 0x2301 MIXER_CHA_VOL              = 0x3f
+ 16806.362  COEF I2C_QWRITE            [0x5d] <- 0x023f
+ 16808.186  I2C 0x00 W 0x2302 MIXER_ADC_VOL              = 0x3f
+ 16808.321  COEF I2C_QWRITE            [0x5d] <- 0x033f
+ 16810.206  I2C 0x00 W 0x2303 MIXER_CHB_VOL              = 0x3f
+ 16810.341  COEF I2C_QWRITE            [0x5d] <- 0x0020
+ 16812.320  COEF I2C_QWRITE            [0x5d] <- 0x010d
+ 16814.207  I2C 0x00 W 0x2001 HP_CTL                     = 0x0d
+ 16814.341  COEF I2C_QWRITE            [0x5d] <- 0x002a
+ 16816.320  COEF I2C_QWRITE            [0x5d] <- 0x0100
+ 16818.186  I2C 0x00 W 0x2a01 ASP_RX_DAI0_EN             = 0x00
+ 16818.320  COEF I2C_QWRITE            [0x5d] <- 0x0012
+ 16820.320  COEF I2C_QWRITE            [0x5d] <- 0x0700
+ 16822.186  I2C 0x00 W 0x1207 ASP_CLK_CFG                = 0x00
+ 16822.320  COEF I2C_QWRITE            [0x5d] <- 0x0011
+ 16824.320  COEF I2C_QWRITE            [0x5d] <- 0x01fe
+ 16826.206  I2C 0x00 W 0x1101 PWR_CTL1                   = 0xfe
+ 16826.341  COEF I2C_QWRITE            [0x5d] <- 0x028c
+ 16828.186  I2C 0x00 W 0x1102 PWR_CTL2                   = 0x8c
+ 16828.320  COEF I2C_QWRITE            [0x5d] <- 0x01ff
+ 16830.186  I2C 0x00 W 0x1101 PWR_CTL1                   = 0xff
+ 16832.188  COEF I2C_QWRITE            [0x5d] <- 0x0013
+ 16834.320  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16838.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16842.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16846.299  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16850.196  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16854.186  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16858.210  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16862.186  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16866.186  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16870.186  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16874.186  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16878.186  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16882.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16886.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16890.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16894.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16898.174  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16902.439  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16906.159  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16910.189  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16914.175  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16918.858  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16923.358  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16927.191  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16931.341  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16935.186  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16939.466  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16944.040  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16948.175  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16952.729  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16957.212  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16961.154  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16965.186  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16969.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16973.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16977.178  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16981.188  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16985.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16989.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16993.188  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 16997.175  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 17001.187  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 17005.188  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 17009.188  COEF I2C_QREAD             [0x5e] <- 0x0800
+ 17011.404  COEF I2C_QWRITE            [0x5d] <- 0x0011
+ 17013.341  COEF I2C_QWRITE            [0x5d] <- 0x029c
+ 17015.165  I2C 0x00 W 0x1102 PWR_CTL2                   = 0x9c
+ 17015.299  01 SET_GPIO_DATA                  0x13 -> 0x00000000
+ 17015.549  COEF DEV_CFG1              [0x00] <- 0x9000
+ 17015.612  24 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17015.675  25 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17015.737  26 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17015.799  27 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17015.862  28 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17015.925  29 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17015.987  2a SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.049  2b SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.112  2c SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.175  2d SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.237  2e SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.299  2f SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.362  30 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.424  31 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.487  32 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.549  33 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.612  34 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.674  35 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.737  36 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.799  37 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.862  38 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.925  39 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17016.987  3a SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.049  3b SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.112  3c SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.175  3d SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.237  3e SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.300  3f SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.362  40 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.424  41 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.487  42 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.550  43 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.612  44 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.674  45 SET_PIN_WIDGET_CONTROL         0x00 -> 0x00000000
+ 17017.737  22 SET_CHANNEL_STREAMID           0x00 -> 0x00000000   stream 0 channel 0
+ 17017.799  22 SET_STREAM_FORMAT              0x0000 -> 0x00000000   48000 Hz 8 bit 1 ch
+ 17017.987  22 SET_POWER_STATE                0x03 -> 0x00000000   D3
+ 17018.049  0a SET_CHANNEL_STREAMID           0x00 -> 0x00000000   stream 0 channel 0
+ 17018.112  0a SET_STREAM_FORMAT              0x0000 -> 0x00000000   48000 Hz 8 bit 1 ch
+ 17018.175  02 SET_CHANNEL_STREAMID           0x00 -> 0x00000000   stream 0 channel 0
+ 17018.237  02 SET_STREAM_FORMAT              0x0000 -> 0x00000000   48000 Hz 8 bit 1 ch
+ 17029.289  01 SET_POWER_STATE                0x03 -> 0x00000000   D3
+ 17029.367  22 SET_POWER_STATE                0x03 -> 0x00000000   D3
+ 17029.425  23 SET_POWER_STATE                0x03 -> 0x00000000   D3
