@@ -1028,15 +1028,192 @@ static volatile uint32_t gFbtH = 0, gFbtV = 0, gFbtDone = 0;
 // -ngreennoportmode; valor ajustável com ngreenportmode=N (0..4).
 static uint32_t gPortModeVal = 0;
 static volatile uint32_t gPortStubHits = 0;
-static uint32_t xePortModeStub(void *) {
+// xe (25/10) HDMI: campos do conector externo (DDI B / combo PHY) no Vostro 3520. O HDMI físico é TMDS nativo,
+// mas a tabela da Apple marca essa porta como DisplayPort (type 0x400, kind/pipe=1), então probePortState roda
+// AUX de DP que dá timeout infinito (log "runAUXCommand ddi=1 Time out"). getOSInformation ajusta o conector, mas
+// o kind efetivo da porta chega como DP mesmo assim; aqui, dentro do stub que já roda em probePortState
+// (slot 0x190, logo ANTES da checagem de kind em +0x8 do PortConfig), forçamos kind=TMDS na própria porta.
+static uint32_t gHdmiDdi = 1;   // ngreenhdmiddi  (índice DDI; 1 = DDI B)
+static uint32_t gHdmiBus = 2;   // ngreenhdmibus  (pino GMBUS; 2 = DDI B)
+static uint32_t gHdmiSig = 2;   // ngreenhdmisig  (kind: 1 = DP, 2 = HDMI/TMDS)
+static uint32_t gHdmiMode = 1;  // ngreenhdmimode (PortMode p/ a porta combo externa; 1 = DDI A/B combo)
+// ngreenhdmiflags (26/10): flags do conector externo (con1), o campo +0x14 de ConnectorEntry. É a ÚNICA entrada de
+// GetGPUCapability (@0x9fc48), que monta as máscaras que o displaypolicyd loga como portmap/mst/ddc/aux. Para cada
+// porta presente (bit idx = k+1), lá: bit0 (0x1) -> MST E AUX; bit3 (0x8) -> AUX; bit1 (0x2) -> DDC. O valor atual
+// 0x401 (= 0x1|0x400) acende bit0, então a porta externa aparece como DP/AUX SEM DDC (log "ddc 0x0"), o
+// displaypolicyd nunca lê o EDID por I2C e nunca atribui caminho ("FB1: Path has not been assigned"). Trocar para
+// 0x402 (bit1 só) dá ddc=1, aux=0, mst=0. Opt-in: só re-estampa con1 quando o arg foi dado; sem o arg o kext é
+// idêntico ao de hoje. Padrão 0x401 = o valor atual. Candidatos: 0x402 (DDC limpo), 0x6/0x82 (HDMI da Apple,
+// mesmas máscaras), 0x403 (DDC + MST/AUX). bits 2/7 não são testados por nenhum consumidor (verificado).
+static uint32_t gHdmiFlags = 0x401;  // ngreenhdmiflags (flags de con1; padrão = atual 0x1|0x400)
+static bool gHdmiFlagsGiven = false; // só re-estampa con1.flags quando o usuário passou o arg
+static volatile uint32_t gHdmiKindForced = 0;
+// Fase 1 (padrão 0 = desligado): neutraliza o AUX de DP só na porta HDMI (ddi gHdmiDdi), para testar se o caminho
+// de HDMI da própria Apple (getOnlineInfo kind==2 -> EDID por GMBUS -> LightUpTMDS) completa sem o AUX travando.
+// Só é INSTALADO quando ligado (ngreenhdmiaux=1 devolve "timeout" na hora; =2 devolve "sucesso"), então o kext
+// padrão continua idêntico ao que boota. Liga com ngreenhdmiaux=1|2 ou o flag -ngreenhdmiaux.
+static uint32_t gHdmiAuxKill = 0;
+static mach_vm_address_t gOrgRunAUX = 0;
+// Fase 2 (padrão 0 = desligado): quando o HDMI conecta (invokeHotplugHandler ddi==gHdmiDdi), chamamos
+// SetFbStatusOnNextProbe para marcar o framebuffer do con1 como "online no próximo probe" — o que faz o
+// WindowServer pedir o EDID (getOnlineInfo kind==2 por GMBUS) e ligar a tela via LightUpTMDS. Só é instalado
+// quando ligado (ngreenhdmitrig=1), então o kext padrão continua idêntico ao que boota.
+static uint32_t gHdmiTrigger = 0;   // ngreenhdmitrig
+static uint32_t gHdmiFbIndex = 1;   // ngreenhdmifb (índice do framebuffer do con1; padrão 1)
+static uint32_t gHdmiEdid = 0;      // ngreenhdmiedid: ler o EDID por GMBUS nós mesmos no hotplug (diagnóstico seguro)
+static uint32_t gHdmiPath = 0;      // ngreenhdmipath (reservado): a Fase 3 no hotplug travava (deadlock) e foi removida
+static uint32_t gHdmiProbe = 0;     // ngreenhdmiprobe (Fase 3-obs): observa connectionProbe do con0/con1 e publica no ioreg (seguro)
+static uint32_t gHdmiSink = 0;      // ngreenhdmisink (Fase 3): getDPSinkCount reporta 1 sink no con1 (faz a Apple "ver" o monitor)
+static uint32_t gHdmiLanes = 0;     // ngreenhdmilanes (WG BlackScreenFix): computeLaneCount devolve lanes validas p/ o con1 (HDMI)
+static uint32_t gHdmiOnline = 0;    // ngreenhdmionline (WG ForceOnlineDisplay): getAttributeForConnection 'enab' reporta con1 online
+// Candidato opt-in para o display 13 (padrão 0 = desligado): o pipe B do ADL-P mora em PW_B (XELPD_PW_CTL_IDX_PW_B
+// = 6 no i915: REQ bit 13, STATE bit 12, em HSW_PWR_WELL_CTL2 0x45404), não em PW_3 (idx 2: REQ bit 5, STATE bit 4)
+// como no Tiger Lake. O FB TGL da Apple (hwSetPowerWellStatePG) só mexe nos bits 0..7 de 0x45404 — pede PW_3, que no
+// ADL-P não liga nada do pipe B. A captura em docs/HDMI-TMDS.md confirma: 0x45404 off=0x0c0f on=0x3c0f (delta = bits
+// 12/13 = PW_B STATE+REQ). Quando ligado (ngreenhdmipw=1) E for display 13 (não-realTGL), espelhamos o pedido de PW_3
+// da Apple para PW_B com a sequência do i915 (set REQ, espera STATE, espera o fuse PG dist). Puramente ADITIVO.
+static uint32_t gHdmiPw = 0;        // ngreenhdmipw
+// ngreenhdmiddc (26/10): o teste F202 provou que ngreenhdmiflags=0x202 faz o displaypolicyd anunciar a HDMI com DDC
+// (portmap ddc 0x4) e TENTAR ler o EDID por DDC — mas a rotina da Apple AppleIntelBaseController::hwDoGMBusRequest
+// (@0x7b470) falha nesse pino ("EDID read 2.0 failed: GPU failed the command for block 0", ~3 s/tentativa, ~67
+// tentativas = as travadas do usuário), mesmo que o NOSSO leitor GMBUS (xeReadEdidGmbus) leia o mesmo pino 2 certo
+// (ngreen-edid header=1 vendor=GSM). Opt-in, default 0, SÓ no pino HDMI (gHdmiBus) e no display 13 (!getIsRealTGL):
+// embrulhamos hwDoGMBusRequest e servimos a LEITURA INDEXADA do bloco-base do EDID (a Apple emite um byte de offset 0
+// ao slave 0x50 e depois lê N<=128 bytes do slave 0x50) com o nosso leitor; qualquer payload de escrita real,
+// offset!=0, outro slave, leitura de extensão/segmento ou falha nossa cai no original sem mudança.
+static uint32_t gHdmiDdc = 0;       // ngreenhdmiddc
+// ngreenhdmiregs (27/10): snapshot READ-ONLY de um conjunto fixo de registradores do pipe B (power wells, fuse,
+// DPCLKA/PLL enables, DDI_BUF_CTL_B, TRANS_DDI_FUNC_CTL_B, TRANSCONF_B, PIPE_SRCSZ_B, combo PHY B) lido com
+// NGreen::readReg32 (BAR0) e publicado em ngreen-hdmiregs. Com ngreenhdmiflags=0x202 + ngreenhdmiddc o monitor LG
+// é DETECTADO (2 telas no system_profiler) mas a tela fica PRETA: o pipe B não liga por completo. Cada valor vivo é
+// comparado com a captura on/off do Linux em docs/HDMI-TMDS.md (verdito 1 char: '='=on, '.'=off, '?'=outro) para ver
+// em que estágio o bring-up parou. Opt-in, default 0 e SÓ no display 13 (!getIsRealTGL) — o kext padrão e o XPS 13
+// Plus ficam idênticos. READ-ONLY: só readReg32, nunca writeReg32.
+static uint32_t gHdmiRegs = 0;      // ngreenhdmiregs
+// ngreenhdmilight (27/10): acende APENAS a energia + o clock do pipe B (FASE 1 do light-up). Opt-in, default 0, só no
+// display 13 (!getIsRealTGL) e só quando o TRANSCONF_B (0x71008) está OFF (a Apple terminou e deixou o pipe B apagado
+// — não corremos contra ela). Sequência ordenada (PG2 -> PW_B -> DDI-B well -> ungate do clock da DDI-B em DPCLKA),
+// cada passo read-modify-write + espera limitada + read-back; aborta a cadeia em qualquer timeout de STATE. NÃO
+// habilita scanout (NADA de DDI_BUF/transcoder/pipe/plane/PHY-TX) — por isso não pode travar/apagar o pipe. O DPLL
+// (P2) FICA DE FORA: a leitura ao vivo do DPCLKA no macOS (0x164280=0x1e07801) mostra DDI-A (eDP interno) -> DPLL1 e
+// DDI-B (HDMI) -> DPLL0 (campo DDI_CLK_SEL: A em bits[1:0]=01, B em bits[3:2]=00), OPOSTO do Linux (on=0x7004: A->
+// DPLL0, B->DPLL1). Ou seja, no macOS o DPLL1 alimenta o PAINEL INTERNO; ligar/reprogramar o DPLL1 perturbaria o eDP.
+// Como não é possível provar o DPLL1 como "external-only", a Fase 1 NÃO mexe no DPLL (ver 92-IMPL-light.md). Limpar o
+// bit11 (P3) é seguro: só desbloqueia a entrada de clock da DDI-B, sem tocar no campo DDI_CLK_SEL (roteamento do eDP
+// intacto). Puramente ADITIVO; inerte sem o arg e no XPS 13 Plus; retenção one-way dos power wells documentada.
+static uint32_t gHdmiLight = 0;     // ngreenhdmilight
+static char gHdmiLightDiag[220] = {};
+static volatile UInt32 gHdmiLightHits = 0;
+// ngreenhdmimodeset (27/10 — FASE 2): o FB1 (HDMI) sempre cai no ramo "Partial modeset by updating plane" da Apple
+// (hwRegsNeedUpdate devolve false), então hwSetMode NUNCA alcança o despacho LightUp e o LightUpTMDS JAMAIS roda — o
+// pipe B fica apagado. =1 só DIAGNOSTICA (loga, no hook hwRegsNeedUpdate, o state do path 0x3644 e o TRANS_CONF_B do
+// FB1, sem mudar nada — 100% seguro). =2 FORÇA: devolve true no hook SÓ para o FB1 (fb->0x1dc == gHdmiFbIndex), em TGL
+// spoofado (!isRealTGL) e SÓ enquanto o transcoder está off (TRANS_CONF_B bit31 == 0), levando ao modeset completo ->
+// despacho por kind (TMDS, forçado pelo portmode) -> LightUpTMDS. Cap rígido (gHdmiModesetTries<12) evita tempestade de
+// modeset se o acendimento falhar. RISCO no =2: o LightUpTMDS chama enableClocks, que pode reprogramar o DPLL — e no
+// macOS o DPLL1 alimenta a tela INTERNA; pode piscar/apagar a interna (reversível reiniciando). Opt-in, default 0.
+static uint32_t gHdmiModeset = 0;          // ngreenhdmimodeset (1=diagnóstico, 2=força modeset completo no FB1)
+static volatile UInt32 gHdmiModesetTries = 0;
+static mach_vm_address_t gOrgHotplug = 0, gSetFbStatus = 0, gAllocDispRes = 0, gOrgConnProbe = 0, gOrgGetSink = 0;
+static mach_vm_address_t gOrgComputeLaneCount = 0, gOrgGetAttr = 0, gOrgHwGmbus = 0;
+// Fase 2 (instrumentação): rotas dos 3 LightUp* p/ ver qual o hwSetMode despacha quando o modeset é forçado.
+static mach_vm_address_t gOrgLightUpTMDS = 0, gOrgLightUpDP = 0, gOrgLightUpEDP = 0;
+static volatile UInt32 gLuTmds = 0, gLuDp = 0, gLuEdp = 0;
+// Diag do ngreenhdmiddc: contadores + último resultado, publicados em ngreen-hdmiddc por um site IOService.
+static char gHdmiDdcDiag[200] = {};
+static volatile UInt32 gHdmiDdcCalls = 0, gHdmiDdcServed = 0, gHdmiDdcPass = 0;
+static volatile UInt32 gHdmiDdcLastRes = 0;
+// PW_B (ngreenhdmipw): diagnóstico compartilhado entre xeEnablePwB (que preenche) e os sites de publicação
+// IOService (xeHotplugHook e getOSInformation). Definido aqui porque xeHotplugHook vem antes de xeEnablePwB.
+static char gHdmiPwDiag[200] = {};
+static volatile UInt32 gHdmiPwHits = 0;
+static volatile UInt32 gHdmiPwPending = 0;
+// ngreenhdmiregs (27/10): snapshot dos registradores do pipe B. Duas strings (pode passar de 900 chars numa só),
+// publicadas em ngreen-hdmiregs1/2. Contador de rate-limit (publica no máximo 16 vezes, mas sempre mantém a última).
+static char gHdmiRegsDiag1[460] = {};
+static char gHdmiRegsDiag2[460] = {};
+static volatile UInt32 gHdmiRegsHits = 0;
+static uint32_t xePortModeStub(void *that) {
 	uint32_t n = ++gPortStubHits;
 	if (n <= 16) SYSLOG("ngreen", "portmode: slot virtual puro de probePortState interceptado (hit #%u); devolvendo %u", n, gPortModeVal);
+	// Força a porta externa (DDI gHdmiDdi) a TMDS para que probePortState pule o caminho de DP/AUX.
+	if (that && !checkKernelArgument("-ngreennohdmikind")) {
+		auto *pc = *reinterpret_cast<uint8_t **>(reinterpret_cast<uint8_t *>(that) + 0x548); // PortConfig*
+		if (pc) {
+			uint32_t ddi  = *reinterpret_cast<uint32_t *>(pc + 0x0);
+			uint32_t kind = *reinterpret_cast<uint32_t *>(pc + 0x8);
+			if (ddi == gHdmiDdi && kind == 1 /* DP */ && gHdmiSig != 1) {
+				*reinterpret_cast<uint32_t *>(pc + 0x8) = gHdmiSig; // 2 = TMDS
+				uint32_t h = ++gHdmiKindForced;
+				if (h <= 8) SYSLOG("ngreen", "portmode: porta externa DDI %u DP->TMDS (kind=%u) em probePortState (hit #%u)", ddi, gHdmiSig, h);
+				return gHdmiMode; // PortMode da porta combo externa
+			}
+		}
+	}
 	return gPortModeVal;
+}
+// Stub de runAUXCommand (slot de vtable +0x188), instalado só quando gHdmiAuxKill != 0. Para a porta HDMI
+// (ddi == gHdmiDdi) devolve na hora, sem esperar o timeout de ~15 ms do hardware: =1 "timeout" (0x5d40023f),
+// =2 "sucesso" (0). Para o eDP (ddi 0) e qualquer outra porta, é repasse puro para o original.
+static uint32_t xeRunAUXStub(void *that, uint32_t cmd, void *p, uint32_t n, uint32_t b) {
+	if (gHdmiAuxKill && that) {
+		auto *pc = *reinterpret_cast<uint8_t **>(reinterpret_cast<uint8_t *>(that) + 0x548);
+		if (pc && *reinterpret_cast<uint32_t *>(pc + 0x0) == gHdmiDdi)
+			return gHdmiAuxKill == 2 ? 0u : 0x5d40023fu;
+	}
+	return FunctionCast(xeRunAUXStub, gOrgRunAUX)(that, cmd, p, n, b);
 }
 // Troca o slot 50 (byte 0x10 do header RTTI + 0x190) da vtable da classe pelo stub, na janela de carga do kext.
 static void patchPortModeVtable(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
 	PE_parse_boot_argn("ngreenportmode", &gPortModeVal, sizeof(gPortModeVal));
 	if (gPortModeVal > 4) gPortModeVal = 0;
+	// Campos do HDMI externo, compartilhados com getOSInformation e o stub (parse aqui pois roda na carga do kext,
+	// antes de probePortState). -ngreennohdmi reverte ao comportamento antigo (DP), útil para comparar.
+	if (checkKernelArgument("-ngreennohdmi")) { gHdmiBus = 1; gHdmiSig = 1; }
+	PE_parse_boot_argn("ngreenhdmiddi",  &gHdmiDdi,  sizeof(gHdmiDdi));
+	PE_parse_boot_argn("ngreenhdmibus",  &gHdmiBus,  sizeof(gHdmiBus));
+	PE_parse_boot_argn("ngreenhdmisig",  &gHdmiSig,  sizeof(gHdmiSig));
+	PE_parse_boot_argn("ngreenhdmimode", &gHdmiMode, sizeof(gHdmiMode));
+	// ngreenhdmiflags (26/10): valor (hex ou decimal), sem forma "-" como os irmãos acima. PE_parse_boot_argn
+	// devolve true quando o arg está presente; só então re-estampamos con1.flags (opt-in), senão o kext fica igual.
+	gHdmiFlagsGiven = PE_parse_boot_argn("ngreenhdmiflags", &gHdmiFlags, sizeof(gHdmiFlags));
+	PE_parse_boot_argn("ngreenhdmiaux",  &gHdmiAuxKill, sizeof(gHdmiAuxKill));
+	if (checkKernelArgument("-ngreenhdmiaux")) gHdmiAuxKill = 1;
+	PE_parse_boot_argn("ngreenhdmitrig", &gHdmiTrigger, sizeof(gHdmiTrigger));
+	if (checkKernelArgument("-ngreenhdmitrig")) gHdmiTrigger = 1;
+	PE_parse_boot_argn("ngreenhdmifb",   &gHdmiFbIndex, sizeof(gHdmiFbIndex));
+	PE_parse_boot_argn("ngreenhdmiedid", &gHdmiEdid, sizeof(gHdmiEdid));
+	if (checkKernelArgument("-ngreenhdmiedid")) gHdmiEdid = 1;
+	PE_parse_boot_argn("ngreenhdmipath", &gHdmiPath, sizeof(gHdmiPath));
+	if (checkKernelArgument("-ngreenhdmipath")) gHdmiPath = 1;
+	PE_parse_boot_argn("ngreenhdmiprobe", &gHdmiProbe, sizeof(gHdmiProbe));
+	if (checkKernelArgument("-ngreenhdmiprobe")) gHdmiProbe = 1;
+	PE_parse_boot_argn("ngreenhdmisink", &gHdmiSink, sizeof(gHdmiSink));
+	if (checkKernelArgument("-ngreenhdmisink")) gHdmiSink = 1;
+	// Fase 1 (26/10): ngreenhdmilanes e ngreenhdmionline eram declaradas e consumidas (xeComputeLaneCountStub /
+	// xeGetAttrStub), mas nunca eram lidas dos boot-args — ficavam 0 e as rotas em installHdmiTrigger (que já
+	// são independentes, uma por flag) nunca entravam. Parse idêntico aos irmãos: valor numérico ou o flag "-".
+	PE_parse_boot_argn("ngreenhdmilanes", &gHdmiLanes, sizeof(gHdmiLanes));
+	if (checkKernelArgument("-ngreenhdmilanes")) gHdmiLanes = 1;
+	PE_parse_boot_argn("ngreenhdmionline", &gHdmiOnline, sizeof(gHdmiOnline));
+	if (checkKernelArgument("-ngreenhdmionline")) gHdmiOnline = 1;
+	// ngreenhdmipw (26/10): espelha PW_3->PW_B no display 13. Opt-in, default 0. Mesma API/forma dos irmãos.
+	PE_parse_boot_argn("ngreenhdmipw", &gHdmiPw, sizeof(gHdmiPw));
+	if (checkKernelArgument("-ngreenhdmipw")) gHdmiPw = 1;
+	// ngreenhdmiddc (26/10): embrulha hwDoGMBusRequest p/ servir a leitura do EDID por DDC no pino HDMI. Opt-in,
+	// mesma forma dos irmãos (valor numérico ou flag "-"). Default 0 => kext idêntico ao que boota.
+	PE_parse_boot_argn("ngreenhdmiddc", &gHdmiDdc, sizeof(gHdmiDdc));
+	if (checkKernelArgument("-ngreenhdmiddc")) gHdmiDdc = 1;
+	// ngreenhdmiregs (27/10): snapshot read-only dos registradores do pipe B. Opt-in, mesma forma dos irmãos
+	// (valor numérico ou flag "-"). Default 0 => kext idêntico ao que boota (nenhuma leitura extra de MMIO).
+	PE_parse_boot_argn("ngreenhdmiregs", &gHdmiRegs, sizeof(gHdmiRegs));
+	if (checkKernelArgument("-ngreenhdmiregs")) gHdmiRegs = 1;
+	// ngreenhdmilight (27/10): FASE 1 do light-up do pipe B (energia + ungate do clock, SEM scanout). Opt-in, mesma
+	// forma dos irmãos (valor numérico ou flag "-"). Default 0 => kext idêntico ao que boota (nenhuma escrita).
+	PE_parse_boot_argn("ngreenhdmilight", &gHdmiLight, sizeof(gHdmiLight));
+	if (checkKernelArgument("-ngreenhdmilight")) gHdmiLight = 1;
+	// ngreenhdmimodeset (FASE 2): 1=diagnóstico (loga state/transconf do FB1 no hook), 2=força o modeset completo do FB1.
+	PE_parse_boot_argn("ngreenhdmimodeset", &gHdmiModeset, sizeof(gHdmiModeset));
 	static const char *vt[] = { "__ZTV17AppleIntelPortHAL", "__ZTV22AppleIntelPortHALDiags" };
 	for (auto *sym : vt) {
 		mach_vm_address_t v = patcher.solveSymbol(index, sym, address, size);
@@ -1049,9 +1226,707 @@ static void patchPortModeVtable(KernelPatcher &patcher, size_t index, mach_vm_ad
 		}
 		uintptr_t before = *slot;
 		*slot = reinterpret_cast<uintptr_t>(xePortModeStub);
+		if (gHdmiAuxKill) {
+			auto *slotAux = reinterpret_cast<uintptr_t *>(v + 0x10 + 0x188);
+			if (!gOrgRunAUX) gOrgRunAUX = *slotAux;
+			*slotAux = reinterpret_cast<uintptr_t>(xeRunAUXStub);
+		}
 		MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-		SYSLOG("ngreen", "portmode: %s slot 50 0x%llx -> stub (devolve %u)", sym, (unsigned long long)before, gPortModeVal);
+		SYSLOG("ngreen", "portmode: %s slot 50 0x%llx -> stub (devolve %u); hdmiauxkill=%u", sym, (unsigned long long)before, gPortModeVal, gHdmiAuxKill);
 	}
+	// Resumo dos flags de HDMI lidos na carga (enabled). A coluna "route" (instalada/não) sai no log de
+	// installHdmiTrigger; aqui só dizemos o estado parseado de cada flag — inclusive os dois que a Fase 1
+	// passou a ler (lanes/online) e o candidato de energia (pw), que não tem rota (age no handler de power well).
+	SYSLOG("ngreen", "hdmiargs: trig=%u edid=%u probe=%u sink=%u lanes=%u online=%u pw=%u ddc=%u regs=%u light=%u (aux=%u, ddi=%u, flags=0x%x%s)",
+		   gHdmiTrigger, gHdmiEdid, gHdmiProbe, gHdmiSink, gHdmiLanes, gHdmiOnline, gHdmiPw, gHdmiDdc, gHdmiRegs, gHdmiLight, gHdmiAuxKill, gHdmiDdi,
+		   gHdmiFlags, gHdmiFlagsGiven ? "" : " padrao");
+}
+
+// xe (25/10) fblog: ponte de log do framebuffer da Apple (IGFB) para o dmesg. O FB gera logs de debug detalhados
+// (PORT/DISPLAY/LINK_TRAINING em nível 31, aplicados por initializeLogging a partir do dicionário "Debug"), mas o
+// listener deles não grava no buffer do kernel: só as linhas ERROR aparecem no dmesg. Todos os logs passam por
+// IntelLogBroadcastToListeners(module, header, str, len) (prólogo só push/mov, seguro p/ trampolim). Roteamos essa
+// função e repetimos no IOLog as linhas não-ERROR dos módulos escolhidos, com balde de tokens (não inunda o msgbuf).
+// Layout do IntelLogHeader (de IntelLogBuildHeader): +0x0 magic 'BFGI', +0x24 nível, +0x28 módulo, +0x38 linha,
+// +0x40 nome da função. Ligado por padrão enquanto depuramos o HDMI; desliga com -ngreennofblog; máscara de módulos
+// com ngreenfblog=0x... (bit = índice do módulo; padrão DEFAULT|AUX|BRINGUP|DISPLAY|LINK_TRAINING|PORT|POWER_WELL).
+// Com a ponte ativa, os logs repetitivos do NootedGreen no caminho de render (V130/V194/V212/V501/V508/V509/V98T)
+// ficam quietos (gNgQuiet) para não empurrar o boot para fora do buffer; -ngreennoquiet os mantém.
+static bool gNgQuiet = false;
+#define NGQ_SYSLOG(...) do { if (!gNgQuiet) SYSLOG(__VA_ARGS__); } while (0)
+static mach_vm_address_t gOrgFbLogBcast = 0;
+static mach_vm_address_t gFbLogBase = 0, gFbLogEnd = 0;   // faixa do kext do FB (valida ponteiros do header)
+static uint32_t gFbLogMask = 0x120259;
+static volatile SInt32 gFbLogTokens = 6000;               // rajada inicial (boot)
+static volatile UInt32 gFbLogDrops = 0;
+static volatile uint64_t gFbLogLastSec = 0;
+static const char *const kFbLogMod[28] = {
+	"DEFAULT", "ASMF", "AUUC", "AUX", "BRINGUP", "DIAGS", "DISPLAY", "DSC", "HDCP", "LINK_TRAINING", "MEI",
+	"MEI_VERBOSE", "METRICS", "MMIO", "PANEL", "PAVP", "PLANE", "PORT", "POWER", "POWER_VERBOSE", "POWER_WELL",
+	"POWER_WELL_VERBOSE", "SCALER", "SIM", "SYSCTL", "TRANSACTION", "VRR", "Invalid"};
+
+static inline bool fbLogInKext(const void *p) {
+	auto a = reinterpret_cast<mach_vm_address_t>(p);
+	return a >= gFbLogBase && a < gFbLogEnd;
+}
+
+static volatile UInt32 gFbLogEmitted = 0;
+static bool gFbLogInstalled = false;
+static void xeFbLogBcast(uint32_t module, const uint8_t *hdr, const char *str, unsigned long len) {
+	if (str && hdr && module < 27 && (gFbLogMask & (1u << module)) &&
+		*reinterpret_cast<const uint32_t *>(hdr + 0x0) == 0x49474642) {
+		{
+			// Reabastece 200 linhas/s (até 8000): o bring-up de uma reconexão cabe mesmo depois do boot.
+			uint64_t ns = 0;
+			absolutetime_to_nanoseconds(mach_absolute_time(), &ns);
+			uint64_t sec = ns / 1000000000ULL, last = gFbLogLastSec;
+			if (sec > last) {
+				gFbLogLastSec = sec;
+				if (last) {
+					uint64_t add = (sec - last) * 200;
+					SInt32 cur = gFbLogTokens;
+					SInt32 room = cur < 8000 ? 8000 - cur : 0;
+					if (add > (uint64_t)room) add = room;
+					if (add) OSAddAtomic((SInt32)add, &gFbLogTokens);
+				}
+			}
+			if (OSAddAtomic(-1, &gFbLogTokens) > 0) {
+				const char *func = *reinterpret_cast<const char *const *>(hdr + 0x40);
+				uint32_t line = *reinterpret_cast<const uint32_t *>(hdr + 0x38);
+				size_t n = len;
+				if (!n) { while (n < 480 && str[n]) n++; }
+				if (n > 480) n = 480;
+				while (n > 0 && (str[n - 1] == '\n' || str[n - 1] == '\r' || str[n - 1] == ' ')) n--;
+				OSIncrementAtomic(&gFbLogEmitted);
+				IOLog("XeFB[%s] %s:%u %.*s\n", kFbLogMod[module], fbLogInKext(func) ? func : "?", line, (int)n, str);
+			} else {
+				OSAddAtomic(1, &gFbLogTokens);
+				UInt32 d = OSIncrementAtomic(&gFbLogDrops);
+				if ((d & 1023) == 0) IOLog("XeFB: limite de taxa, %u linhas descartadas ate agora\n", d + 1);
+			}
+		}
+	}
+	FunctionCast(xeFbLogBcast, gOrgFbLogBcast)(module, hdr, str, len);
+}
+
+static mach_vm_address_t gOrgGetDPCDInfo = 0;
+static volatile UInt32 gDpcdHits = 0;
+static uint32_t xeGetDPCDInfo(void *that) {
+	if (that) {
+		auto *pc = *reinterpret_cast<uint8_t **>(reinterpret_cast<uint8_t *>(that) + 0x548);
+		if (pc) {
+			uint32_t ddi = *reinterpret_cast<uint32_t *>(pc + 0x0), kind = *reinterpret_cast<uint32_t *>(pc + 0x8);
+			UInt32 h = OSIncrementAtomic(&gDpcdHits);
+			if (h < 24) IOLog("XeAUX getDPCDInfo ddi=%u kind=%u (AUX de DP no caminho de online)\n", ddi, kind);
+		}
+	}
+	return FunctionCast(xeGetDPCDInfo, gOrgGetDPCDInfo)(that);
+}
+
+// Fase 3 (raiz): getDPSinkCount lê o SINK_COUNT do DPCD por AUX (conceito de DisplayPort). Num HDMI/TMDS nativo
+// não há DPCD, então ela devolve "erro de AUX" e o invokeHotplugHandler conclui sinkCount=0 -> "desconectado" ->
+// sem path -> SetFbStatusOnNextProbe falha. Aqui, SÓ para o con1 (PortConfig+0x0 == gHdmiDdi), devolvemos 0
+// (AUX "ok") e *out=1 (1 sink). Isso faz o invokeHotplugHandler pegar o caminho "sink presente" (FB 0xb0a51),
+// disparar a notificação connection-changed (*0x148) e deixar a máquina da Apple (AGDC/WindowServer) criar o path
+// e acender no contexto dela. NÃO chamamos nada da pilha de display — é só um valor de retorno, não trava.
+static volatile UInt32 gSinkHits = 0;
+static char gSinkDiag[96];
+static uint32_t xeGetSinkCountStub(void *port, uint8_t *out) {
+	if (gHdmiSink && port) {
+		auto *pc = *reinterpret_cast<uint8_t **>(reinterpret_cast<uint8_t *>(port) + 0x548);
+		if (pc && *reinterpret_cast<uint32_t *>(pc + 0x0) == gHdmiDdi) {
+			if (out) *out = 1;                 // 1 sink presente (confirmado pelo nosso EDID por GMBUS)
+			UInt32 h = OSIncrementAtomic(&gSinkHits);
+			if (h < 16) IOLog("XeHDMI sink ddi=%u -> ret=0 count=1 (forcado)\n", gHdmiDdi);
+			snprintf(gSinkDiag, sizeof(gSinkDiag), "ddi=%u overrides=%u", gHdmiDdi, (unsigned)(h + 1));
+			return 0;                          // 0 = readAUX "sucesso" -> caminho do sink presente
+		}
+	}
+	return FunctionCast(xeGetSinkCountStub, gOrgGetSink)(port, out);
+}
+
+// Fase 2 (instrumentação): os logs de entrada nativos do LightUpTMDS/DP/EDP são nível INFO, suprimidos por
+// IGLogDISPLAY=7. Aqui logamos via SYSLOG (dmesg, sem gating de nível) a ENTRADA e a SAÍDA de cada um — só
+// observam, chamam o original sem alterar nada. Objetivo: ver qual LightUp o hwSetMode despacha para o FB1
+// quando o modeset é forçado (modeset=2). Roteados só quando gHdmiModeset.
+static uint32_t xeLightUpTMDS(void *that, void *fb, void *path, const void *t) {
+	uint32_t idx = fb ? getMember<uint32_t>(fb, 0x1dc) : 0xffffu;
+	UInt32 n = OSIncrementAtomic(&gLuTmds);
+	if (n < 24) SYSLOG("ngreen", "XeLightUp: TMDS enter fb=%u (hit #%u)", idx, (unsigned)(n + 1));
+	uint32_t r = FunctionCast(xeLightUpTMDS, gOrgLightUpTMDS)(that, fb, path, t);
+	if (n < 24) SYSLOG("ngreen", "XeLightUp: TMDS exit  fb=%u ret=0x%x", idx, r);
+	return r;
+}
+static uint32_t xeLightUpDP(void *that, void *fb, void *path, const void *t) {
+	uint32_t idx = fb ? getMember<uint32_t>(fb, 0x1dc) : 0xffffu;
+	UInt32 n = OSIncrementAtomic(&gLuDp);
+	if (n < 24) SYSLOG("ngreen", "XeLightUp: DP   enter fb=%u (hit #%u)", idx, (unsigned)(n + 1));
+	uint32_t r = FunctionCast(xeLightUpDP, gOrgLightUpDP)(that, fb, path, t);
+	if (n < 24) SYSLOG("ngreen", "XeLightUp: DP   exit  fb=%u ret=0x%x", idx, r);
+	return r;
+}
+static uint32_t xeLightUpEDP(void *that, void *fb, void *path, const void *t) {
+	uint32_t idx = fb ? getMember<uint32_t>(fb, 0x1dc) : 0xffffu;
+	UInt32 n = OSIncrementAtomic(&gLuEdp);
+	if (n < 8) SYSLOG("ngreen", "XeLightUp: EDP  enter fb=%u (hit #%u)", idx, (unsigned)(n + 1));
+	uint32_t r = FunctionCast(xeLightUpEDP, gOrgLightUpEDP)(that, fb, path, t);
+	if (n < 8) SYSLOG("ngreen", "XeLightUp: EDP  exit  fb=%u ret=0x%x", idx, r);
+	return r;
+}
+
+// WG BlackScreenFix: AppleIntelPort::computeLaneCount faz switch em link rates de DisplayPort (0x6/0xa/0xc/0x14/0x1e)
+// e, num HDMI (sem rate DP), cai fora deixando *out=0 e retornando false -> validateDetailedTiming (0x45a8e/0x463b7)
+// rejeita todo modo (tela preta). Aqui, SÓ para o con1 (PortConfig+0x0 == gHdmiDdi), se o original devolver 0 lanes,
+// devolvemos 4 (lanes válidas) e sucesso, pra Apple aceitar o modo HDMI. Idêntico em espírito ao wrapComputeLaneCount do WG.
+static volatile UInt32 gLaneHits = 0;
+static bool xeComputeLaneCountStub(void *port, void *timing, uint32_t bpp, uint32_t rate, uint32_t *out) {
+	bool r = FunctionCast(xeComputeLaneCountStub, gOrgComputeLaneCount)(port, timing, bpp, rate, out);
+	if (gHdmiLanes && port && out) {
+		auto *pc = *reinterpret_cast<uint8_t **>(reinterpret_cast<uint8_t *>(port) + 0x548);
+		if (pc && *reinterpret_cast<uint32_t *>(pc + 0x0) == gHdmiDdi && (!r || *out == 0)) {
+			*out = 4;
+			UInt32 h = OSIncrementAtomic(&gLaneHits);
+			if (h < 16) IOLog("XeHDMI lanes ddi=%u rate=0x%x -> 4 (era r=%d out=%u)\n", gHdmiDdi, rate, (int)r, *out);
+			return true;
+		}
+	}
+	return r;
+}
+
+// WG ForceOnlineDisplay: getAttributeForConnection(idx, attr, *value) é o que o SO/WindowServer consulta. No atributo
+// 'enab' (0x656e6162) a Apple devolve fb->0x1e0 (flag online). Aqui, SÓ para o con1 (fb->0x1dc == gHdmiFbIndex),
+// respondemos online=1 nessa consulta — quebrando a dependência circular (o SO passa a configurar o con1, alocando
+// path no contexto dele, sem deadlock). Idêntico em espírito ao wrapGetDisplayStatus do WG.
+static volatile UInt32 gOnlineHits = 0;
+static uint32_t xeGetAttrStub(void *fb, int idx, int attr, unsigned long *value) {
+	uint32_t r = FunctionCast(xeGetAttrStub, gOrgGetAttr)(fb, idx, attr, value);
+	if (gHdmiOnline && fb && value && static_cast<uint32_t>(attr) == 0x656e6162u) {   // 'enab'
+		uint32_t fbidx = *reinterpret_cast<uint32_t *>(reinterpret_cast<uint8_t *>(fb) + 0x1dc);
+		if (fbidx == gHdmiFbIndex) {
+			*value = 1;
+			UInt32 h = OSIncrementAtomic(&gOnlineHits);
+			if (h < 16) IOLog("XeHDMI online fb=%u 'enab' -> 1 (era ret=0x%x)\n", fbidx, r);
+			return 0; // kIOReturnSuccess
+		}
+	}
+	return r;
+}
+
+// Fase 2: gancho do invokeHotplugHandler(controller, ddi, portMode). Depois do original, se for a porta HDMI,
+// marca o framebuffer do con1 como online no próximo probe, disparando a leitura de EDID + LightUpTMDS da Apple.
+// GMBUS (PCH) — lê o EDID do monitor por I2C, com nosso próprio código (NGreen readReg32/writeReg32 = BAR0).
+// Só faz transação I2C no pino DDC; NÃO mexe em pipe/plane/PLL. Offsets confirmados na captura do i915 (base 0xc5100).
+// Base da implementação: sequência gmbus_xfer do i915 (escreve offset 0 no slave 0x50, depois lê o bloco 0).
+static bool xeGmbusWait(uint32_t wantBit, int maxUs) {
+	for (int us = 0; us <= maxUs; us += 10) {
+		uint32_t s = NGreen::callback->readReg32(0xc5108);   // GMBUS2
+		if (s & 0x400) return false;                         // GMBUS_SATOER (NAK do slave)
+		if (s & wantBit) return true;                        // ex.: GMBUS_HW_RDY (0x800)
+		IODelay(10);
+	}
+	return false;
+}
+static char gEdidDiag[120];
+static char gPathDiag[160];
+static char gProbe0[96], gProbe1[112];
+static bool xeReadEdidGmbus(uint32_t pin, uint8_t *buf, uint32_t len) {
+	auto wr = [](uint32_t r, uint32_t v) { NGreen::callback->writeReg32(r, v); };
+	auto rd = [](uint32_t r) { return NGreen::callback->readReg32(r); };
+	wr(0xc5110, 0);                            // GMBUS4: sem interrupção (vamos pollar)
+	wr(0xc5104, 0x80000000);                   // GMBUS1: SW_CLR_INT (limpa estado preso)
+	wr(0xc5104, 0);
+	wr(0xc5100, (pin & 0xf));                  // GMBUS0: 100kHz | pino DDC (2 = DDI B)
+	uint32_t g0rb = rd(0xc5100);               // readback (se != pino, escrita não chega)
+	uint32_t st0  = rd(0xc5108);               // GMBUS2 inicial
+	// i915 gmbus_xfer_index_read: UMA transação. offset (0) embutido em [15:8], CYCLE_INDEX|CYCLE_WAIT,
+	// ler len bytes do slave 0x50. Evita o HW_RDY "pendurado" da sequência de duas fases.
+	uint32_t cmd = (1u << 30)            // GMBUS_SW_RDY
+	             | (2u << 25) | (1u << 25) // GMBUS_CYCLE_INDEX | GMBUS_CYCLE_WAIT
+	             | (0u << 8)             // índice/offset = 0
+	             | (len << 16)           // byte count
+	             | (0x50u << 1) | 1u;    // slave 0x50, READ
+	wr(0xc5104, cmd);
+	uint32_t st1 = 0; bool okall = true;
+	for (uint32_t i = 0; i < len; i += 4) {
+		if (!xeGmbusWait(0x800, 50000)) { st1 = rd(0xc5108); okall = false; break; }
+		uint32_t v = rd(0xc510c);
+		for (uint32_t b = 0; b < 4 && i + b < len; b++) buf[i + b] = (v >> (8 * b)) & 0xff;
+	}
+	if (okall) st1 = rd(0xc5108);
+	snprintf(gEdidDiag, sizeof(gEdidDiag), "g0rb=0x%x st0=0x%x st1=0x%x", g0rb, st0, st1);
+	wr(0xc5104, (1u << 30) | (4u << 25)); // GMBUS1: SW_RDY | CYCLE_STOP (finaliza)
+	xeGmbusWait(0x100, 10000);            // espera breve o INUSE/WAIT baixar
+	wr(0xc5100, 0);                       // libera o GMBUS
+	return okall;
+}
+// ngreenhdmiregs (27/10): snapshot READ-ONLY do pipe B. Tabela fixa de registradores com os valores on/off da
+// captura Linux em docs/HDMI-TMDS.md (apagado -> aceso). Lê cada um com NGreen::readReg32 (BAR0, sem efeito) e
+// monta `nome=vivo` + 1 char de verdito: '='=igual ao on, '.'=igual ao off, '?'=outro valor. 0x42000 (SKL_FUSE)
+// não está na captura (não tem on/off): sempre verdito '?', só o valor vivo (marcado UNVERIFIED nos docs). Sem
+// loops além da tabela estática; nunca writeReg32. Gate no chamador: só quando gHdmiRegs E !getIsRealTGL.
+struct XeHdmiRegEntry { uint32_t off; uint32_t vOff; uint32_t vOn; const char *name; };
+static const XeHdmiRegEntry kXeHdmiRegs[] = {
+	// power / fuse
+	{ 0x45400, 0x00000405, 0x00001405, "PWCTL1"  },  // HSW_PWR_WELL_CTL1
+	{ 0x45404, 0x00000c0f, 0x00003c0f, "PWCTL2"  },  // HSW_PWR_WELL_CTL2 (PW_B bits 12/13)
+	{ 0x45454, 0x00000003, 0x0000000f, "PWDDI2"  },  // PWR_WELL_CTL_DDI2
+	{ 0x42000, 0x00000000, 0x00000000, "FUSE?"   },  // SKL_FUSE_STATUS (sem captura -> '?' sempre)
+	{ 0x45254, 0x00000000, 0x00000001, "PDMCB"   },  // _PIPEDMC_CONTROL_B
+	// clock / PLL
+	{ 0x164280, 0x01e07804, 0x01e07004, "DPCLKA" },  // DPCLKA_CFGCR0
+	{ 0x164e80, 0x01e07804, 0x01e07004, "DPCLKM" },  // DPCLKA_CFGCR0 (mirror)
+	{ 0x46014,  0x00000000, 0xcc000000, "DPLL1"  },  // _DPLL1_ENABLE (ngreenhdmilight P2 observável; não é escrito)
+	{ 0x46000,  0x00780164, 0x0038017e, "CDCLK"  },  // CDCLK_CTL
+	{ 0x46070,  0xc000000e, 0xc000000a, "DEPLL"  },  // BXT_DE_PLL_ENABLE
+	{ 0x46144,  0x00000000, 0x20000000, "TCLKSB" },  // TRANS_CLK_SEL_B
+	// DDI / transcoder / pipe B
+	{ 0x64100,  0x00000080, 0x80000000, "DBUFB"  },  // DDI_BUF_CTL_B
+	{ 0x61400,  0x00030000, 0x90030000, "TDFCB"  },  // TRANS_DDI_FUNC_CTL_B
+	{ 0x71008,  0x00000000, 0xc0000000, "TCONFB" },  // TRANS_CONF_B
+	{ 0x6101c,  0x00000000, 0x077f0437, "SRCSZB" },  // PIPE_SRCSZ_B (transcoder B timing)
+	// combo PHY B
+	{ 0x6c00c,  0x2f770ff0, 0xef770ff0, "PHYB"   },  // Combo PHY B comp
+};
+static void xeDumpHdmiRegs(IOService *that) {
+	if (!gHdmiRegs || NGreen::callback->getIsRealTGL() || !that) return;
+	// Monta duas metades para caber bem abaixo de ~900 chars por chave (cada entrada ~22 chars).
+	size_t n = sizeof(kXeHdmiRegs) / sizeof(kXeHdmiRegs[0]);
+	size_t half = (n + 1) / 2;
+	int p1 = 0, p2 = 0;
+	for (size_t i = 0; i < n; i++) {
+		const XeHdmiRegEntry &e = kXeHdmiRegs[i];
+		uint32_t live = NGreen::callback->readReg32(e.off);   // READ-ONLY
+		char verdict = '?';
+		if (e.off != 0x42000) {                               // 0x42000 sem captura -> sempre '?'
+			if (live == e.vOn) verdict = '=';
+			else if (live == e.vOff) verdict = '.';
+		}
+		char *dst = (i < half) ? gHdmiRegsDiag1 : gHdmiRegsDiag2;
+		int   *pp = (i < half) ? &p1 : &p2;
+		int sz = (int)((i < half) ? sizeof(gHdmiRegsDiag1) : sizeof(gHdmiRegsDiag2));
+		if (*pp < sz - 1)
+			*pp += snprintf(dst + *pp, sz - *pp, "%s@%x=%x%c ", e.name, e.off, live, verdict);
+	}
+	UInt32 h = OSIncrementAtomic(&gHdmiRegsHits);
+	if (h < 16) {
+		IOLog("XeHDMI regs1 %s| regs2 %s\n", gHdmiRegsDiag1, gHdmiRegsDiag2);
+		that->setProperty("ngreen-hdmiregs1", gHdmiRegsDiag1);
+		that->setProperty("ngreen-hdmiregs2", gHdmiRegsDiag2);
+	}
+}
+static volatile UInt32 gTrigHits = 0;
+// F2 (iter 3, B1): xeEnablePwB é definida bem abaixo (junto do handler de power well). Declaramos aqui para poder
+// disparar PW_B também no hotplug do conector HDMI. CORREÇÃO da iter 2: o espelho do handler NÃO é "indecidível" —
+// overridePowerWellsState(bool) @0x89722 tem 6 chamadores estáticos (E8, confirmado por capstone + llvm-objdump),
+// e dois passam bool=true: AppleIntelPowerWell::init @0x8817a (bring-up do GPU) e restorePowerWellsState @0x8c12e.
+// A ramificação true chama hwSetPowerWellStatePG(1, 0xaa) @0x89970 (bit5 = PW_3 REQ), então o espelho JÁ dispara no
+// init, em todo boot do display 13. O gatilho de hotplug é um EXTRA inofensivo (requisição redundante, mesmo PW_B),
+// mantido para (a) garantir PW_B no hotplug mesmo que o init não tenha corrido o override e (b) publicar ngreen-hdmipw.
+static bool xeEnablePwB(AppleIntel::AppleIntelBaseController *that, bool enable);
+// ngreenhdmilight (27/10) — FASE 1 do light-up do pipe B: SÓ energia + ungate do clock da DDI-B. NÃO HABILITA
+// SCANOUT (nada de DDI_BUF/transcoder/pipe/plane/PHY-TX). RMW só nos bits nomeados; esperas limitadas; aborta a
+// cadeia em qualquer timeout de STATE; read-back em cada passo. O DPLL (P2) fica de FORA porque a leitura ao vivo
+// do DPCLKA no macOS (0x164280=0x1e07801) prova que o DPLL1 alimenta o DDI-A/eDP INTERNO (DDI_CLK_SEL de A em
+// bits[1:0]=01=PLL1; B em bits[3:2]=00=PLL0), oposto ao Linux — logo o DPLL1 NÃO é external-only aqui e mexer nele
+// perturbaria o painel interno (ver 92-IMPL-light.md). Limpar o bit11 (P3) só desbloqueia a entrada de clock da
+// DDI-B e NÃO toca no campo DDI_CLK_SEL (roteamento do eDP intacto). Só chamada do xeHotplugHook com o gating
+// completo (gHdmiLight, !realTGL, ddi==gHdmiDdi, APÓS o original, TRANSCONF_B==0). Só NGreen::readReg32/writeReg32.
+static void xeHdmiLightUp(IOService *svc) {
+	// Registradores/bits — verificados em i915 + captura (docs/HDMI-TMDS.md), citados em 92-IMPL-light.md.
+	constexpr uint32_t PWCTL2   = 0x45404;   // HSW_PWR_WELL_CTL2
+	constexpr uint32_t PWDDI2   = 0x45454;   // PWR_WELL_CTL_DDI2
+	constexpr uint32_t DPCLKA   = 0x164280;  // ICL_DPCLKA_CFGCR0
+	constexpr uint32_t DPCLKA_M = 0x164e80;  // DPCLKA_CFGCR0 (espelho)
+	constexpr uint32_t TRANSCONF_B = 0x71008;
+	// PG2/PW2 = índice de domínio 1 -> REQ bit3 / STATE bit2 (2<<(2*1) / 1<<(2*1)).
+	constexpr uint32_t PG2_REQ   = (0x2u << (2 * 1));   // bit3
+	constexpr uint32_t PG2_STATE = (0x1u << (2 * 1));   // bit2
+	// PW_B = índice XELPD 6 -> REQ bit13 / STATE bit12.
+	constexpr uint32_t PWB_REQ   = (0x2u << (2 * 6));   // bit13
+	constexpr uint32_t PWB_STATE = (0x1u << (2 * 6));   // bit12
+	// DDI-B well (0x45454) = índice 1 -> REQ bit3 / STATE bit2 (WhateverXe power.hpp request/enabled).
+	constexpr uint32_t DDIB_REQ   = (0x2u << (2 * 1));  // bit3
+	constexpr uint32_t DDIB_STATE = (0x1u << (2 * 1));  // bit2
+	// DPCLKA bit de clock-off da PHY_B = ICL_DPCLKA_CFGCR0_DDI_CLK_OFF(PHY_B) = bit11 (intel_display_regs.h:2872).
+	constexpr uint32_t PHYB_CLK_OFF = (1u << 11);       // 0x800
+
+	auto rd = [](uint32_t r) { return NGreen::callback->readReg32(r); };
+	auto wr = [](uint32_t r, uint32_t v) { NGreen::callback->writeReg32(r, v); };
+	// Espera limitada por um bit subir em `reg` (passo 10us, orçamento i915 ~1ms/well; usamos 2ms de folga).
+	auto waitSet = [&](uint32_t reg, uint32_t bit, int maxUs) -> bool {
+		for (int us = 0; us <= maxUs; us += 10) {
+			if (rd(reg) & bit) return true;
+			IODelay(10);
+		}
+		return false;
+	};
+
+	// Gate final: TRANSCONF_B OFF (a Apple terminou e deixou o pipe B apagado; não corremos contra ela).
+	uint32_t tconf = rd(TRANSCONF_B);
+	if (tconf != 0) {
+		snprintf(gHdmiLightDiag, sizeof(gHdmiLightDiag), "skip: TRANSCONF_B=0x%x (Apple drove pipe B)", tconf);
+		if (OSIncrementAtomic(&gHdmiLightHits) < 16) IOLog("XeHDMI light %s\n", gHdmiLightDiag);
+		if (svc) svc->setProperty("ngreen-hdmilight", gHdmiLightDiag);
+		return;
+	}
+
+	uint32_t c2b = rd(PWCTL2), ddib = rd(PWDDI2), dca = rd(DPCLKA), dcam = rd(DPCLKA_M);
+	bool pg2Ok = false, pwbOk = false, ddiOk = false;
+
+	// 1) PG2/PW2: RMW set bit3 -> espera STATE bit2 (<=2ms). Timeout -> aborta (não cascateia p/ PW_B).
+	if (!(c2b & PG2_REQ)) wr(PWCTL2, c2b | PG2_REQ);
+	pg2Ok = waitSet(PWCTL2, PG2_STATE, 2000);
+
+	// 2) PW_B: só se PG2 subiu. RMW set bit13 -> espera STATE bit12 (<=2ms).
+	if (pg2Ok) {
+		uint32_t c2 = rd(PWCTL2);
+		if (!(c2 & PWB_REQ)) wr(PWCTL2, c2 | PWB_REQ);
+		pwbOk = waitSet(PWCTL2, PWB_STATE, 2000);
+	}
+
+	// 3) DDI-B well: só se PW_B subiu. RMW set bit3 em 0x45454 -> espera STATE bit2 (<=2ms).
+	if (pwbOk) {
+		if (!(ddib & DDIB_REQ)) wr(PWDDI2, ddib | DDIB_REQ);
+		ddiOk = waitSet(PWDDI2, DDIB_STATE, 2000);
+	}
+
+	// 4) DPCLKA ungate: só se a cadeia de energia completou. RMW CLEAR bit11 em 0x164280 + espelho 0x164e80.
+	bool dpclkaDone = false;
+	if (ddiOk) {
+		if (dca & PHYB_CLK_OFF)  wr(DPCLKA,   dca  & ~PHYB_CLK_OFF);
+		if (dcam & PHYB_CLK_OFF) wr(DPCLKA_M, dcam & ~PHYB_CLK_OFF);
+		dpclkaDone = true;
+	}
+	// (P2 DPLL1 propositalmente omitido — DPLL1 alimenta o eDP interno no macOS; ver cabeçalho e 92-IMPL-light.md.)
+
+	uint32_t c2a = rd(PWCTL2), ddia = rd(PWDDI2), dcaa = rd(DPCLKA), dcama = rd(DPCLKA_M);
+	snprintf(gHdmiLightDiag, sizeof(gHdmiLightDiag),
+			 "P1 pg2=%d pwb=%d ddi=%d dpclka=%d | 45404:0x%x->0x%x 45454:0x%x->0x%x 164280:0x%x->0x%x 164e80:0x%x->0x%x (P2 DPLL skip:internal-eDP)",
+			 (int)pg2Ok, (int)pwbOk, (int)ddiOk, (int)dpclkaDone,
+			 c2b, c2a, ddib, ddia, dca, dcaa, dcam, dcama);
+	if (OSIncrementAtomic(&gHdmiLightHits) < 16) IOLog("XeHDMI light %s\n", gHdmiLightDiag);
+	if (svc) svc->setProperty("ngreen-hdmilight", gHdmiLightDiag);
+}
+static void xeHotplugHook(void *controller, uint32_t ddi, uint32_t portMode) {
+	FunctionCast(xeHotplugHook, gOrgHotplug)(controller, ddi, portMode);
+	if (ddi == gHdmiDdi && controller) {
+		// B1 (iter 3): extra inofensivo. O espelho do handler já pede PW_B no init (via overridePowerWellsState(true),
+		// confirmado estaticamente), então este gatilho NÃO é "o caminho garantido" — é redundante e serve para
+		// (a) reforçar PW_B no hotplug e (b) publicar ngreen-hdmipw num site IOService. Só liga (enable-only): não
+		// solta no disconnect. Não briga com o espelho — ambos só pedem PW_B; a única liberação é a do espelho num
+		// release real de PW_3 (bit5) ou, no futuro, um unplug. Custo de manter = residência DC5/DC6. Inerte sem
+		// ngreenhdmipw e fora do display 13.
+		if (gHdmiPw && !NGreen::callback->getIsRealTGL()) {
+			xeEnablePwB(reinterpret_cast<AppleIntel::AppleIntelBaseController *>(controller), true);
+			if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(controller)))
+				svc->setProperty("ngreen-hdmipw", gHdmiPwDiag);
+		}
+		// ngreenhdmiddc: publica o resumo do embrulho de hwDoGMBusRequest (calls/served/pass/último resultado) num
+		// site IOService, igual ao ngreen-hdmipw. O embrulho só preenche gHdmiDdcDiag; aqui só o expomos no ioreg.
+		if (gHdmiDdc && gHdmiDdcDiag[0] && !NGreen::callback->getIsRealTGL()) {
+			if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(controller)))
+				svc->setProperty("ngreen-hdmiddc", gHdmiDdcDiag);
+		}
+		// ngreenhdmiregs: snapshot read-only do pipe B logo APÓS a Apple tentar acender a tela externa (o hotplug
+		// roda em contexto de thread, não de interrupção). Gate dentro de xeDumpHdmiRegs (gHdmiRegs && !realTGL).
+		if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(controller)))
+			xeDumpHdmiRegs(svc);
+		// ngreenhdmilight (FASE 1): energia (PG2->PW_B->DDI-B) + ungate do clock da DDI-B. SÓ aqui (contexto de
+		// thread, APÓS o original), só no display 13 e no máximo algumas vezes (anti-churn, como o ngreenhdmipw).
+		// Todo o resto do gating (TRANSCONF_B==0) está dentro de xeHdmiLightUp. Sem scanout.
+		if (gHdmiLight && !NGreen::callback->getIsRealTGL()) {
+			static volatile UInt32 gLightRuns = 0;
+			if (OSIncrementAtomic(&gLightRuns) < 4) {
+				auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(controller));
+				xeHdmiLightUp(svc);
+			}
+		}
+		if (gHdmiSink && gSinkDiag[0]) {
+			if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(controller)))
+				svc->setProperty("ngreen-sink", gSinkDiag);
+		}
+		if (gHdmiEdid) {
+			// Lê o EDID por GMBUS nós mesmos e publica no ioreg (verificável contra o LG UltraGear conhecido).
+			static uint8_t edid[128];
+			bool ok = xeReadEdidGmbus(gHdmiBus, edid, sizeof(edid));
+			bool hdr = ok && edid[0] == 0x00 && edid[1] == 0xff && edid[2] == 0xff && edid[7] == 0x00;
+			char b[160];
+			if (hdr) {
+				uint32_t m = (edid[8] << 8) | edid[9];
+				char ven[4] = { char(((m >> 10) & 0x1f) + 64), char(((m >> 5) & 0x1f) + 64), char((m & 0x1f) + 64), 0 };
+				uint32_t prod = edid[10] | (edid[11] << 8);
+				snprintf(b, sizeof(b), "pino=%u ok=1 header=1 vendor=%s produto=0x%04x | %s",
+						 gHdmiBus, ven, prod, gEdidDiag);
+			} else {
+				snprintf(b, sizeof(b), "pino=%u ok=%d header=0 b0..3=%02x%02x%02x%02x | %s",
+						 gHdmiBus, (int)ok, edid[0],edid[1],edid[2],edid[3], gEdidDiag);
+			}
+			UInt32 e = OSIncrementAtomic(&gTrigHits);
+			if (e < 12) IOLog("XeHDMI edid %s\n", b);
+			if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(controller)))
+				svc->setProperty("ngreen-edid", b);
+		}
+		// S1/S3 (iter 3): gating EXATO do pre-impl. No pre-impl a rota do hotplug era instalada por QUALQUER flag do
+		// early-return (trig/edid/path/probe/sink/lanes/online), e `if (gSetFbStatus)` disparava sempre que a rota
+		// rodava — na config atual do Vostro (ngreenhdmiedid=1 ngreenhdmisink=1, sem trig) e também em qualquer
+		// config com uma só dessas 7 flags. wantHook agora inclui as 7 (mais gHdmiPw), então a rota instala para
+		// exatamente as mesmas configs do pre-impl e este empurrão dispara igual. gHdmiPw fica DE FORA desta
+		// expressão para que ngreenhdmipw sozinho rode só o handler original + o pedido de PW_B e nada mais (S2).
+		if ((gHdmiTrigger || gHdmiEdid || gHdmiPath || gHdmiProbe || gHdmiSink || gHdmiLanes || gHdmiOnline) && gSetFbStatus) {
+			uint32_t arg[8] = { gHdmiFbIndex, 1, 0, 0, 0, 0, 0, 0 };  // AGDCFBOnline_t { fbIndex, online=1, ... }
+			auto fn = reinterpret_cast<uint32_t (*)(void *, void *)>(gSetFbStatus);
+			uint32_t r = fn(controller, arg);
+			UInt32 h = OSIncrementAtomic(&gTrigHits);
+			if (h < 12) IOLog("XeHDMI trig ddi=%u fb=%u SetFbStatusOnNextProbe=0x%x\n", ddi, gHdmiFbIndex, r);
+		}
+	}
+}
+
+// Fase 3 (observação, SEGURO): gancho do connectionProbe() — roda no boot/probe, que é o contexto certo
+// (sem o lock do hotplug que travava). Só chama o original e fotografa o estado do con0/con1 no ioreg (que
+// sobrevive ao despejo do msgbuf no boot). Diz se o con1 ganha display path no boot (fb->0x49e8>0) e, se não,
+// com que flags ele fica — para desenharmos o empurrão no lugar certo. NÃO chama nada da pilha de display.
+static volatile UInt32 gProbeHits = 0;
+static bool xeConnProbeHook(void *fbv) {
+	bool rv = FunctionCast(xeConnProbeHook, gOrgConnProbe)(fbv);
+	if (fbv) {
+		auto *fb = reinterpret_cast<uint8_t *>(fbv);
+		uint32_t idx = *reinterpret_cast<uint32_t *>(fb + 0x1dc);
+		if (idx == 0 || idx == gHdmiFbIndex) {
+			auto u32 = [&](uint32_t o) -> uint32_t { return *reinterpret_cast<uint32_t *>(fb + o); };
+			int32_t sel = static_cast<int32_t>(u32(0x3fd8));
+			uint32_t paths = (sel == -1) ? u32(0x49e8) : u32(0x4a08);
+			char *b = (idx == 0) ? gProbe0 : gProbe1;
+			size_t bs = (idx == 0) ? sizeof(gProbe0) : sizeof(gProbe1);
+			snprintf(b, bs, "fb%u paths=%u 1e0=%u 1e1=%u 1e2=%u 1e7=%u r170=0x%x r44e0=0x%x",
+					 idx, paths, *(fb + 0x1e0), *(fb + 0x1e1), *(fb + 0x1e2), *(fb + 0x1e7), u32(0x170), u32(0x44e0));
+			UInt32 h = OSIncrementAtomic(&gProbeHits);
+			if (h < 16) IOLog("XeHDMI probe %s\n", b);
+			void *ctrl = *reinterpret_cast<void **>(fb + 0x1d0);   // fb->0x1d0 = controlador (confirmado na disasm)
+			if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(ctrl))) {
+				char combo[232];
+				snprintf(combo, sizeof(combo), "%s || %s", gProbe0, gProbe1);
+				svc->setProperty("ngreen-probe", combo);
+			}
+		}
+	}
+	return rv;
+}
+
+// ngreenhdmiddc: embrulho de AppleIntelBaseController::hwDoGMBusRequest(this, bus, speed, IOI2CRequest*).
+// ABI confirmada por desmontagem function-bounded (0x7b470..0x7c26a, ver _ref/hdmi-notes/70-IMPL-ddc.md): o
+// 1º arg C é `this`, o 2º é o pino GMBUS, o 3º a velocidade, o 4º o IOI2CRequest*; devolve um status uint32 e o
+// grava em req+0x1c (0 = sucesso). Campos do IOI2CRequest usados pela Apple (todos confirmados na desmontagem):
+//   +0x00 tipo (kind): ==1 (@0x7b497) monta o sub-bloco de ESCRITA no GMBUS1 (@0x7b85e-0x7b8ba), ==0xf (@0x7bb99)
+//         o sub-bloco INDEX (@0x7bba2-0x7bbc9); a LEITURA é o caminho restante (@0x7beaf).
+//   +0x04 fase presente: ==1 habilita a fase de ESCRITA (@0x7b662/0x7b66d) e/ou de LEITURA (@0x7beaf/0x7beb4)
+//   +0x08 slave de ESCRITA (GMBUS1 bits[7:0], @0x7b8a2); +0x10 BYTE de índice/offset de escrita (bits[15:8], @0x7b898)
+//   +0x28 contagem de ESCRITA (bits[24:16], @0x7b874); +0x44 buffer de ESCRITA (@0x7b90a / dump @0x7bb17)
+//   +0x0c slave de LEITURA (GMBUS1 bits[7:0] | 0x42000001 = CYCLE_INDEX|READ, @0x7bef4/0x7befb). ATENÇÃO: este byte é
+//         o endereço I2C de 8 bits (0xA0 = 0x50<<1; a Apple soma |1 → 0xA1 = leitura), NÃO o 7 bits 0x50.
+//   +0x11 BYTE de offset de leitura (bits[15:8], @0x7beea); +0x38 contagem de LEITURA (bits[24:16], @0x7bec5)
+//   +0x4c buffer de LEITURA (dados vão p/ [+0x4c]+(count-restante), @0x7bf94-0x7bf9b)
+//   +0x1c resultado (saída): erro @0x7b5bc, sucesso `mov [r14+0x1c],0` @0x7c25a; +0x20 flags (bit1 last, bit2 stop)
+//   A palavra GMBUS1 em 0x7b8a7 e 0x7bbb4 leva 0x42000000 = bit30 SW_RDY | bits[26:25]=0b10 (GMBUS_CYCLE_INDEX);
+//   a leitura soma |1 (bit0 = direção READ no byte do slave). Ou seja: a Apple emite a leitura do EDID como uma
+//   LEITURA INDEXADA (escreve o byte de offset 0 no slave 0xA0, depois lê N bytes do slave 0xA0/0xA1) — não uma leitura
+//   pura. O portão antigo (rslave==0x50 em 7 bits) RECUSAVA isso e caía no original que falha; por isso agora servimos
+//   a leitura INDEXADA do bloco-base do EDID, comparando o endereço em 8 bits `(rslave>>1)==0x50`, desde que o único
+//   sub-bloco de escrita seja no máximo UM byte de índice 0. Qualquer payload de escrita real (wcount>1 ou wbyte!=0),
+//   offset!=0, outro slave, contagem>128, outro pino ou display real cai no original SEM alteração (nunca falsificamos).
+static uint32_t xeHwDoGMBusRequest(void *that, uint32_t bus, uint32_t speed, void *req) {
+	// Caminho idêntico ao kext padrão quando o arg está ausente ou não é o pino HDMI: tail-call ao original.
+	if (!gHdmiDdc || bus != gHdmiBus || !req)
+		return FunctionCast(xeHwDoGMBusRequest, gOrgHwGmbus)(that, bus, speed, req);
+
+	auto *r = reinterpret_cast<uint8_t *>(req);
+	uint32_t kind    = getMember<uint32_t>(r, 0x00);
+	uint32_t phase   = getMember<uint32_t>(r, 0x04);
+	uint32_t wcount  = getMember<uint32_t>(r, 0x28);
+	uint32_t rcount  = getMember<uint32_t>(r, 0x38);
+	uint8_t  wslave  = getMember<uint8_t>(r, 0x08);
+	uint8_t  wbyte   = getMember<uint8_t>(r, 0x10);   // byte de índice/offset de ESCRITA
+	uint8_t  rslave  = getMember<uint8_t>(r, 0x0c);
+	uint8_t  roffset = getMember<uint8_t>(r, 0x11);
+	void    *rbuf    = getMember<void *>(r, 0x4c);
+	void    *wbuf    = getMember<void *>(r, 0x44);
+
+	UInt32 n = OSIncrementAtomic(&gHdmiDdcCalls);
+
+	// Sub-bloco de LEITURA do bloco-base do EDID: fase presente, buffer válido, slave do EDID, offset 0, 1..128 bytes.
+	// CORREÇÃO (2026-10-27): o IOI2CRequest carrega o endereço DDC na forma de 8 bits 0xA0 (= 0x50<<1); a Apple
+	// dobra esse byte no GMBUS1 em +0x0c e soma |1 (0xA1) no caminho de leitura (@0x7bef4/0x7befb). A run ao vivo
+	// (2026-10-27 01:58, ngreen-hdmiddc calls=301 served=0) mostrou rs=0xa0 em TODAS as chamadas, então o portão
+	// antigo `rslave==0x50` (7 bits) recusava tudo. Comparamos agora `(rslave>>1)==0x50`, aceitando 0xA0 e 0xA1 e
+	// rejeitando qualquer outro slave (que ainda cai no original).
+	bool readOk = (phase == 1) && rbuf && rcount >= 1 && rcount <= 128 &&
+				  (rslave >> 1) == 0x50 && roffset == 0;
+
+	// Sub-bloco de ESCRITA tolerado: NENHUM (leitura pura) OU no máximo UM byte de índice 0 (a "leitura indexada"
+	// clássica do DDC). NÃO exigimos mais um slave de escrita específico — a run ao vivo mostrou ws=0x0 — mas ainda
+	// rejeitamos qualquer escrita REAL do monitor (wcount>1 ou wbyte!=0), que é a propriedade de segurança que importa.
+	bool noWrite      = (wcount == 0) && (wbuf == nullptr);
+	bool indexWriteOk = (wcount <= 1) && (wbyte == 0);
+	bool writeOk      = noWrite || indexWriteOk;
+
+	// Servimos a leitura (pura OU indexada) do bloco-base do EDID no pino HDMI e no display 13. Tudo o mais -> original.
+	bool serveEdid = readOk && writeOk && !NGreen::callback->getIsRealTGL();
+
+	// Rótulo do caso decodificado, para o log/ioreg mostrarem se o portão engatou (e por quê, quando não engata).
+	const char *decoded = serveEdid ? (noWrite ? "pure-read" : "indexed-edid-read")
+					   : !readOk          ? "passthrough:not-edid-read"
+					   : !writeOk         ? "passthrough:write-payload"
+					   : "passthrough:real-tgl";
+
+	if (!serveEdid) {
+		UInt32 p = OSIncrementAtomic(&gHdmiDdcPass);
+		uint32_t rv = FunctionCast(xeHwDoGMBusRequest, gOrgHwGmbus)(that, bus, speed, req);
+		gHdmiDdcLastRes = rv;
+		snprintf(gHdmiDdcDiag, sizeof(gHdmiDdcDiag),
+				 "calls=%u served=%u pass=%u last=original case=%s kind=0x%x phase=%u w=%u ws=0x%x wb=0x%x r=%u rs=0x%x ro=0x%x res=0x%x",
+				 (unsigned)(n + 1), (unsigned)gHdmiDdcServed, (unsigned)(p + 1), decoded, kind, phase,
+				 wcount, wslave, wbyte, rcount, rslave, roffset, rv);
+		if (n < 8) IOLog("XeHDMI ddc PASSTHROUGH bus=%u case=%s kind=0x%x phase=%u w=%u ws=0x%x wb=0x%x r=%u rs=0x%x ro=0x%x -> original res=0x%x\n",
+						 bus, decoded, kind, phase, wcount, wslave, wbyte, rcount, rslave, roffset, rv);
+		return rv;
+	}
+
+	// Servimos com o nosso leitor GMBUS comprovado (mesma sequência de xeReadEdidGmbus; lê o bloco 0 do slave 0x50).
+	uint8_t edid[128];
+	bool ok = xeReadEdidGmbus(gHdmiBus, edid, rcount);
+	if (!ok) {
+		// Não falsificamos: se a nossa leitura falhar, caímos no original (que registra o erro da Apple como antes).
+		UInt32 p = OSIncrementAtomic(&gHdmiDdcPass);
+		uint32_t rv = FunctionCast(xeHwDoGMBusRequest, gOrgHwGmbus)(that, bus, speed, req);
+		gHdmiDdcLastRes = rv;
+		snprintf(gHdmiDdcDiag, sizeof(gHdmiDdcDiag),
+				 "calls=%u served=%u pass=%u last=ourread-failed case=%s r=%u res=0x%x | %s",
+				 (unsigned)(n + 1), (unsigned)gHdmiDdcServed, (unsigned)(p + 1), decoded, rcount, rv, gEdidDiag);
+		if (n < 8) IOLog("XeHDMI ddc our-read FAILED bus=%u case=%s r=%u -> original res=0x%x | %s\n",
+						 bus, decoded, rcount, rv, gEdidDiag);
+		return rv;
+	}
+
+	// Preenche o buffer de leitura do chamador e marca sucesso, exatamente como o caminho de sucesso da Apple
+	// (grava [req+0x1c]=0 @0x7c25a e devolve 0). Copiamos só rcount bytes (<=128).
+	memcpy(rbuf, edid, rcount);
+	getMember<uint32_t>(r, 0x1c) = 0;
+	UInt32 s = OSIncrementAtomic(&gHdmiDdcServed);
+	gHdmiDdcLastRes = 0;
+	snprintf(gHdmiDdcDiag, sizeof(gHdmiDdcDiag),
+			 "calls=%u served=%u pass=%u last=served case=%s r=%u hdr=%02x%02x res=0x0 | %s",
+			 (unsigned)(n + 1), (unsigned)(s + 1), (unsigned)gHdmiDdcPass, decoded, rcount, edid[0], edid[1], gEdidDiag);
+	if (n < 8) IOLog("XeHDMI ddc SERVED bus=%u case=%s r=%u hdr=%02x%02x%02x%02x | %s\n",
+					 bus, decoded, rcount, edid[0], edid[1], edid[2], edid[3], gEdidDiag);
+	return 0;
+}
+
+static void installHdmiTrigger(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+	if (!gHdmiTrigger && !gHdmiEdid && !gHdmiPath && !gHdmiProbe && !gHdmiSink && !gHdmiLanes && !gHdmiOnline && !gHdmiPw && !gHdmiDdc && !gHdmiModeset) return;
+	gSetFbStatus = patcher.solveSymbol(index,
+		"__ZN24AppleIntelBaseController22SetFbStatusOnNextProbeEP14AGDCFBOnline_t", address, size);
+	patcher.clearError();
+	gAllocDispRes = patcher.solveSymbol(index,
+		"__ZN21AppleIntelFramebuffer24allocateDisplayResourcesEv", address, size);
+	patcher.clearError();
+	// S2/S3 (iter 3): a rota do hotplug (xeHotplugHook) roda o gatilho (trig), o EDID (edid), o sink (sink) e,
+	// desde a iter 3, o pedido de PW_B (pw). No pre-impl a rota era instalada INCONDICIONALMENTE depois do
+	// early-return de 7 flags, ou seja, QUALQUER uma das 7 (trig/edid/path/probe/sink/lanes/online) instalava o
+	// hook — e com ele o empurrão SetFbStatus-on-hotplug. Para manter o gating EXATO do pre-impl (S3) e ainda fazer
+	// ngreenhdmipw funcionar sozinho como os irmãos (S2), wantHook = o conjunto completo das 7 flags pré-pw MAIS
+	// gHdmiPw. Assim: qualquer das 7 originais instala o hook idêntico ao pre-impl; pw sozinho também instala;
+	// sem flag nenhuma o early-return já cortou. É um acréscimo puro sobre o pre-impl (nenhuma config perde o hook).
+	bool wantHook = gHdmiTrigger || gHdmiEdid || gHdmiPath || gHdmiProbe || gHdmiSink || gHdmiLanes || gHdmiOnline || gHdmiPw;
+	bool ok = false;
+	if (wantHook) {
+		RouteRequestPlus r[] = {
+			{"__ZN24AppleIntelBaseController20invokeHotplugHandlerEjN14AppleIntelPort8PortModeE", xeHotplugHook, gOrgHotplug},
+		};
+		ok = RouteRequestPlus::routeAll(patcher, index, r, address, size);
+		if (!ok) patcher.clearError();
+	}
+	bool okp = false;
+	if (gHdmiProbe) {
+		RouteRequestPlus rp[] = {
+			{"__ZN21AppleIntelFramebuffer15connectionProbeEv", xeConnProbeHook, gOrgConnProbe},
+		};
+		okp = RouteRequestPlus::routeAll(patcher, index, rp, address, size);
+		if (!okp) patcher.clearError();
+	}
+	bool oks = false;
+	if (gHdmiSink) {
+		RouteRequestPlus rs[] = {
+			{"__ZN14AppleIntelPort14getDPSinkCountEPh", xeGetSinkCountStub, gOrgGetSink},
+		};
+		oks = RouteRequestPlus::routeAll(patcher, index, rs, address, size);
+		if (!oks) patcher.clearError();
+	}
+	bool okl = false;
+	if (gHdmiLanes) {
+		RouteRequestPlus rl[] = {
+			{"__ZN14AppleIntelPort16computeLaneCountEPK29IODetailedTimingInformationV2jjPj", xeComputeLaneCountStub, gOrgComputeLaneCount},
+		};
+		okl = RouteRequestPlus::routeAll(patcher, index, rl, address, size);
+		if (!okl) patcher.clearError();
+	}
+	bool oko = false;
+	if (gHdmiOnline) {
+		RouteRequestPlus ro[] = {
+			{"__ZN21AppleIntelFramebuffer25getAttributeForConnectionEijPm", xeGetAttrStub, gOrgGetAttr},
+		};
+		oko = RouteRequestPlus::routeAll(patcher, index, ro, address, size);
+		if (!oko) patcher.clearError();
+	}
+	// ngreenhdmiddc: roteia hwDoGMBusRequest (mesma classe que invokeHotplugHandler acima). O embrulho só desvia
+	// quando gHdmiDdc && bus==gHdmiBus && display 13 && leitura pura de EDID; caso contrário chama o original.
+	bool okd = false;
+	if (gHdmiDdc) {
+		RouteRequestPlus rd[] = {
+			{"__ZN24AppleIntelBaseController16hwDoGMBusRequestEjjP12IOI2CRequest", xeHwDoGMBusRequest, gOrgHwGmbus},
+		};
+		okd = RouteRequestPlus::routeAll(patcher, index, rd, address, size);
+		if (!okd) patcher.clearError();
+	}
+	// Fase 2: instrumenta os 3 LightUp* (só quando gHdmiModeset) p/ ver qual é despachado pro FB1 no modeset forçado.
+	bool okm = false;
+	if (gHdmiModeset) {
+		RouteRequestPlus rm[] = {
+			{"__ZN24AppleIntelBaseController11LightUpTMDSEP21AppleIntelFramebufferP21AppleIntelDisplayPathPK29IODetailedTimingInformationV2", xeLightUpTMDS, gOrgLightUpTMDS},
+			{"__ZN24AppleIntelBaseController9LightUpDPEP21AppleIntelFramebufferP21AppleIntelDisplayPathPK29IODetailedTimingInformationV2", xeLightUpDP, gOrgLightUpDP},
+			{"__ZN24AppleIntelBaseController10LightUpEDPEP21AppleIntelFramebufferP21AppleIntelDisplayPathPK29IODetailedTimingInformationV2", xeLightUpEDP, gOrgLightUpEDP},
+		};
+		okm = RouteRequestPlus::routeAll(patcher, index, rm, address, size);
+		if (!okm) patcher.clearError();
+		SYSLOG("ngreen", "hdmimodeset: rotas LightUp instaladas=%d (modeset=%u)", (int)okm, gHdmiModeset);
+	}
+	SYSLOG("ngreen", "hdmitrig: setfb=%d alloc=%d hook=%d/%d (trig=%u edid=%u path=%u probe=%u sink=%u lanes=%u online=%u pw=%u ddc=%u) fb=%u probe=%u/%d sink=%u/%d lanes=%u/%d online=%u/%d ddc=%u/%d",
+		   (int)(gSetFbStatus != 0), (int)(gAllocDispRes != 0), (int)wantHook, (int)ok,
+		   gHdmiTrigger, gHdmiEdid, gHdmiPath, gHdmiProbe, gHdmiSink, gHdmiLanes, gHdmiOnline, gHdmiPw, gHdmiDdc,
+		   gHdmiFbIndex, gHdmiProbe, (int)okp,
+		   gHdmiSink, (int)oks, gHdmiLanes, (int)okl, gHdmiOnline, (int)oko, gHdmiDdc, (int)okd);
+}
+
+static void installFbLogBridge(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+	// Sonda: registra ddi/kind da porta sempre que o caminho de online tenta DPCD por AUX. Diz se o kind da porta
+	// externa voltou a DP (1) na hora do hotplug/modeset, mesmo depois de forçarmos TMDS (2) no probe.
+	RouteRequestPlus dpcd[] = {
+		{"__ZN14AppleIntelPort11getDPCDInfoEv", xeGetDPCDInfo, gOrgGetDPCDInfo},
+	};
+	if (!RouteRequestPlus::routeAll(patcher, index, dpcd, address, size)) patcher.clearError();
+
+	if (checkKernelArgument("-ngreennofblog")) { SYSLOG("ngreen", "fblog: desligado por -ngreennofblog"); return; }
+	PE_parse_boot_argn("ngreenfblog", &gFbLogMask, sizeof(gFbLogMask));
+	gFbLogBase = address;
+	gFbLogEnd  = address + size;
+	RouteRequestPlus fbLog[] = {
+		{"__Z28IntelLogBroadcastToListeners14IntelLogModuleRK14IntelLogHeaderPKcm", xeFbLogBcast, gOrgFbLogBcast},
+	};
+	bool ok = RouteRequestPlus::routeAll(patcher, index, fbLog, address, size);
+	if (!ok) patcher.clearError();
+	gFbLogInstalled = ok;
+	gNgQuiet = ok && !checkKernelArgument("-ngreennoquiet");
+	SYSLOG("ngreen", "fblog: ponte de log do FB %s (mascara 0x%x, quiet=%d)", ok ? "ATIVA" : "FALHOU", gFbLogMask,
+		   (int)gNgQuiet);
 }
 
 static void fbTimingsWorker(thread_call_param_t, thread_call_param_t) {
@@ -1452,6 +2327,10 @@ bool Gen11::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
 		if (!checkKernelArgument("-ngreennoportmode")) {
 			patchPortModeVtable(patcher, index, address, size);
 		}
+		// xe (25/10) fblog: logs de debug do FB da Apple no dmesg (diagnóstico do HDMI). -ngreennofblog desliga.
+		installFbLogBridge(patcher, index, address, size);
+		// xe (25/10) Fase 2: dispara o online do HDMI no hotplug (ngreenhdmitrig=1). Desligado por padrão.
+		installHdmiTrigger(patcher, index, address, size);
 		SYSLOG("ngreen", "TGL FB routes applied (fixbootmode: getCurrentDisplayMode org=0x%llx, arg=%d)",
 			   (unsigned long long)this->ogetCurrentDisplayMode, (int)checkKernelArgument("-ngreenfixbootmode"));
 		
@@ -3605,10 +4484,10 @@ IOReturn Gen11::wrapICLReadAUX(void *that, uint32_t address, void *buffer, uint3
 		if (v98tLogs < 5) {
 			v98tLogs++;
 			if (length >= 2)
-				SYSLOG("ngreen", "V98T[%d]: DPCD 0x0100 passthrough bw=0x%02x lanes=0x%02x",
+				NGQ_SYSLOG("ngreen", "V98T[%d]: DPCD 0x0100 passthrough bw=0x%02x lanes=0x%02x",
 					   v98tLogs, raw[0], raw[1]);
 			else
-				SYSLOG("ngreen", "V98T[%d]: DPCD 0x0100 passthrough bw=0x%02x (len=1)",
+				NGQ_SYSLOG("ngreen", "V98T[%d]: DPCD 0x0100 passthrough bw=0x%02x (len=1)",
 					   v98tLogs, raw[0]);
 		}
 	}
@@ -3801,6 +4680,96 @@ IOReturn Gen11::wrapSetAttribute(void *that, uint32_t attr, uintptr_t value) {
 	return FunctionCast(wrapSetAttribute, callback->oSetAttribute)(that, attr, value);
 }
 
+// ── ngreenhdmipw: pipe B power well para o display 13 (ADL-P) ───────────────────────────────────────────────
+// Registradores e bits VERIFICADOS no i915 (drivers/gpu/drm/i915/display/intel_display_regs.h):
+//   HSW_PWR_WELL_CTL2 = 0x45404 (o CTL "driver" do hsw_power_well_ops). A disasm de hwSetPowerWellStatePG (a função
+//     da Apple interceptada aqui por hwSetPowerWellStatePGE) escreve os pedidos de PG em 0x45404; este handler, no
+//     entanto, no display 13 escreve PG1/PG2 em CTL1 (0x45400) e NUNCA toca PW_B. Esse é o buraco do pipe B.
+//   HSW_PWR_WELL_CTL_REQ(idx) = 0x2 << (idx*2);  HSW_PWR_WELL_CTL_STATE(idx) = 0x1 << (idx*2)
+//   XELPD_PW_CTL_IDX_PW_B = 6  -> REQ = bit 13 (0x2000), STATE = bit 12 (0x1000)
+//   ICL_PW_CTL_IDX_PW_3   = 2  -> REQ = bit 5  (0x0020)  (o que o TGL pede p/ pipe B; a Apple manda param_2=0xaa,
+//                                                         que inclui esse bit, em overridePowerWellsState(true) @0x89970,
+//                                                         NÃO em enableDisplayEngine (essa chama com param_2=2 @0x8848b))
+//   SKL_FUSE_STATUS = 0x42000;  SKL_FUSE_PG_DIST_STATUS(pg) = 1 << (27 - pg)
+//   pw_idx_to_pg(PW_B) = pw_idx - ICL_PW_CTL_IDX_PW_1(0) + SKL_PG1(1) = 6 + 1 = 7  -> fuse dist = bit (27-7)=20
+//     (UNVERIFIED: pg=7 passa do enum skl_power_gate do i915 (…ICL_PG4=4); a fórmula é literal do i915, mas se o
+//      ADL-P não popular esse bit de fuse, fusetmo=1 e seguimos mesmo assim — o STATE bit 12 é o que decide.)
+// Sequência do i915 hsw_power_well_enable (sem a Wa_16013190616, que é só p/ PG1): set REQ -> espera STATE ->
+// espera o fuse PG dist. Timeout do i915 p/ PW sem enable_timeout = 1 ms; fuse = 1 ms. Usamos IODelay (não dorme),
+// o que é seguro no contexto de modeset (mesmo padrão dos outros writeReg32 deste handler).
+// A captura em docs/HDMI-TMDS.md prova o alvo: 0x45404 on=0x3c0f (bits 12+13 ligados) vs off=0x0c0f.
+// DC5/DC6 (DC_STATE_EN 0x45504) e o DMC: pedir PW_B mantém um power well de display ligado, o que impede o hardware
+// de entrar em DC5/DC6 enquanto o pedido estiver ativo (como no i915, que também segura DC ao ligar um PW de pipe).
+// É o comportamento correto quando há um pipe externo ativo; o custo é só energia (sem economia DC com o HDMI ligado).
+// Puramente ADITIVO sobre o CTL1 que o handler já escreve; não altera DC_STATE_EN nem o blob do DMC.
+static constexpr uint32_t kPwrWellCtl2   = 0x45404;
+static constexpr uint32_t kFuseStatus    = 0x42000;
+static constexpr uint32_t kPwBReqBit     = (0x2u << (6 * 2));   // bit 13
+static constexpr uint32_t kPwBStateBit   = (0x1u << (6 * 2));   // bit 12
+static constexpr uint32_t kPw3ReqBit     = (0x2u << (2 * 2));   // bit 5
+static constexpr uint32_t kFusePwBDist   = (1u   << (27 - 7));  // bit 20 (pg 7 p/ PW_B)
+// F4 (iter 2): ICL_PW_CTL_IDX_PW_2 = 1 (i915 intel_display_regs.h:2401) -> STATE = 0x1<<(1*2) = bit 2 em 0x45404.
+// O i915 (hsw_power_well_enable) habilita PW_2 ANTES de PW_B e espera cada well subir. Antes de pedir PW_B esperamos
+// (limitado, 1 ms) o STATE de PW_2; se não subir, logamos pw2tmo=1 e seguimos (o STATE de PW_B decide o sucesso).
+static constexpr uint32_t kPw2StateBit   = (0x1u << (1 * 2));   // bit 2 (PW_2 STATE)
+// F1 (iter 2): o `that` do handler de power well é um AppleIntelPowerWell, cuja super-metaclasse é OSObject
+// (verificado: __ZN19AppleIntelPowerWell9MetaClassC1Ev @0x865b0 passa OSObject::gMetaClass como super; a reloc do
+// GOT que a ctor carrega é __ZN8OSObject10gMetaClassE; a vtable __ZTV19AppleIntelPowerWell só tem os slots de
+// OSObject), NÃO um IOService. Logo OSDynamicCast(IOService, that) devolve NULL e setProperty NUNCA publicava
+// ngreen-hdmipw. Guardamos aqui a string e um "pendente"; a publicação sai de um site IOService seguro
+// (getOSInformation, que já publica ngreen-hdmi-con1 no controlador/acelerador) em contexto de thread.
+// (gHdmiPwDiag/gHdmiPwHits/gHdmiPwPending são definidos lá em cima, antes de xeHotplugHook.)
+// Liga/desliga PW_B via 0x45404 com a sequência do i915. Só lê/escreve 0x45404 e lê 0x42000/0x45400 — nada de
+// pipe/plane/PLL. Devolve true se o STATE subiu dentro do timeout. Resumo (antes/depois, fuse, flags) em gHdmiPwDiag.
+static bool xeEnablePwB(AppleIntel::AppleIntelBaseController *that, bool enable) {
+	uint32_t c2before = NGreen::callback->readReg32(kPwrWellCtl2);
+	bool stateOk = true, fuseOk = true, pw2Ok = true;
+	if (enable) {
+		// F4: o i915 habilita PW_2 antes de PW_B. PW_2 já é pedido pela Apple (enableDisplayEngine/overridePowerWellsState);
+		// aqui só esperamos (limitado) o STATE de PW_2 subir antes de pedir PW_B, sem escrever nada em PW_2.
+		pw2Ok = false;
+		for (int us = 0; us <= 1000; us += 10) {
+			if (NGreen::callback->readReg32(kPwrWellCtl2) & kPw2StateBit) { pw2Ok = true; break; }
+			IODelay(10);
+		}
+		if (!(c2before & kPwBReqBit))
+			NGreen::callback->writeReg32(kPwrWellCtl2, c2before | kPwBReqBit);   // intel_de_rmw(0, REQ)
+		// hsw_wait_for_power_well_enable: espera o STATE bit (1 ms, como o i915 p/ PW sem enable_timeout).
+		stateOk = false;
+		for (int us = 0; us <= 1000; us += 10) {
+			if (NGreen::callback->readReg32(kPwrWellCtl2) & kPwBStateBit) { stateOk = true; break; }
+			IODelay(10);
+		}
+		// gen9_wait_for_power_well_fuses: espera o fuse PG dist (1 ms no i915).
+		fuseOk = false;
+		for (int us = 0; us <= 1000; us += 10) {
+			if (NGreen::callback->readReg32(kFuseStatus) & kFusePwBDist) { fuseOk = true; break; }
+			IODelay(10);
+		}
+	} else {
+		// Release: só se o REQ estiver ligado. intel_de_rmw(REQ, 0); espera o STATE cair (1 ms).
+		if (c2before & kPwBReqBit)
+			NGreen::callback->writeReg32(kPwrWellCtl2, c2before & ~kPwBReqBit);
+		for (int us = 0; us <= 1000; us += 10) {
+			if (!(NGreen::callback->readReg32(kPwrWellCtl2) & kPwBStateBit)) break;
+			IODelay(10);
+		}
+	}
+	uint32_t c1after = NGreen::callback->readReg32(0x45400);
+	uint32_t c2after = NGreen::callback->readReg32(kPwrWellCtl2);
+	uint32_t fuse    = NGreen::callback->readReg32(kFuseStatus);
+	snprintf(gHdmiPwDiag, sizeof(gHdmiPwDiag),
+			 "en=%d ctl1=0x%x ctl2:0x%x->0x%x fuse=0x%x pgdist=%d state=%d fusetmo=%d pw2tmo=%d",
+			 (int)enable, c1after, c2before, c2after, fuse, (int)((fuse & kFusePwBDist) != 0),
+			 (int)stateOk, (int)(enable && !fuseOk), (int)(enable && !pw2Ok));
+	UInt32 h = OSIncrementAtomic(&gHdmiPwHits);
+	if (h < 16) IOLog("XeHDMI pw %s\n", gHdmiPwDiag);
+	// F1: NÃO publicamos aqui — `that` é um AppleIntelPowerWell (super = OSObject), o OSDynamicCast(IOService,...)
+	// daria NULL. Só marcamos pendente; getOSInformation (site IOService válido, contexto de thread) publica.
+	OSIncrementAtomic(&gHdmiPwPending);
+	return enable ? (stateOk && fuseOk) : true;
+}
+
 // V183: ADL-P/RPL write-only power well handler.
 // HSW_PWR_WELL_CTL1 (0x45400): REQ bits = odd bits (mask 0xAA: bits 1,3,5,7,...);
 //                               STATE bits = even bits (mask 0x55: bits 0,2,4,6,...).
@@ -3826,6 +4795,24 @@ void Gen11::hwSetPowerWellStatePGE(AppleIntel::AppleIntelBaseController *that, b
 		SYSLOG("ngreen", "V183.PGE: en=%u mask=0x%x ctl1: 0x%x->0x%x",
 			   (unsigned)param_1, param_2, ctl1, newVal);
 		NGreen::callback->writeReg32(0x45400, newVal);
+		// ngreenhdmipw (26/10): o handler acima só liga PG1/PG2 em CTL1; o pipe B do ADL-P precisa de PW_B em CTL2
+		// (bits 12/13), que o TGL não conhece. F5 (iter 2): a chamada que carrega PW_3 (bit5 de param_2=0xaa) é
+		// AppleIntelPowerWell::overridePowerWellsState(true) @0x89722 (call @0x89970), NÃO enableDisplayEngine
+		// (que chama com param_2=2 @0x8848b — só bit1/PW_1, sem PW_3). B1 (iter 3): CORREÇÃO da iter 2.
+		// overridePowerWellsState(bool) @0x89722 TEM 6 chamadores estáticos E8 (capstone + llvm-objdump; a varredura
+		// linear da iter 2 dessincronizou e produziu o falso "sem chamador"): setDCState @0x6556b (false),
+		// enableSWDC6 @0x65d34 (false), hwShutdown @0x77a29 (false), AppleIntelPowerWell::init @0x8817a (TRUE),
+		// enableDisplayEngine @0x886c4 (false) e restorePowerWellsState @0x8c12e (TRUE). A ramificação true chama
+		// hwSetPowerWellStatePG(1, 0xaa) @0x89970 (bit5 = PW_3 REQ); a false chama hwSetPowerWellStatePG(0, 2)
+		// @0x899b8 (só PW_1, SEM bit5). Logo o espelho JÁ dispara via init em TODO boot do display 13 — não é
+		// "indecidível". O gatilho do hotplug (xeHotplugHook) é um extra inofensivo (pede o mesmo PW_B) para garantir
+		// publicação de ngreen-hdmipw e cobrir o hotplug. Este espelho é o caminho principal. Inerte sem o boot-arg.
+		// N3: a liberação de PW_B só ocorre quando param_1=false E param_2 carrega bit5 (um release real de PW_3,
+		// p.ex. disablePowerWellPG(PW_3) no teardown); overridePowerWellsState(false) passa mask=2 (sem bit5) e NÃO
+		// entra aqui, então PW_B fica retido (one-way hold) após disables que não carregam bit5 — custo só de
+		// residência DC5/DC6 enquanto o HDMI está ligado, igual à assimetria do CTL1 que o handler já tem.
+		if (gHdmiPw && (param_2 & kPw3ReqBit))
+			xeEnablePwB(that, param_1);
 		return;
 	}
 	// Real TGL: use original with ccont fixup.
@@ -4664,13 +5651,32 @@ uint64_t Gen11::getOSInformation(AppleIntel::AppleIntelBaseController *that)
 		pinfo[1].connectors[0].type  = ConnectorLVDS;
 		pinfo[1].connectors[0].flags = 0x8 | 0x10;
 
-		// Connector 1: external USB-C/Thunderbolt DP (TC1/DDI-D), pipe 2
-		pinfo[1].connectors[1].index = 1;
-		pinfo[1].connectors[1].busId = 1;
-		pinfo[1].connectors[1].pipe  = 2;
-		pinfo[1].connectors[1].pad   = 0;
-		pinfo[1].connectors[1].type  = ConnectorDP;
-		pinfo[1].connectors[1].flags = 0x1 | 0x400;
+		// Connector 1: external display. Os campos de ConnectorEntry mapeiam a tabela de portas do FB TGL
+		// (FB 0xf35b0): index=DDI, busId=pino GMBUS, pipe=SINAL (0 eDP, 1 DP, 2 HDMI/TMDS), pad=phy, type, flags.
+		// No Vostro 3520 o HDMI físico está na DDI B (combo PHY B) = pino GMBUS 2 (VBT da BIOS e a tabela da
+		// própria Apple: DDI B -> gmbus 2). O valor antigo usava busId=1 (pino GMBUS 1), então a leitura de EDID
+		// ia no pino errado e o monitor externo nunca aparecia. Corrigido para 2. Tudo ajustável por boot-arg para
+		// iterar sem recompilar:
+		//   ngreenhdmiddi=N   DDI (index), padrão 1 (DDI B)
+		//   ngreenhdmibus=N   pino GMBUS (busId), padrão 2 (DDI B)
+		//   ngreenhdmisig=N   sinal (pipe): 1 = DP, 2 = HDMI/TMDS, padrão 2
+		//   ngreenhdmiflags=N flags do con1 (campo +0x14), re-estampadas na entrada ativa só quando o arg é dado;
+		//                     bit0 (0x1)->MST+AUX, bit3 (0x8)->AUX, bit1 (0x2)->DDC em GetGPUCapability. 0x402 = DDC
+		//                     limpo (ddc=1,aux=0,mst=0). Sem o arg, a tabela e o con1 ficam idênticos a hoje (0x401).
+		//   -ngreennohdmi     volta ao antigo (DDI B, GMBUS 1, DP) para comparar
+		// Os valores (gHdmiDdi/gHdmiBus/gHdmiSig) são lidos dos boot-args em patchPortModeVtable (carga do kext).
+		{
+			pinfo[1].connectors[1].index = gHdmiDdi;
+			pinfo[1].connectors[1].busId = gHdmiBus;
+			pinfo[1].connectors[1].pipe  = gHdmiSig;                                 // campo "pipe" = sinal/kind
+			pinfo[1].connectors[1].pad   = 0;                                        // phy 0 = combo
+			pinfo[1].connectors[1].type  = (gHdmiSig == 2) ? ConnectorHDMI : ConnectorDP;
+			// flags da tabela estática: SEMPRE 0x1|0x400 (idêntico a hoje). O ngreenhdmiflags age depois, na entrada
+			// ativa (c1 + 0x14), e só quando o arg é dado — é essa escrita que GetGPUCapability enxerga.
+			pinfo[1].connectors[1].flags = 0x1 | 0x400;
+			SYSLOG("ngreen", "getOSInformation: con1 externo DDI %u gmbus %u sinal %u (%s)", gHdmiDdi, gHdmiBus,
+				   gHdmiSig, gHdmiSig == 2 ? "HDMI" : "DP");
+		}
 
 		// Connectors 2-3: Dummy
 		pinfo[1].connectors[2] = { 2, 2, 2, 0, ConnectorDummy, 0 };
@@ -4678,7 +5684,54 @@ uint64_t Gen11::getOSInformation(AppleIntel::AppleIntelBaseController *that)
 
 		SYSLOG("ngreen", "getOSInformation: patched pinfo[1] for ADL-P (LVDS+HDMI, mobile)");
 	}
-	return FunctionCast(getOSInformation, callback->ogetOSInformation)(that);
+	uint64_t ret = FunctionCast(getOSInformation, callback->ogetOSInformation)(that);
+	// Diagnóstico sobrevivente (o log do kernel é varrido pelo spam de AUX): a entrada ativa é escolhida pela
+	// getOSInformation original e guardada em controller+0xd40. Lemos con1 de LÁ (é a struct que cria as portas),
+	// reforçamos os campos do HDMI, e publicamos no IORegistry p/ o relatório ler com ioreg a qualquer momento.
+	if (that) {
+		auto *active = *reinterpret_cast<uint8_t **>(reinterpret_cast<uint8_t *>(that) + 0xd40);
+		if (active) {
+			auto *c1 = active + 0x20 + 0x18;              // connectors[1] (base 0x20, +0x18 = índice 1)
+			uint32_t pid   = *reinterpret_cast<uint32_t *>(active + 0x0);
+			*reinterpret_cast<uint32_t *>(c1 + 0x4) = gHdmiBus;                        // gmbus
+			*reinterpret_cast<uint32_t *>(c1 + 0x8) = gHdmiSig;                        // pipe/kind
+			*reinterpret_cast<uint32_t *>(c1 + 0x10) = (gHdmiSig == 2) ? ConnectorHDMI : ConnectorDP;
+			// ngreenhdmiflags: campo +0x14 (flags) do ConnectorEntry = a palavra que GetGPUCapability (@0x9fc48) lê
+			// p/ montar as máscaras AGDC do con1. bit0 (0x1) -> MST+AUX, bit3 (0x8) -> AUX, bit1 (0x2) -> DDC. Só
+			// re-estampamos quando o arg foi dado (gHdmiFlagsGiven); sem o arg a tabela fica EXATAMENTE como hoje.
+			if (gHdmiFlagsGiven)
+				*reinterpret_cast<uint32_t *>(c1 + 0x14) = gHdmiFlags;
+			char buf[128];
+			snprintf(buf, sizeof(buf), "pid=0x%x ddi=%u gmbus=%u kind=%u type=0x%x flags=0x%x (sig=%u forcado)",
+					 pid, *reinterpret_cast<uint32_t *>(c1 + 0x0), *reinterpret_cast<uint32_t *>(c1 + 0x4),
+					 *reinterpret_cast<uint32_t *>(c1 + 0x8), *reinterpret_cast<uint32_t *>(c1 + 0x10),
+					 *reinterpret_cast<uint32_t *>(c1 + 0x14), gHdmiSig);
+			if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(that)))
+				svc->setProperty("ngreen-hdmi-con1", buf);
+			char fb[112];
+			snprintf(fb, sizeof(fb), "instalada=%d mascara=0x%x emitidas=%u auxkill=%u trig=%u path=%u", (int)gFbLogInstalled, gFbLogMask, gFbLogEmitted, gHdmiAuxKill, gHdmiTrigger, gHdmiPath);
+			if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(that)))
+				svc->setProperty("ngreen-fblog", fb);
+			// F1 (iter 2): publica ngreen-hdmipw aqui, num IOService válido (o controlador/acelerador = `that`),
+			// em contexto de thread. xeEnablePwB não consegue publicar (seu `that` é um AppleIntelPowerWell/OSObject).
+			if (gHdmiPw && gHdmiPwPending && gHdmiPwDiag[0]) {
+				if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(that)))
+					svc->setProperty("ngreen-hdmipw", gHdmiPwDiag);
+			}
+			// ngreenhdmiregs: refresh extra do snapshot do pipe B num site IOService de thread (o controlador).
+			// Gate dentro de xeDumpHdmiRegs (gHdmiRegs && !getIsRealTGL); inerte sem o boot-arg.
+			if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(that)))
+				xeDumpHdmiRegs(svc);
+			// ngreenhdmilight: só RE-PUBLICA o resumo da Fase 1 (preenchido no hotplug por xeHdmiLightUp). NÃO
+			// re-roda a sequência de escrita aqui (ela só dispara do hotplug, com o gate de TRANSCONF_B==0).
+			if (gHdmiLight && gHdmiLightDiag[0] && !NGreen::callback->getIsRealTGL()) {
+				if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(that)))
+					svc->setProperty("ngreen-hdmilight", gHdmiLightDiag);
+			}
+			SYSLOG("ngreen", "getOSInformation: entrada ativa %s", buf);
+		}
+	}
+	return ret;
 }
 
 int Gen11::handleLinkIntegrityCheck()
@@ -5367,6 +6420,29 @@ uint8_t Gen11::hwRegsNeedUpdate
 	// ADL-P DC exit: restore power wells and context before Apple writes registers.
 	if (NGreen::callback->dmcIsAdlp)
 		NGreen::callback->adlpDcExit("hwRNU");
+
+	// Fase 2 (ngreenhdmimodeset): o FB1 (HDMI) sempre toma o ramo "Partial modeset by updating plane" da Apple —
+	// hwRegsNeedUpdate devolve false — então hwSetMode nunca chega ao despacho LightUp e o LightUpTMDS nunca roda
+	// (pipe B fica preto). Aqui, SÓ para o FB1 (fb->0x1dc == gHdmiFbIndex) em TGL spoofado e SÓ enquanto o transcoder
+	// está desabilitado (TRANS_CONF_B bit31 == 0), devolvemos true para forçar o caminho completo, que despacha pelo
+	// kind (TMDS, forçado pelo portmode) -> LightUpTMDS. Cap rígido evita tempestade de modeset se o acendimento falhar.
+	// =1 só loga (seguro); =2 força (pode perturbar a tela interna via DPLL compartilhado — reversível reiniciando).
+	if (gHdmiModeset && !NGreen::callback->isRealTGL && param_1 && param_2) {
+		uint32_t fbidx = getMember<uint32_t>(param_1, 0x1dc);
+		if (fbidx == gHdmiFbIndex) {
+			uint32_t transconf = NGreen::callback->readReg32(0x71008);   // TRANS_CONF_B
+			uint32_t state     = getMember<uint32_t>(param_2, 0x3644);   // estado do path (2 = "aceso")
+			UInt32 t = gHdmiModesetTries;
+			bool force = (gHdmiModeset >= 2) && ((transconf & 0x80000000u) == 0) && (t < 12);
+			if (t < 24)
+				SYSLOG("ngreen", "hdmimodeset: FB%u state(0x3644)=%u TRANS_CONF_B=0x%08x force=%d (tries=%u)",
+					   fbidx, state, transconf, (int)force, t);
+			if (force) {
+				OSIncrementAtomic(&gHdmiModesetTries);
+				return 1;   // força modeset completo -> despacho LightUp -> LightUpTMDS
+			}
+		}
+	}
 
 	// param_3 is the pending CRTCParams built by SetupParams.
 	if (!NGreen::callback->isRealTGL && param_3) {
@@ -6926,7 +8002,7 @@ void * Gen11::getBlit3DContext(void *that,bool param_1)
 		void *b8 = ctx ? getMember<void *>(ctx, 0xb8) : nullptr;
 		if (ctx && (b8 || !NGreen::callback->isRealTGL)) {
 			if (ctx != callback->v131CachedBlit3DCtx) {
-				SYSLOG("ngreen", "V194: getBlit3DContext ctx changed %p -> %p (restart recovery), updating cache",
+				NGQ_SYSLOG("ngreen", "V194: getBlit3DContext ctx changed %p -> %p (restart recovery), updating cache",
 					   callback->v131CachedBlit3DCtx, ctx);
 				callback->v131CachedBlit3DCtx = ctx;
 			} else if (isExperimentalMonitorEnabled()) {
@@ -7611,7 +8687,7 @@ uint64_t Gen11::IGHardwareContextinitWithOptions(void *that, void *task, const v
 	// Bits [31:12] = 4K-aligned GPU physical address of LRCA page0.  Page1 = page0 + 0x1000.
 	uint32_t lrcaGpuVa = getMember<uint32_t>(that, 0x89) & 0xFFFFF000;
 	if (!lrcaGpuVa) {
-		SYSLOG("ngreen", "V509: LRCA GPU VA zero, skipping repair");
+		NGQ_SYSLOG("ngreen", "V509: LRCA GPU VA zero, skipping repair");
 		return ret;
 	}
 	uint32_t page1Idx = (lrcaGpuVa >> 12) + 1;
@@ -7622,7 +8698,7 @@ uint64_t Gen11::IGHardwareContextinitWithOptions(void *that, void *task, const v
 	uint32_t p1Lo = cb->readReg32(GGTT_PTE_LO(page1Idx));
 	uint32_t p1Hi = cb->readReg32(GGTT_PTE_HI(page1Idx));
 	if (!(p1Lo & 1) || !cb->aperturePtr || cb->apertureLen < 0x1000) {
-		SYSLOG("ngreen", "V509: LRCA page1 PTE not present (idx=%u lo=%08x), skipping", page1Idx, p1Lo);
+		NGQ_SYSLOG("ngreen", "V509: LRCA page1 PTE not present (idx=%u lo=%08x), skipping", page1Idx, p1Lo);
 		return ret;
 	}
 
@@ -7637,14 +8713,14 @@ uint64_t Gen11::IGHardwareContextinitWithOptions(void *that, void *task, const v
 		  (uint32_t)ap[2], (uint32_t)ap[3], (uint32_t)ap[80], ap[1] == 0x00ffffff ? "REPARA" : "ok");
 	if (ap[1] != 0x00ffffff) {
 		// Already has a valid LRI header — restoreFromSafeImage gave us a good image.
-		SYSLOG("ngreen", "V509: DW1=%08x (valid), no repair needed", (uint32_t)ap[1]);
+		NGQ_SYSLOG("ngreen", "V509: DW1=%08x (valid), no repair needed", (uint32_t)ap[1]);
 	} else {
 		// Read ring setup from live MMIO — Apple's ring-setup code runs before context creation.
 		uint32_t rcsStart = cb->readReg32(0x2038);   // RCS RING_START
 		uint32_t rcsCtl   = cb->readReg32(0x2040);   // RCS RING_CTL (bit0=0 when stopped)
 		if (!rcsStart) rcsStart = 0x402eb000;         // fallback from HANGCHECK
 
-		SYSLOG("ngreen", "V509: repairing LRCA page1 lrcaGpuVa=%08x RING_START=%08x RING_CTL=%08x",
+		NGQ_SYSLOG("ngreen", "V509: repairing LRCA page1 lrcaGpuVa=%08x RING_START=%08x RING_CTL=%08x",
 		       lrcaGpuVa, rcsStart, rcsCtl);
 
 		// Zero DW0-DW79 (replaces 0x00ffffff GEM-fill with MI_NOOPs).
@@ -7672,7 +8748,7 @@ uint64_t Gen11::IGHardwareContextinitWithOptions(void *that, void *task, const v
 		ap[80] = 0x05000001;
 
 		asm volatile("sfence" ::: "memory");
-		SYSLOG("ngreen", "V509: repair done DW1=%08x DW10(RING_START)=%08x DW12(CTL)=%08x",
+		NGQ_SYSLOG("ngreen", "V509: repair done DW1=%08x DW10(RING_START)=%08x DW12(CTL)=%08x",
 		       (uint32_t)ap[1], rcsStart, rcsCtl | 1);
 	}
 
@@ -7731,7 +8807,7 @@ void *Gen11::IGHardwareContextwithOptions(void *task, const void *params, uint8_
 	cb->lastRCSCtx = ctx;
 
 	uint32_t lrcaGpuVa = getMember<uint32_t>(ctx, 0x89) & 0xFFFFF000;
-	if (!lrcaGpuVa) { SYSLOG("ngreen", "V509: LRCA GPU VA zero"); return ctx; }
+	if (!lrcaGpuVa) { NGQ_SYSLOG("ngreen", "V509: LRCA GPU VA zero"); return ctx; }
 	uint32_t ctxPage1Idx = (lrcaGpuVa >> 12) + 1;
 
 	cb->setApertureIfNecessary();
@@ -7757,7 +8833,7 @@ void *Gen11::IGHardwareContextwithOptions(void *task, const void *params, uint8_
 	for (int i = 0; i < 96; i++) buf[i] = ap[i];
 
 	if (v508Count <= 4) {
-		SYSLOG("ngreen", "V508: ctx  pg1 DW0..7: %08x %08x %08x %08x  %08x %08x %08x %08x",
+		NGQ_SYSLOG("ngreen", "V508: ctx  pg1 DW0..7: %08x %08x %08x %08x  %08x %08x %08x %08x",
 		       buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
 	}
 
@@ -7767,7 +8843,7 @@ void *Gen11::IGHardwareContextwithOptions(void *task, const void *params, uint8_
 	cb->writeReg32(0x101008, 0x1);
 
 	if (v508Count <= 4) {
-		SYSLOG("ngreen", "V508: slot pg1 DW0..7: %08x %08x %08x %08x  %08x %08x %08x %08x",
+		NGQ_SYSLOG("ngreen", "V508: slot pg1 DW0..7: %08x %08x %08x %08x  %08x %08x %08x %08x",
 		       ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], ap[6], ap[7]);
 	}
 
@@ -7777,14 +8853,14 @@ void *Gen11::IGHardwareContextwithOptions(void *task, const void *params, uint8_
 		if ((buf[1] & 0x1F801000) == 0x11001000) {
 			for (int i = 0; i < 96; i++) ap[i] = buf[i];
 			asm volatile("sfence" ::: "memory");
-			SYSLOG("ngreen", "V509: ctx→slot copy done  DW1=%08x DW10=%08x DW12=%08x",
+			NGQ_SYSLOG("ngreen", "V509: ctx→slot copy done  DW1=%08x DW10=%08x DW12=%08x",
 			       buf[1], buf[10], buf[12]);
 		} else {
-			SYSLOG("ngreen", "V509: both invalid  slot=%08x ctx=%08x — skipping",
+			NGQ_SYSLOG("ngreen", "V509: both invalid  slot=%08x ctx=%08x — skipping",
 			       (uint32_t)ap[1], buf[1]);
 		}
 	} else if (v508Count <= 4) {
-		SYSLOG("ngreen", "V509: slot DW1=%08x already valid — no repair", (uint32_t)ap[1]);
+		NGQ_SYSLOG("ngreen", "V509: slot DW1=%08x already valid — no repair", (uint32_t)ap[1]);
 	}
 
 	cb->writeReg32(GGTT_PTE_LO(0), saveLo);
@@ -7824,7 +8900,7 @@ uint64_t Gen11::IGHardwareExtendedContextinitWithOptions(void *that,void *param_
 	static int v501Count = 0;
 	if (v501Count < 8) {
 		v501Count++;
-		SYSLOG("ngreen", "V501[%d]: initWithOptions(%p) ret=%llu b8_pre=%p b8_post=%p p1=%p p2=%p",
+		NGQ_SYSLOG("ngreen", "V501[%d]: initWithOptions(%p) ret=%llu b8_pre=%p b8_post=%p p1=%p p2=%p",
 			   v501Count, that, (unsigned long long)ret, b8pre, b8post, param_1, param_2);
 	}
 	return ret;
@@ -8370,7 +9446,7 @@ uint8_t Gen11::barrierSubmission(void *queue, void *accelerator, void *cmdDesc,
 		
 		if (v130CallCount <= 24 || (v130CallCount > 100 && v130CallCount <= 124) ||
 			(v130CallCount > 1000 && v130CallCount % 100 == 0)) {
-			SYSLOG("ngreen", "V130[%d|init=%d|render=%d]: phase=%s q=%p acc=%p cmd=%p evt=%p count=%u mode=%d",
+			NGQ_SYSLOG("ngreen", "V130[%d|init=%d|render=%d]: phase=%s q=%p acc=%p cmd=%p evt=%p count=%u mode=%d",
 				   v130CallCount, v130CallInitPhase, v130CallRenderPhase,
 				   isInitPhase ? "INIT" : "RENDER", queue, accelerator, cmdDesc, event,
 				   static_cast<unsigned>(count), v130Mode);
@@ -8379,13 +9455,13 @@ uint8_t Gen11::barrierSubmission(void *queue, void *accelerator, void *cmdDesc,
 		uint8_t retVal = 0;
 		if (v130Mode == 3 && !isInitPhase) {
 			if (v130CallCount <= 24 || (v130CallCount > 100 && v130CallCount <= 124)) {
-				SYSLOG("ngreen", "V130[%d]: HYBRID render phase -> ORIGINAL path", v130CallCount);
+				NGQ_SYSLOG("ngreen", "V130[%d]: HYBRID render phase -> ORIGINAL path", v130CallCount);
 			}
 			retVal = FunctionCast(barrierSubmission, callback->obarrierSubmission)(queue, accelerator,
 																				 cmdDesc, event,
 																				 count, list);
 			if (v130CallCount <= 24 || (v130CallCount > 100 && v130CallCount <= 124)) {
-				SYSLOG("ngreen", "V130[%d]: HYBRID original returned %u", v130CallCount, static_cast<unsigned>(retVal));
+				NGQ_SYSLOG("ngreen", "V130[%d]: HYBRID original returned %u", v130CallCount, static_cast<unsigned>(retVal));
 			}
 			return retVal;
 		}
@@ -8393,20 +9469,20 @@ uint8_t Gen11::barrierSubmission(void *queue, void *accelerator, void *cmdDesc,
 		// Log the return path for first few calls to capture mode decision
 		if (v130Mode == 2) {
 			if (v130CallCount <= 24) {
-				SYSLOG("ngreen", "V130[%d]: RETURNING ORIGINAL path (mode=2)", v130CallCount);
+				NGQ_SYSLOG("ngreen", "V130[%d]: RETURNING ORIGINAL path (mode=2)", v130CallCount);
 			}
 			retVal = FunctionCast(barrierSubmission, callback->obarrierSubmission)(queue, accelerator,
 																				 cmdDesc, event,
 																				 count, list);
 			if (v130CallCount <= 24) {
-				SYSLOG("ngreen", "V130[%d]: ORIGINAL returned %u", v130CallCount, static_cast<unsigned>(retVal));
+				NGQ_SYSLOG("ngreen", "V130[%d]: ORIGINAL returned %u", v130CallCount, static_cast<unsigned>(retVal));
 			}
 			return retVal;
 		}
 
 		retVal = static_cast<uint8_t>((v130Mode == 1 || v130Mode == 3) ? 1 : 0);
 		if (v130CallCount <= 24) {
-			SYSLOG("ngreen", "V130[%d]: RETURNING BYPASS path (mode=%d, ret=%u)", v130CallCount, v130Mode, static_cast<unsigned>(retVal));
+			NGQ_SYSLOG("ngreen", "V130[%d]: RETURNING BYPASS path (mode=%d, ret=%u)", v130CallCount, v130Mode, static_cast<unsigned>(retVal));
 		}
 		return retVal;
 	}
@@ -11825,7 +12901,7 @@ bool Gen11::wrapIGScheduler5IsGpuIdle(const void *that) {
 	if (!idle) {
 		uint32_t instdone = NGreen::callback->readReg32(RING_INSTDONE(RENDER_RING_BASE));
 		if ((instdone & ~1U) == 0xfffffffe) {
-			SYSLOG("ngreen", "V212[5]: isGpuIdle override INSTDONE=0x%08x → idle", instdone);
+			NGQ_SYSLOG("ngreen", "V212[5]: isGpuIdle override INSTDONE=0x%08x → idle", instdone);
 			return true;
 		}
 	}
@@ -11837,7 +12913,7 @@ bool Gen11::wrapIGScheduler4IsGpuIdle(const void *that) {
 	if (!idle) {
 		uint32_t instdone = NGreen::callback->readReg32(RING_INSTDONE(RENDER_RING_BASE));
 		if ((instdone & ~1U) == 0xfffffffe) {
-			SYSLOG("ngreen", "V212[4]: isGpuIdle override INSTDONE=0x%08x → idle", instdone);
+			NGQ_SYSLOG("ngreen", "V212[4]: isGpuIdle override INSTDONE=0x%08x → idle", instdone);
 			return true;
 		}
 	}
