@@ -8,14 +8,18 @@
   repository (probePortMode NULL `callback`, strnstr signature). It is under the **MIT License**; see
   [src/LICENSE-HookCase](src/LICENSE-HookCase).
 - **Third-party components in `EFI/`** keep their own licenses: OpenCore, Lilu, WhateverGreen, VirtualSMC, NVMeFix,
-  RestrictEvents, BrightnessKeys, CpuTopologyRebuild (acidanthera and contributors); itlwm, IntelBluetoothFirmware,
-  IntelBTPatcher (OpenIntelWireless); VoodooI2C and VoodooPS2 (their authors); USBToolBox (dhinakg). See each
-  project for its terms.
-- **`EFI/OC/Kexts/AirportItlwm.kext`** is the unmodified release build of **AirportItlwm-Tahoe v2.4.0-alpha** from
-  laobamac's fork of itlwm (commit `738d4c6`, executable sha256 `259bac94…973c`), licensed under the **GNU General
-  Public License v2.0** like itlwm itself; the licence text is in [licenses/itlwm-GPL-2.0.txt](licenses/itlwm-GPL-2.0.txt).
-  Corresponding source: <https://github.com/laobamac/itlwm> at that commit (release `v2.4.0-alpha`). It contains Intel
-  Wi-Fi firmware under Intel's firmware licence (see the source repository).
+  RestrictEvents, BrightnessKeys, CpuTopologyRebuild (acidanthera and contributors); VoodooI2C and VoodooPS2 (their
+  authors); USBToolBox (dhinakg); XHCI-unsupported (RehabMan). See each project for its terms.
+- **`EFI/OC/Kexts/RealtekRTL8111.kext`** is the unmodified v3.0.0 release of
+  [Mieze/RTL8111_driver_for_OS_X](https://github.com/Mieze/RTL8111_driver_for_OS_X) (executable sha256
+  `a9a99d10…`), under the **GNU General Public License v2.0 or later**
+  ([licenses/GPL-2.0.txt](licenses/GPL-2.0.txt)). Corresponding source: tag `v3.0.0` of that repository.
+- **`EFI/OC/Kexts/HoRNDIS.kext`** is the unmodified rel9.2 release of [jwise/HoRNDIS](https://github.com/jwise/HoRNDIS),
+  taken from `HoRNDIS-9.2.pkg` (executable sha256 `a6dae833…`), under the **GNU General Public License v3.0**
+  ([licenses/GPL-3.0.txt](licenses/GPL-3.0.txt)). Corresponding source: tag `rel9.2` of that repository.
+- **`EFI/OC/Kexts/UTBMap.kext`** is the USB port map of the Dell Vostro 3520 for USBToolBox, made for this repository.
+- **`EFI/OC/Kexts/NootedGreen.kext`** and **`EFI/OC/Kexts/CS8409HDA.kext`** are built from `src/NootedGreen` and
+  `tools/CS8409HDA` of this repository.
 - **Intel SOF audio firmware and topology are not included.** The speaker driver (`tools/AudShim`) is built against
   files you download from the official sof-bin release; `tools/AudShim/AudShimData.h`, which would contain the firmware,
   is generated locally and excluded from the repository. The firmware is distributed by Intel under its own licence
