@@ -99,7 +99,7 @@ macos/                   espaço do usuário: patcher do driver Metal, libxedrv,
 tools/CS8409HDA/         driver de áudio para o Cirrus CS8409 do Vostro, com um harness de teste no Linux
 tools/XeSpeakers/        o dispositivo de som do macOS (AudioServerPlugIn)
 tools/hdmi-flags.sh      troca os boot-args dos experimentos de HDMI
-tools/diagnostics/       hdmi-diag.sh e os programas de teste de GPU do projeto base
+tools/diagnostics/       hdmi-diag.sh, i915-regdump.py (Linux) e os programas de teste de GPU do projeto base
 tools/tcc-permitir.sh    permissões de privacidade que o amfi_get_out_of_my_way=1 bloqueia
 docs/VOSTRO.md           este notebook: hardware, EFI, patches, problemas conhecidos, mudanças
 docs/HDMI.md             o trabalho no HDMI

@@ -97,7 +97,7 @@ macos/                   user-space stack: Metal driver patcher, libxedrv, shade
 tools/CS8409HDA/         audio driver for the Vostro's Cirrus CS8409, with a Linux test harness
 tools/XeSpeakers/        the macOS sound device (AudioServerPlugIn)
 tools/hdmi-flags.sh      switches the HDMI experiment boot-args
-tools/diagnostics/       hdmi-diag.sh and the base project's GPU test programs
+tools/diagnostics/       hdmi-diag.sh, i915-regdump.py (Linux) and the base project's GPU test programs
 tools/tcc-permitir.sh    privacy permissions that amfi_get_out_of_my_way=1 blocks
 docs/VOSTRO.md           this laptop: hardware, EFI, patches, known issues, changes
 docs/HDMI.md             the HDMI work

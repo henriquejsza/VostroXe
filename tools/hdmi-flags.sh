@@ -56,7 +56,7 @@ set_tokens(){
   local base="$1" tail="$2" out="" tok
   for tok in ${(s: :)base}; do
     case $tok in
-      ngreenhdmiflags=*|ngreenhdmiddc=*|ngreenhdmipw=*|ngreenhdmitrig=*|ngreenhdmiregs=*|ngreenhdmilight=*|ngreenhdmimodeset=*) ;;  # tokens de HDMI que gerenciamos
+      ngreenhdmiflags=*|ngreenhdmiddc=*|ngreenhdmipw=*|ngreenhdmitrig=*|ngreenhdmiregs=*|ngreenhdmilight=*|ngreenhdmimodeset=*|ngreenhdmiaux=*|ngreenhdmiedid=*|ngreenhdmisink=*|msgbuf=*) ;;  # tokens de HDMI que gerenciamos
       *) out+="$tok " ;;
     esac
   done
@@ -135,7 +135,20 @@ off)
   umount_oc; print "Pronto. Reinicie."; exit 0 ;;
 "")
   print "uso: zsh hdmi-flags.sh test | <valor 0x.. ou decimal> | off | status"
-  print "  test | testregs (snapshot) | testlight (FASE 1: energia+clock) | testmodeset (FASE 2 diag) | forcemodeset (FASE 2 forca) | <valor> | off | status"; exit 1 ;;
+  print "  test | light (acende o HDMI: ngreenhdmilight=2) | testregs (snapshot) | testlight (FASE 1: energia+clock) | testmodeset (FASE 2 diag) | forcemodeset (FASE 2 forca) | <valor> | off | status"; exit 1 ;;
+light)
+  # XE-HDMI13: os boot-args dos boots em que o monitor foi detectado (msgbuf grande, AUX do HDMI respondido na hora,
+  # EDID e sink, flags=0x202, ddc=1) + ngreenhdmilight=2 (energia do pipe B, PLL livre do eDP, modeset completo do FB1
+  # pelo caminho da Apple) + snapshot read-only. Se a tela interna travar: reinicie e rode 'off' (ou, no Linux,
+  # copie config-accel.plist por cima de config.plist).
+  mount_oc
+  base=$(base_ba); [[ -n $base ]] || fail "config-accel.plist sem boot-args em :NVRAM:Add:$G"
+  new=$(set_tokens "$base" "msgbuf=8388608 ngreenhdmiaux=1 ngreenhdmiedid=1 ngreenhdmisink=1 ngreenhdmiflags=0x202 ngreenhdmiddc=1 ngreenhdmilight=2 ngreenhdmiregs=1")
+  write_cfg "$new"
+  ok "config.plist = config-accel + aux=1 edid=1 sink=1 flags=0x202 ddc=1 light=2 regs=1 (XE-HDMI13)"
+  print "  boot-args: $($PB -c "Print :NVRAM:Add:$G:boot-args" "$CFG" 2>/dev/null)"
+  $PB -c "Print :NVRAM:Delete:$G" "$CFG" 2>/dev/null | grep -qx '    boot-args' && ok "boot-args em NVRAM:Delete (OpenCore reescreve no boot)" || fail "Delete nao ficou certo"
+  umount_oc; print "Pronto. Reinicie com o cabo HDMI conectado."; exit 0 ;;
 test)
   mount_oc
   base=$(base_ba); [[ -n $base ]] || fail "config-accel.plist sem boot-args em :NVRAM:Add:$G"

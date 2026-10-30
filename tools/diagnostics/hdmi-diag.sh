@@ -159,6 +159,11 @@ if [[ $SUDO_OK -eq 1 ]]; then
   if sudo -n dmesg > "$DMESG_TMP.raw" 2>/dev/null && [[ -s $DMESG_TMP.raw ]]; then
     grep -E 'XeHDMI|XeFB|XeAUX|ngreen|hdmiargs|hdmitrig|V183.PGE' "$DMESG_TMP.raw" > "$DMESG_TMP" 2>/dev/null || true
     cut -c1-240 "$DMESG_TMP" | capN 60 200 "dmesg NootedGreen lines"
+    # ngreenhdmilight=2 (XE-HDMI13): its register dumps are long, so they get their own section at full width.
+    if grep -q 'XeHDMI13' "$DMESG_TMP" 2>/dev/null; then
+      sec "XE-HDMI13 (ngreenhdmilight=2): power, clock, modeset and register dumps (dmesg, full lines)"
+      grep 'XeHDMI13' "$DMESG_TMP" | capN 80 160 "XeHDMI13 lines"
+    fi
   else
     out "(dmesg produced no output via 'sudo -n' — either denied, or the buffer has no matching lines)"
   fi
@@ -443,6 +448,9 @@ REGS2=$(grep -i 'ngreen-hdmiregs2' "$BODY" 2>/dev/null | head -1 | sed 's/^[ |]*
 # deferred because DPLL1 feeds the internal eDP on macOS). 0x46014 DPLL1_ENABLE is in the read-only snapshot above.
 XE_LIGHT=$(grep 'XeHDMI light' "$NGREEN_TMP" "$DMESG_TMP" 2>/dev/null | tail -1 | sed 's/^[^ ]*: //; s/^[ |]*//')
 LIGHTPROP=$(grep -i 'ngreen-hdmilight' "$BODY" 2>/dev/null | head -1 | sed 's/^[ |]*//')
+# ngreenhdmilight=2 (XE-HDMI13): summary, power, clock, modeset decision and the register dumps before/after
+# LightUpTMDS and 2 s later (frames counted in 100 ms; > 0 means pipe B is scanning out).
+d13prop() { grep -i "\"$1\" = " "$BODY" 2>/dev/null | head -1 | sed 's/^[ |]*//'; }
 
 # cntf <file> <pattern>: matching-line count in <file>. `grep -c` always prints a count; swallow its non-zero exit.
 cntf() { local n; n=$(grep -c -- "$2" "$1" 2>/dev/null); print -r -- "${n:-0}"; }
@@ -475,6 +483,9 @@ sm "ngreen-hdmiregs1 (ioreg): ${REGS1:-(not found)}"
 sm "ngreen-hdmiregs2 (ioreg): ${REGS2:-(not found)}"
 sm "last 'XeHDMI light' (NootedGreen): ${XE_LIGHT:-(none)}"
 sm "ngreen-hdmilight (ioreg): ${LIGHTPROP:-(not found)}"
+for k in ngreen-hdmi13 ngreen-hdmi13-pwr ngreen-hdmi13-rnu ngreen-hdmi13-clk ngreen-hdmi13-pre ngreen-hdmi13-post ngreen-hdmi13-late; do
+  v=$(d13prop "$k"); sm "$k (ioreg): ${v:-(not found)}"
+done
 sm "hdmiargs: ${HDMIARGS:-(not found)}"
 
 # ===================== append the SUMMARY at the END and print it on screen =====================
