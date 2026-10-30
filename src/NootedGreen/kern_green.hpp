@@ -284,6 +284,7 @@ class NGreen {
 public:
     bool getIsRealTGL() const { return isRealTGL; }
     uint64_t mmioLength() const { return (rmmio && rmmioPtr) ? rmmio->getLength() : 0; }  // xe/rc6fw (22/10)
+    void dcExit(const char *caller) { adlpDcExit(caller); }  // xe/hdmi13 (30/10): ADL-P DC exit for the HDMI pipe
 private:
     bool dmcIsAdlp = false;    // true when ADL-P DMC blob was loaded in hwInitializeCState
     void adlpDcExit(const char *caller);

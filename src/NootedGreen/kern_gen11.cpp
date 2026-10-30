@@ -1210,6 +1210,7 @@ static void patchPortModeVtable(KernelPatcher &patcher, size_t index, mach_vm_ad
 	if (checkKernelArgument("-ngreenhdmiregs")) gHdmiRegs = 1;
 	// ngreenhdmilight (27/10): FASE 1 do light-up do pipe B (energia + ungate do clock, SEM scanout). Opt-in, mesma
 	// forma dos irmãos (valor numérico ou flag "-"). Default 0 => kext idêntico ao que boota (nenhuma escrita).
+	// =2 (30/10): XE-HDMI13, o acendimento completo pelo caminho da Apple (bloco XE-HDMI13 acima).
 	PE_parse_boot_argn("ngreenhdmilight", &gHdmiLight, sizeof(gHdmiLight));
 	if (checkKernelArgument("-ngreenhdmilight")) gHdmiLight = 1;
 	// ngreenhdmimodeset (FASE 2): 1=diagnóstico (loga state/transconf do FB1 no hook), 2=força o modeset completo do FB1.
@@ -1345,16 +1346,482 @@ static uint32_t xeGetSinkCountStub(void *port, uint8_t *out) {
 	return FunctionCast(xeGetSinkCountStub, gOrgGetSink)(port, out);
 }
 
+// ===================================================================================================================
+// XE-HDMI13 (ngreenhdmilight=2, 30/10): acende o HDMI nativo da DDI B (combo PHY B) no display 13 (ADL-P/RPL-P) pelo
+// caminho da própria Apple (hwSetMode -> LightUpTMDS -> enablePipe/enablePort), corrigindo só o que o FB TGL 16.0.32
+// faz errado neste hardware (desmontagem do binário + captura ao vivo do i915 em _ref/hdmi-notes):
+//  1. Energia: o pipe B do ADL-P depende de PW_2 + PW_B (HSW_PWR_WELL_CTL2 0x45404: bits 3/2 e 13/12) e o buffer dele
+//     fica nas fatias S2/S3 do DBUF (0x44300/0x44304, banco B do MBUS). O driver TGL não conhece nada disso, e o
+//     adlpDcExit regravava CTL2=0x0C03. Pedimos tudo no hotplug (antes de o AGDC configurar o FB1) e no modeset.
+//  2. PLL: o enableClocks(port) da Apple usa o DPLL de índice = DDI (DDI B -> DPLL1) e grava os divisores nos
+//     endereços do ICL (0x164080/0x164084, tabela @0xf3518), não nos do TGL/ADL-P (0x16428C/0x164290). O GOP deixa o
+//     eDP no DPLL1 (DPCLKA 0x164280 bits[1:0]=01): a Apple religava o PLL do painel e mandava o clock do eDP para o
+//     HDMI, e o disableClocks(port) desligava o DPLL1 (o "pisca" da tela interna com ngreenhdmimodeset=2). Os dois são
+//     substituídos para a porta HDMI: combo PLL que o eDP não usa, divisores como o i915 (icl_calc_wrpll + Display WA
+//     22010492432, metade da fração com ref 38,4 MHz) e DPCLKA em duas escritas (seleção, depois ungate).
+//  3. Modeset completo: o patch f10 do NootedGreen (debug FB) troca o `je` depois do hwRegsNeedUpdate no hwSetMode por
+//     `jmp`, então todo hwSetMode faz só o "Partial modeset" (o eDP depende disso). Com o modo ligado o f10 é desfeito
+//     e o gancho do hwRegsNeedUpdate decide por path: eDP parcial (como antes), HDMI completo enquanto o transcoder e a
+//     DDI não estiverem ligados. O ngreenhdmimodeset=2 nunca teve efeito por causa do f10.
+// Opt-in: sem ngreenhdmilight=2 nada disto roda; inerte no TGL real. Diagnóstico em ngreen-hdmi13-* e "XeHDMI13".
+// ===================================================================================================================
+static mach_vm_address_t gXeD13OrgEnClk = 0, gXeD13OrgDisClk = 0;
+static mach_vm_address_t gXeD13FnMailbox = 0, gXeD13FnVolt = 0, gXeD13FnDdiOn = 0, gXeD13FnDdiOff = 0;
+static bool gXeD13Ready = false;               // rotas de clock instaladas (sem elas o modo fica desligado)
+static bool gXeD13F10Undone = false;           // o patch f10 foi desfeito: o hwRegsNeedUpdate volta a decidir
+static mach_vm_address_t gXeD13RnuRet = 0;     // endereço de retorno da chamada do hwRegsNeedUpdate no hwSetMode
+static volatile UInt32 gXeD13Held = 0;         // bit p: PW_2 + PW_<pipe p> + banco B do DBUF pedidos por nós
+static uint32_t gXeD13Pll = 0xff;              // combo PLL que programamos para a DDI B (0/1), 0xff = nenhum
+static uint32_t gXeD13Pipe = 0;                // pipe do último LightUpTMDS da porta HDMI
+static volatile uint32_t gXeD13PendingKHz = 0; // clock do modo, gravado na entrada do LightUpTMDS
+static volatile UInt32 gXeD13Forces = 0, gXeD13Lightups = 0, gXeD13ClkOn = 0, gXeD13ClkOff = 0, gXeD13Logs = 0;
+static IOService *gXeD13Svc = nullptr;         // controlador (site IOService para publicar)
+static thread_call_t gXeD13LateTc = nullptr;
+static char gXeD13PwrDiag[256], gXeD13ClkDiag[320], gXeD13RnuDiag[192];
+static char gXeD13Pre[1024], gXeD13Post[1024], gXeD13Late[1280];
+
+static inline uint32_t xeD13Rd(uint32_t r) { return NGreen::callback->readReg32(r); }
+static inline void xeD13Wr(uint32_t r, uint32_t v) { NGreen::callback->writeReg32(r, v); }
+static bool xeD13Wait(uint32_t reg, uint32_t mask, uint32_t want, uint32_t maxUs) {
+	for (uint32_t us = 0;; us += 10) {
+		if ((xeD13Rd(reg) & mask) == want) return true;
+		if (us >= maxUs) return false;
+		IODelay(10);
+	}
+}
+static bool xeD13Active() {
+	return gHdmiLight >= 2 && gXeD13Ready && NGreen::callback && !NGreen::callback->getIsRealTGL();
+}
+// PortConfig (port+0x548): [0]=DDI, [1]=pino GMBUS, [2]=tipo (0 eDP, 1 DP, 2 TMDS), [3]=Type-C.
+static bool xeD13IsHdmiPort(void *port) {
+	if (!port) return false;
+	auto *pc = getMember<uint32_t *>(port, 0x548);
+	return pc && pc[0] == gHdmiDdi && pc[3] == 0 && pc[2] == 2;
+}
+
+// Registradores (i915 intel_display_regs.h / skl_watermark_regs.h; valores "on" do Linux com o HDMI aceso).
+static constexpr uint32_t kD13PwCtl2 = 0x45404, kD13Ddi2 = 0x45454, kD13Mbus = 0x4438C, kD13Dpclka = 0x164280;
+static constexpr uint32_t kD13Dbuf[4] = {0x45008, 0x44FE8, 0x44300, 0x44304};   // DBUF_CTL S0..S3
+static constexpr uint32_t kD13Pw2Req = 1u << 3, kD13Pw2St = 1u << 2;           // PW_2 = índice 1
+static inline uint32_t xeD13PwReq(uint32_t pipe) { return 2u << (2 * (5 + pipe)); }   // PW_A=5, PW_B=6, PW_C=7
+static inline uint32_t xeD13PwSt(uint32_t pipe) { return 1u << (2 * (5 + pipe)); }
+static inline uint32_t xeD13DdiReq() { return 2u << (2 * gHdmiDdi); }                // DDI IO B: bits 3/2
+static inline uint32_t xeD13DdiSt() { return 1u << (2 * gHdmiDdi); }
+static inline uint32_t xeD13DdiBuf() { return 0x64000 + 0x100 * gHdmiDdi; }          // DDI_BUF_CTL
+static inline uint32_t xeD13ClkOff() { return 1u << (gHdmiDdi ? 11 : 10); }           // DPCLKA DDI_CLK_OFF(PHY)
+static inline uint32_t xeD13SelShift() { return 2 * gHdmiDdi; }                       // DPCLKA DDI_CLK_SEL(PHY)
+
+// Bits de CTL2 e DDI2 que o adlpDcExit deve manter enquanto seguramos o pipe externo.
+static uint32_t xeD13KeepCtl2() {
+	UInt32 h = gXeD13Held;
+	if (!h || !xeD13Active()) return 0;
+	uint32_t m = kD13Pw2Req;
+	for (uint32_t p = 1; p <= 2; p++)
+		if (h & (1u << p)) m |= xeD13PwReq(p);
+	return m;
+}
+static uint32_t xeD13KeepDdi2() {
+	return xeD13KeepCtl2() ? (xeD13Rd(kD13Ddi2) & xeD13DdiReq()) : 0;
+}
+
+// Banco B do DBUF para os pipes B/C. Com o MBUS unido (um pipe só) o banco B não serve aos pipes B/C: separa como o
+// i915 (intel_dbuf_mbus_post_ddb_update): min tracker de cada fatia para o valor sem join (no ADL-P o MDCLK vem do
+// CD2XCLK, razão 2 -> campo 1; unido seria 3), crédito A do DBOX do pipe A 6 -> 4, MBUS_CTL hashing 2x2 sem join
+// (pipe select NONE). Sem esperar o vblank do i915: o pipe B só usa o banco B bem depois, no modeset. A DDB do pipe A
+// pela Apple (TGL) já cabe em 0..2047. Depois liga S2/S3 com o tracker do i915 (gen12_dbuf_slices_config).
+static constexpr uint32_t kD13MinTracker = 1u << 16;   // DBUF_MIN_TRACKER_STATE_SERVICE(ratio 2 - 1), ADL-P sem join
+static int xeD13DbufOn(char *out, size_t n) {
+	int p = 0;
+	uint32_t mbus = xeD13Rd(kD13Mbus);
+	if (mbus & (1u << 31)) {
+		for (uint32_t s = 0; s < 4; s++) {
+			uint32_t v = xeD13Rd(kD13Dbuf[s]);
+			if ((v & (7u << 16)) != kD13MinTracker) xeD13Wr(kD13Dbuf[s], (v & ~(7u << 16)) | kD13MinTracker);
+		}
+		uint32_t dbox = xeD13Rd(0x7003C);
+		if ((dbox & 0xF) == 6) xeD13Wr(0x7003C, (dbox & ~0xFu) | 4);
+		xeD13Wr(kD13Mbus, (mbus & ~((1u << 31) | (1u << 30) | (7u << 26))) | (7u << 26));
+		p += snprintf(out + p, n - p, " mbus:0x%x->0x%x", mbus, xeD13Rd(kD13Mbus));
+	}
+	for (uint32_t s = 2; s < 4 && p < (int)n - 1; s++) {
+		uint32_t v = xeD13Rd(kD13Dbuf[s]);
+		uint32_t want = (v & ~((0x1Fu << 19) | (7u << 16))) | (8u << 19) | kD13MinTracker | (1u << 31);
+		if (v != want) xeD13Wr(kD13Dbuf[s], want);
+		bool ok = xeD13Wait(kD13Dbuf[s], 1u << 30, 1u << 30, 100);
+		p += snprintf(out + p, n - p, " S%u:0x%x->0x%x%s", s, v, xeD13Rd(kD13Dbuf[s]), ok ? "" : "(tmo)");
+	}
+	return p;
+}
+
+// PW_2 -> PW_<pipe> (i915 hsw_power_well_enable: REQ, espera STATE, espera o fuse PG dist) + banco B do DBUF.
+// Antes, como o poço "DC off" do i915, sai de DC5/DC6 pelo adlpDcExit (que restaura o contexto do display 13 e,
+// com o pipe seguro, mantém os bits dele). Idempotente.
+static bool xeD13PowerOn(uint32_t pipe, const char *why) {
+	if (!xeD13Active() || pipe < 1 || pipe > 2) return false;
+	const uint32_t dc = xeD13Rd(0x45504);
+	if (dc & 0x3u) {   // DC_STATE_EN bits[1:0]: DC5, DC6, DC3CO
+		NGreen::callback->dcExit("hdmi13");
+		const uint32_t dc2 = xeD13Rd(0x45504);
+		if (dc2 & 0x3u) xeD13Wr(0x45504, dc2 & ~0x3u);   // sem o DMC do ADL-P o adlpDcExit não faz nada
+	}
+	uint32_t c2b = xeD13Rd(kD13PwCtl2);
+	if (!(c2b & kD13Pw2Req)) xeD13Wr(kD13PwCtl2, c2b | kD13Pw2Req);
+	bool pw2 = xeD13Wait(kD13PwCtl2, kD13Pw2St, kD13Pw2St, 2000), pwx = false;
+	bool fuse2 = pw2 && xeD13Wait(0x42000, 1u << 25, 1u << 25, 1000), fusex = false;   // SKL_FUSE_PG_DIST_STATUS(PG2)
+	if (pw2) {
+		uint32_t c2 = xeD13Rd(kD13PwCtl2);
+		if (!(c2 & xeD13PwReq(pipe))) xeD13Wr(kD13PwCtl2, c2 | xeD13PwReq(pipe));
+		pwx = xeD13Wait(kD13PwCtl2, xeD13PwSt(pipe), xeD13PwSt(pipe), 2000);
+		const uint32_t fb = 1u << (27 - (5 + pipe + 1));   // pg = índice do poço + 1 (PW_B -> pg 7 -> bit 20)
+		fusex = pwx && xeD13Wait(0x42000, fb, fb, 1000);
+	}
+	char db[160] = {};
+	if (pw2 && pwx) {
+		xeD13DbufOn(db, sizeof(db));
+		OSBitOrAtomic(1u << pipe, &gXeD13Held);
+	}
+	snprintf(gXeD13PwrDiag, sizeof(gXeD13PwrDiag), "%s pipe=%c dc=0x%x pw2=%d/%d pw%c=%d/%d ctl2:0x%x->0x%x fuse=0x%x%s",
+			 why, 'A' + pipe, dc, (int)pw2, (int)fuse2, 'A' + pipe, (int)pwx, (int)fusex, c2b, xeD13Rd(kD13PwCtl2),
+			 xeD13Rd(0x42000), db);
+	if (OSIncrementAtomic(&gXeD13Logs) < 64) IOLog("XeHDMI13 pwr %s\n", gXeD13PwrDiag);
+	return pw2 && pwx;
+}
+
+// WRPLL do combo PLL para um clock de porta (kHz): icl_calc_wrpll + icl_wrpll_get_multipliers + icl_calc_dpll_state
+// do i915 (intel_dpll_mgr.c). Com ref 38,4 MHz o DPLL divide por 2 (usa 19,2) e a Display WA 22010492432 (TGL/ADL-P)
+// pede metade da fração. 148500 kHz -> CFGCR0 0x001001d0, CFGCR1 0x00000e84, como o i915 grava nesta máquina.
+struct XeD13Wrpll { uint32_t cfgcr0, cfgcr1, dcoKHz, p, q, k; };
+static bool xeD13CalcWrpll(uint32_t portKHz, uint32_t refKHz, XeD13Wrpll &o) {
+	if (portKHz < 25000 || portKHz > 600000 || !refKHz) return false;
+	const uint32_t ref = refKHz == 38400 ? 19200 : refKHz;
+	const uint64_t afe = (uint64_t)portKHz * 5, dcoMin = 7998000, dcoMax = 10000000, dcoMid = (dcoMin + dcoMax) / 2;
+	static const uint8_t divs[] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 28, 30, 32, 36, 40, 42, 44, 48, 50, 52, 54,
+		56, 60, 64, 66, 68, 70, 72, 76, 78, 80, 84, 88, 90, 92, 96, 98, 100, 102, 3, 5, 7, 9, 15, 21};
+	uint32_t best = 0;
+	uint64_t bestDco = 0, bestCen = ~0ULL;
+	for (uint8_t d : divs) {
+		uint64_t dco = afe * d;
+		if (dco < dcoMin || dco > dcoMax) continue;
+		uint64_t cen = dco > dcoMid ? dco - dcoMid : dcoMid - dco;
+		if (cen < bestCen) { bestCen = cen; best = d; bestDco = dco; }
+	}
+	if (!best) return false;
+	uint32_t p = 0, q = 0, k = 0;
+	if (best % 2 == 0) {
+		if (best == 2) { p = 2; q = 1; k = 1; }
+		else if (best % 4 == 0) { p = 2; q = best / 4; k = 2; }
+		else if (best % 6 == 0) { p = 3; q = best / 6; k = 2; }
+		else if (best % 5 == 0) { p = 5; q = best / 10; k = 2; }
+		else if (best % 14 == 0) { p = 7; q = best / 14; k = 2; }
+	} else if (best == 3 || best == 5 || best == 7) { p = best; q = 1; k = 1; }
+	else { p = best / 3; q = 1; k = 3; }
+	const uint32_t kReg = k == 1 ? 1 : k == 2 ? 2 : k == 3 ? 4 : 0;
+	const uint32_t pReg = p == 2 ? 1 : p == 3 ? 2 : p == 5 ? 4 : p == 7 ? 8 : 0;
+	if (!kReg || !pReg || !q || q > 0xff) return false;
+	const uint64_t dco = (bestDco << 15) / ref;
+	uint32_t dInt = (uint32_t)(dco >> 15), dFrac = (uint32_t)(dco & 0x7fff);
+	if (refKHz == 38400) dFrac = (dFrac + 1) / 2;
+	o.cfgcr0 = (dFrac << 10) | (dInt & 0x3ff);
+	o.cfgcr1 = (q << 10) | ((q == 1 ? 0u : 1u) << 9) | (kReg << 6) | (pReg << 2);
+	o.dcoKHz = (uint32_t)bestDco; o.p = p; o.q = q; o.k = k;
+	return true;
+}
+static uint32_t xeD13RefKHz() {   // SKL_DSSM 0x51004 bits[31:29]: 0 = 24 MHz, 1 = 19,2 MHz, 2 = 38,4 MHz
+	switch ((xeD13Rd(0x51004) >> 29) & 7) {
+		case 0: return 24000;
+		case 1: return 19200;
+		case 2: return 38400;
+		default: return 0;
+	}
+}
+// ClockParams da Apple (path+0x218, calculatePllDivisors): [0] DCO inteiro, [1] fração (15 bits), [2] P, [3] Q, [4] K.
+static uint32_t xeD13ClockFromParams(const uint32_t *pr, uint32_t refKHz) {
+	if (!pr || !refKHz) return 0;
+	const uint32_t in = pr[0] & 0x3ff, fr = pr[1] & 0x7fff, pd = pr[2], qd = pr[3], kd = pr[4];
+	if (!in || !pd || pd > 7 || !qd || qd > 0xff || !kd || kd > 3) return 0;
+	const uint64_t dco = ((uint64_t)(refKHz == 38400 ? 19200 : refKHz) * (((uint64_t)in << 15) + fr)) >> 15;
+	return (uint32_t)(dco / ((uint64_t)pd * qd * kd * 5));
+}
+
+typedef int (*XeD13MailboxFn)(void *, uint32_t, uint32_t, bool);
+typedef uint32_t (*XeD13VoltFn)(void *);
+typedef void (*XeD13PortFn)(void *);
+
+// Substitui AppleIntelBaseController::enableClocks(port, other, params) para a porta HDMI. Mesmo envelope da Apple
+// (mailbox 7 = nível de tensão, máximo antes; calculateVoltageLevel depois; enablePowerWellDDI no fim) com o PLL e o
+// DPCLKA do i915 (combo_pll_enable + _icl_ddi_enable_clock). Nunca toca no PLL que o eDP (PHY A) usa.
+static void xeD13EnableClocks(void *ctrl, void *port, void *other, void *params) {
+	if (!xeD13Active() || !xeD13IsHdmiPort(port)) {
+		FunctionCast(xeD13EnableClocks, gXeD13OrgEnClk)(ctrl, port, other, params);
+		return;
+	}
+	auto mbox = reinterpret_cast<XeD13MailboxFn>(gXeD13FnMailbox);
+	auto volt = reinterpret_cast<XeD13VoltFn>(gXeD13FnVolt);
+	auto ddiOn = reinterpret_cast<XeD13PortFn>(gXeD13FnDdiOn);
+	UInt32 n = OSIncrementAtomic(&gXeD13ClkOn);
+	if (mbox) mbox(ctrl, 7, 3, false);
+	const uint32_t ref = xeD13RefKHz();
+	const uint32_t pkhz = xeD13ClockFromParams(reinterpret_cast<const uint32_t *>(params), ref);
+	const uint32_t khz = gXeD13PendingKHz ? gXeD13PendingKHz : pkhz;
+	gXeD13PendingKHz = 0;
+	XeD13Wrpll w {};
+	const bool calc = xeD13CalcWrpll(khz, ref, w);
+	const uint32_t dp0 = xeD13Rd(kD13Dpclka);
+	const uint32_t edp = (dp0 & (1u << 10)) ? 0xff : (dp0 & 3);   // PHY A ligado: o PLL do eDP
+	// PLLs em uso por outra PHY combo ligada: A (sel bits[1:0], off bit10) e C (sel bits[5:4], off bit24, ausente no
+	// ADL-P). Qualquer outro combo PLL é nosso; prefere o que já programamos.
+	uint32_t busy = 0;
+	if (!(dp0 & (1u << 10))) busy |= 1u << (dp0 & 3);
+	if (!(dp0 & (1u << 24))) busy |= 1u << ((dp0 >> 4) & 3);
+	uint32_t pll = (gXeD13Pll < 2 && !(busy & (1u << gXeD13Pll))) ? gXeD13Pll : 0xff;
+	for (uint32_t c = 0; c < 2 && pll == 0xff; c++)
+		if (!(busy & (1u << c))) pll = c;
+	uint32_t en0 = 0, en1 = 0;
+	bool pwrOk = false, lockOk = false;
+	if (calc && pll != 0xff) {
+		const uint32_t enReg = 0x46010 + 4 * pll;
+		en0 = xeD13Rd(enReg);
+		if (en0 & 0x80000000u) {   // ainda ligado por um modo anterior: corta o clock da PHY B e desliga para reprogramar
+			xeD13Wr(kD13Dpclka, xeD13Rd(kD13Dpclka) | xeD13ClkOff());
+			xeD13Wr(enReg, xeD13Rd(enReg) & ~0x80000000u);
+			xeD13Wait(enReg, 1u << 30, 0, 1000);
+		}
+		if (!(xeD13Rd(enReg) & (1u << 27))) xeD13Wr(enReg, xeD13Rd(enReg) | (1u << 27));   // PLL_POWER_ENABLE
+		pwrOk = xeD13Wait(enReg, 1u << 26, 1u << 26, 1000);                                  // PLL_POWER_STATE
+		if (pwrOk) {
+			xeD13Wr(0x164284 + 8 * pll, w.cfgcr0);   // TGL_DPLL_CFGCR0(pll)
+			xeD13Wr(0x164288 + 8 * pll, w.cfgcr1);   // TGL_DPLL_CFGCR1(pll)
+			(void)xeD13Rd(0x164288 + 8 * pll);
+			xeD13Wr(enReg, xeD13Rd(enReg) | 0x80000000u);                // PLL_ENABLE
+			lockOk = xeD13Wait(enReg, 1u << 30, 1u << 30, 2000);          // PLL_LOCK
+		}
+		en1 = xeD13Rd(enReg);
+		if (lockOk) {
+			gXeD13Pll = pll;
+			uint32_t v = xeD13Rd(kD13Dpclka);
+			uint32_t sel = (v & ~(3u << xeD13SelShift())) | (pll << xeD13SelShift()) | xeD13ClkOff();
+			if (sel != v) xeD13Wr(kD13Dpclka, sel);   // 1ª escrita: seleção com o clock ainda cortado
+			xeD13Wr(kD13Dpclka, sel & ~xeD13ClkOff()); // 2ª escrita: ungate
+			getMember<uint64_t>(port, 0x140) = (uint64_t)khz * 1000ULL;   // clock do link em Hz (como o setupPort do DP)
+		}
+	}
+	if (mbox && volt) mbox(ctrl, 7, volt(ctrl), false);
+	if (ddiOn) ddiOn(port);
+	bool ddiOk = xeD13Wait(kD13Ddi2, xeD13DdiSt(), xeD13DdiSt(), 2000);
+	if (!ddiOk) {   // o poço da DDI IO pelo código TGL não subiu: pede direto (DDI2 é o registrador do driver)
+		xeD13Wr(kD13Ddi2, xeD13Rd(kD13Ddi2) | xeD13DdiReq());
+		ddiOk = xeD13Wait(kD13Ddi2, xeD13DdiSt(), xeD13DdiSt(), 2000);
+	}
+	snprintf(gXeD13ClkDiag, sizeof(gXeD13ClkDiag),
+			 "on#%u clk=%ukHz par=%u ref=%u pll=%u eDP=%u cfgcr0=0x%x cfgcr1=0x%x dco=%u p%u q%u k%u en:0x%x->0x%x pwr=%d lock=%d dpclka:0x%x->0x%x ddi=%d other=%d",
+			 (unsigned)(n + 1), khz, pkhz, ref, pll, edp, w.cfgcr0, w.cfgcr1, w.dcoKHz, w.p, w.q, w.k, en0, en1,
+			 (int)pwrOk, (int)lockOk, dp0, xeD13Rd(kD13Dpclka), (int)ddiOk, (int)(other && other != port));
+	if (n < 16) IOLog("XeHDMI13 clk %s\n", gXeD13ClkDiag);
+}
+
+// Substitui disableClocks(port, other) para a porta HDMI: corta o clock da PHY B e desliga só o PLL que é nosso.
+static void xeD13DisableClocks(void *ctrl, void *port, void *other) {
+	if (!xeD13Active() || !xeD13IsHdmiPort(port)) {
+		FunctionCast(xeD13DisableClocks, gXeD13OrgDisClk)(ctrl, port, other);
+		return;
+	}
+	auto mbox = reinterpret_cast<XeD13MailboxFn>(gXeD13FnMailbox);
+	auto volt = reinterpret_cast<XeD13VoltFn>(gXeD13FnVolt);
+	auto ddiOff = reinterpret_cast<XeD13PortFn>(gXeD13FnDdiOff);
+	UInt32 n = OSIncrementAtomic(&gXeD13ClkOff);
+	if (ddiOff) ddiOff(port);
+	if (mbox) mbox(ctrl, 7, 3, false);
+	const uint32_t v = xeD13Rd(kD13Dpclka);
+	const uint32_t sel = (v >> xeD13SelShift()) & 3, edp = (v & (1u << 10)) ? 0xff : (v & 3);
+	uint32_t busy = 0;   // PLLs de outras PHYs ligadas (A, C): nunca desligar
+	if (!(v & (1u << 10))) busy |= 1u << (v & 3);
+	if (!(v & (1u << 24))) busy |= 1u << ((v >> 4) & 3);
+	if (!(v & xeD13ClkOff())) xeD13Wr(kD13Dpclka, v | xeD13ClkOff());
+	bool pllOff = false;
+	if (sel < 2 && !(busy & (1u << sel)) && sel == gXeD13Pll) {
+		const uint32_t enReg = 0x46010 + 4 * sel;
+		xeD13Wr(enReg, xeD13Rd(enReg) & ~0x80000000u);
+		xeD13Wait(enReg, 1u << 30, 0, 1000);
+		xeD13Wr(enReg, xeD13Rd(enReg) & ~(1u << 27));
+		pllOff = xeD13Wait(enReg, 1u << 26, 0, 1000);
+		gXeD13Pll = 0xff;
+	}
+	if (mbox && volt) mbox(ctrl, 7, volt(ctrl), false);
+	if (n < 16) IOLog("XeHDMI13 clkoff#%u dpclka:0x%x->0x%x sel=%u eDP=%u pll-off=%d\n", (unsigned)(n + 1), v,
+					  xeD13Rd(kD13Dpclka), sel, edp, (int)pllOff);
+}
+
+// Retrato dos registradores do caminho do pipe externo. Referência = Linux com o HDMI aceso (1080p60, pipe B, DPLL1);
+// mask 0 = só o valor. rel: 0 global; 1 pipe/transcoder (+0x1000 por pipe); 2 GAMMA_MODE (+0x800); 3 +4 por pipe;
+// 4 interrupções DE do pipe (+0x10). Endereços escritos para o pipe B.
+struct XeD13Reg { uint32_t off, on, mask; uint8_t rel; const char *name; };
+static const XeD13Reg kXeD13Regs[] = {
+	{0x45404, 0x00003c0f, 0x0000300c, 0, "PWCTL2"}, {0x45454, 0x0000000f, 0x0000000c, 0, "PWDDI2"},
+	{0x44300, 0xc041c000, 0xc0000000, 0, "DBUFS2"}, {0x44304, 0xc041c000, 0xc0000000, 0, "DBUFS3"},
+	{0x4438c, 0x1c000700, 0xdc000000, 0, "MBUS"}, {0x46010, 0, 0, 0, "DPLL0"}, {0x46014, 0, 0, 0, "DPLL1"},
+	{0x164284, 0, 0, 0, "D0CR0"}, {0x164288, 0, 0, 0, "D0CR1"}, {0x16428c, 0, 0, 0, "D1CR0"},
+	{0x164290, 0, 0, 0, "D1CR1"}, {0x164280, 0, 0, 0, "DPCLKA"}, {0x46144, 0x20000000, 0xf0000000, 3, "TCLKSEL"},
+	{0x64100, 0x80000000, 0x80000080, 0, "DDIBUF"}, {0x61400, 0x90030000, 0xff730000, 1, "TDDIFC"},
+	{0x61000, 0x0897077f, 0xffffffff, 1, "HTOT"}, {0x6100c, 0x04640437, 0xffffffff, 1, "VTOT"},
+	{0x6101c, 0x077f0437, 0xffffffff, 1, "PIPESRC"}, {0x71008, 0xc0000000, 0xc0000000, 1, "TCONF"},
+	{0x71028, 0x00002a0f, 0x00002000, 1, "ARB"}, {0x71030, 0x00800100, 0, 1, "PMISC"},
+	{0x71038, 0x40008080, 0x40008080, 1, "PCHICK"}, {0x7103c, 0xb1038804, 0x01ffdfef, 1, "DBOX"},
+	{0x71180, 0, 0, 1, "PLCTL"}, {0x71188, 0, 0, 1, "PLSTRIDE"}, {0x71190, 0x0437077f, 0xffffffff, 1, "PLSIZE"},
+	{0x7119c, 0, 0, 1, "PLSURF"}, {0x7127c, 0, 0, 1, "PLDDB"}, {0x71240, 0, 0, 1, "PLWM0"}, {0x7117c, 0, 0, 1, "CURDDB"},
+	{0x4ac80, 0, 0xffffffff, 2, "GAMMA"}, {0x45274, 0, 0, 3, "LINETIME"}, {0x61200, 0, 0, 1, "DIP"},
+	{0x6c028, 0x0003000a, 0x000000f0, 0, "PHYCL10"}, {0x6c804, 0x18000004, 0x04000000, 0, "PCS1"},
+	{0x6c888, 0x00003098, 0x0000b8ff, 0, "TX2"}, {0x6c890, 0x0028003f, 0x8003ffff, 0, "TX4"},
+	{0x6c894, 0xa0290030, 0xe01c0038, 0, "TX5"}, {0x6c89c, 0x7f000000, 0x7f000000, 0, "TX7"},
+	{0x44414, 0, 0, 4, "DEIMR"}, {0x4441c, 0, 0, 4, "DEIER"}, {0x44418, 0, 0, 4, "DEIIR"},
+	{0x71040, 0, 0, 1, "FRMCNT"}, {0xc4000, 0, 0, 0, "SDEISR"},
+};
+static void xeD13Dump(char *out, size_t n, const char *stage, uint32_t pipe) {
+	if (pipe < 1 || pipe > 2) pipe = 1;
+	int p = snprintf(out, n, "%s pipe=%c:", stage, 'A' + pipe);
+	for (const auto &e : kXeD13Regs) {
+		if (p >= (int)n - 1) break;
+		const uint32_t d = pipe - 1;
+		const uint32_t off = e.off + (e.rel == 1 ? 0x1000 * d : e.rel == 2 ? 0x800 * d : e.rel == 3 ? 4 * d :
+									 e.rel == 4 ? 0x10 * d : 0);
+		const uint32_t v = xeD13Rd(off);
+		const char vd = !e.mask ? ' ' : ((v ^ e.on) & e.mask) ? '!' : '=';
+		p += snprintf(out + p, n - p, " %s=%x%c", e.name, v, vd);
+	}
+}
+static void xeD13LogLong(const char *tag, const char *s) {   // o IOLog corta linhas longas: imprime em pedaços
+	size_t len = strlen(s);
+	for (size_t i = 0; i < len; i += 400)
+		IOLog("XeHDMI13 %s[%u] %.400s\n", tag, (unsigned)(i / 400), s + i);
+}
+static void xeD13Publish() {
+	IOService *svc = gXeD13Svc;
+	if (!svc) return;
+	char sum[200];
+	snprintf(sum, sizeof(sum), "light=%u f10undone=%d held=0x%x pll=%u pipe=%u forces=%u lightups=%u clkon=%u clkoff=%u",
+			 gHdmiLight, (int)gXeD13F10Undone, (unsigned)gXeD13Held, gXeD13Pll, gXeD13Pipe, (unsigned)gXeD13Forces,
+			 (unsigned)gXeD13Lightups, (unsigned)gXeD13ClkOn, (unsigned)gXeD13ClkOff);
+	svc->setProperty("ngreen-hdmi13", sum);
+	if (gXeD13PwrDiag[0]) svc->setProperty("ngreen-hdmi13-pwr", gXeD13PwrDiag);
+	if (gXeD13ClkDiag[0]) svc->setProperty("ngreen-hdmi13-clk", gXeD13ClkDiag);
+	if (gXeD13RnuDiag[0]) svc->setProperty("ngreen-hdmi13-rnu", gXeD13RnuDiag);
+	if (gXeD13Pre[0]) svc->setProperty("ngreen-hdmi13-pre", gXeD13Pre);
+	if (gXeD13Post[0]) svc->setProperty("ngreen-hdmi13-post", gXeD13Post);
+	if (gXeD13Late[0]) svc->setProperty("ngreen-hdmi13-late", gXeD13Late);
+}
+
+// 2 s depois do LightUpTMDS (thread_call): o pipe está varrendo? Contador de quadros em 100 ms, IIR do pipe
+// (bit 31 = underrun do FIFO), plano e DDI. Só leitura.
+static void xeD13LateWorker(thread_call_param_t, thread_call_param_t) {
+	if (!NGreen::callback) return;
+	const uint32_t pipe = gXeD13Pipe >= 1 && gXeD13Pipe <= 2 ? gXeD13Pipe : 1;
+	const uint32_t fc = 0x70040 + 0x1000 * pipe;
+	const uint32_t f0 = xeD13Rd(fc);
+	IOSleep(100);
+	const uint32_t f1 = xeD13Rd(fc), iir = xeD13Rd(0x44408 + 0x10 * pipe);
+	int p = snprintf(gXeD13Late, sizeof(gXeD13Late), "frames/100ms=%u iir=0x%x underrun=%d | ", f1 - f0, iir,
+					 (int)((iir >> 31) & 1));
+	xeD13Dump(gXeD13Late + p, sizeof(gXeD13Late) - p, "late", pipe);
+	xeD13LogLong("late", gXeD13Late);
+	xeD13Publish();
+}
+
+static void xeD13PreLightUp(void *ctrl, void *path, const void *timing) {
+	const uint32_t pipe = getMember<uint32_t>(path, 0x3640);
+	if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(ctrl))) gXeD13Svc = svc;
+	gXeD13Pipe = pipe;
+	xeD13PowerOn(pipe, "lightup");
+	const auto *t = reinterpret_cast<const IODetailedTimingInformationV2 *>(timing);
+	const uint64_t hz = t ? t->pixelClock : 0;
+	gXeD13PendingKHz = (hz >= 25000000ULL && hz <= 600000000ULL) ? (uint32_t)(hz / 1000) : 0;
+	if (pipe >= 1 && pipe <= 2) {
+		const uint32_t base = 0x70000 + 0x1000 * pipe;
+		// Wa_22012358565 (adl-p): PIPE_ARB_CTL.USE_PROG_SLOTS antes de ligar o transcoder (intel_enable_transcoder).
+		const uint32_t arb = xeD13Rd(base + 0x28);
+		if (!(arb & (1u << 13))) xeD13Wr(base + 0x28, arb | (1u << 13));
+		// icl_set_pipe_chicken: bypass de alpha, pixel rounding passthrough e underrun recovery desligado (display 13).
+		const uint32_t ck = xeD13Rd(base + 0x38);
+		if ((ck & 0x40008080u) != 0x40008080u) xeD13Wr(base + 0x38, ck | 0x40008080u);
+	}
+	xeD13Dump(gXeD13Pre, sizeof(gXeD13Pre), "pre", pipe);
+	xeD13LogLong("pre", gXeD13Pre);
+}
+
+static void xeD13PostLightUp(uint32_t ret) {
+	const uint32_t pipe = gXeD13Pipe;
+	OSIncrementAtomic(&gXeD13Lightups);
+	if (pipe >= 1 && pipe <= 2) {
+		const uint32_t base = 0x70000 + 0x1000 * pipe;
+		const uint32_t ck = xeD13Rd(base + 0x38);   // a Apple pode ter regravado o PIPE_CHICKEN
+		if ((ck & 0x40008080u) != 0x40008080u) xeD13Wr(base + 0x38, ck | 0x40008080u);
+		// PIPE_MBUS_DBOX_CTL como o i915 no ADL-P (pipe_mbus_dbox_ctl): B2B 16/1/regulado, BW credit 2, B credit 8,
+		// A credit 4 (Wa_22010947358). O driver TGL grava os créditos do TGL.
+		const uint32_t dbox = xeD13Rd(base + 0x3C);
+		if ((dbox & 0x01ffdfefu) != 0x01038804u) xeD13Wr(base + 0x3C, (dbox & ~0x01ffdfefu) | 0x01038804u);
+		if (xeFixEnabled() && xeD13Rd(0x4A480 + 0x800 * pipe) != 0) xeD13Wr(0x4A480 + 0x800 * pipe, 0);  // GAMMA_MODE
+	}
+	int p = snprintf(gXeD13Post, sizeof(gXeD13Post), "ret=0x%x ", ret);
+	xeD13Dump(gXeD13Post + p, sizeof(gXeD13Post) - p, "post", pipe);
+	xeD13LogLong("post", gXeD13Post);
+	xeD13Publish();
+	if (gXeD13LateTc) {
+		uint64_t dl;
+		clock_interval_to_deadline(2000, kMillisecondScale, &dl);
+		thread_call_enter_delayed(gXeD13LateTc, dl);
+	}
+}
+
+// Decisão do modeset para as chamadas do hwRegsNeedUpdate que vêm do hwSetMode, com o f10 desfeito:
+//   -1 = vale o resultado da Apple; 0 = "Partial modeset" (o que o f10 forçava); 1 = modeset completo.
+// eDP (e qualquer path que não seja o do HDMI): 0, como o f10. HDMI com HPD alto: liga a energia antes de a Apple
+// programar o pipe; enquanto o transcoder e a DDI não estiverem ligados, 1 (no máximo 6 vezes por plug); aceso, -1
+// (mesmo modo -> parcial; modo novo -> completo). HPD baixo: 0.
+static int xeD13RnuDecision(void *ctrl, void *fb, void *path, const void *ret) {
+	if (!xeD13Active() || !gXeD13F10Undone || !gXeD13RnuRet || !fb || !path ||
+		reinterpret_cast<mach_vm_address_t>(ret) != gXeD13RnuRet)
+		return -1;
+	if (!xeD13IsHdmiPort(getMember<void *>(path, 0x3648))) return 0;
+	if (!(xeD13Rd(0xc4000) & (1u << (16 + gHdmiDdi)))) return 0;   // HPD baixo: nada para acender
+	const uint32_t pipe = getMember<uint32_t>(path, 0x3640);
+	if (pipe < 1 || pipe > 2) return 0;
+	if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(ctrl))) gXeD13Svc = svc;
+	xeD13PowerOn(pipe, "rnu");
+	const uint32_t tconf = xeD13Rd(0x70008 + 0x1000 * pipe), buf = xeD13Rd(xeD13DdiBuf());
+	const bool lit = (tconf & 0xC0000000u) == 0xC0000000u && (buf & 0x80000000u) && !(buf & 0x80u);
+	const UInt32 f = gXeD13Forces;
+	const int d = lit ? -1 : f < 6 ? 1 : 0;
+	if (d == 1) OSIncrementAtomic(&gXeD13Forces);
+	snprintf(gXeD13RnuDiag, sizeof(gXeD13RnuDiag), "fb=%u pipe=%c state=%u tconf=0x%x ddibuf=0x%x lit=%d decision=%d forces=%u",
+			 getMember<uint32_t>(fb, 0x1dc), 'A' + pipe, getMember<uint32_t>(path, 0x3644), tconf, buf, (int)lit, d,
+			 (unsigned)gXeD13Forces);
+	if (f < 24) IOLog("XeHDMI13 rnu %s\n", gXeD13RnuDiag);
+	return d;
+}
+static bool xeD13IsPipeA(void *path) {   // V97P/V97C (correções do eDP) só no pipe A quando o modo está ativo
+	return !xeD13Active() || !path || getMember<uint32_t>(path, 0x3640) == 0;
+}
+// Escritas da Apple com o pipe externo seguro: mantém PW_2/PW_B no CTL2 e não deixa ligar DC5/DC6/DC3CO (o i915 também
+// segura o "DC off" enquanto um poço além do PW1 está em uso). Sem o pipe seguro, nada muda.
+static uint32_t xeD13FilterWrite(unsigned long reg, uint32_t val) {
+	switch (reg & 0xFFFFF) {
+		case 0x45404: return val | xeD13KeepCtl2();
+		case 0x45504: return xeD13KeepCtl2() ? (val & ~0x3u) : val;
+	}
+	return val;
+}
+
 // Fase 2 (instrumentação): os logs de entrada nativos do LightUpTMDS/DP/EDP são nível INFO, suprimidos por
 // IGLogDISPLAY=7. Aqui logamos via SYSLOG (dmesg, sem gating de nível) a ENTRADA e a SAÍDA de cada um — só
 // observam, chamam o original sem alterar nada. Objetivo: ver qual LightUp o hwSetMode despacha para o FB1
 // quando o modeset é forçado (modeset=2). Roteados só quando gHdmiModeset.
 static uint32_t xeLightUpTMDS(void *that, void *fb, void *path, const void *t) {
 	uint32_t idx = fb ? getMember<uint32_t>(fb, 0x1dc) : 0xffffu;
+	const bool d13 = xeD13Active() && path && xeD13IsHdmiPort(getMember<void *>(path, 0x3648));
+	if (d13) xeD13PreLightUp(that, path, t);   // XE-HDMI13: energia, clock do modo, WAs do pipe, retrato "pre"
 	UInt32 n = OSIncrementAtomic(&gLuTmds);
 	if (n < 24) SYSLOG("ngreen", "XeLightUp: TMDS enter fb=%u (hit #%u)", idx, (unsigned)(n + 1));
 	uint32_t r = FunctionCast(xeLightUpTMDS, gOrgLightUpTMDS)(that, fb, path, t);
 	if (n < 24) SYSLOG("ngreen", "XeLightUp: TMDS exit  fb=%u ret=0x%x", idx, r);
+	if (d13) xeD13PostLightUp(r);
 	return r;
 }
 static uint32_t xeLightUpDP(void *that, void *fb, void *path, const void *t) {
@@ -1608,6 +2075,19 @@ static void xeHdmiLightUp(IOService *svc) {
 	if (svc) svc->setProperty("ngreen-hdmilight", gHdmiLightDiag);
 }
 static void xeHotplugHook(void *controller, uint32_t ddi, uint32_t portMode) {
+	// XE-HDMI13: com o HPD da DDI B alto (SDEISR bit 16+DDI), liga PW_2/PW_B e o banco B do DBUF ANTES do handler da
+	// Apple, para que a configuração do FB1 pelo AGDC (DBUF, planos, interrupções do pipe) caia em hardware ligado.
+	if (ddi == gHdmiDdi && controller && xeD13Active()) {
+		static volatile UInt32 gXeD13LastHpd = 0;
+		const UInt32 hpd = (xeD13Rd(0xc4000) >> (16 + gHdmiDdi)) & 1;
+		if (hpd) {
+			if (!gXeD13LastHpd) gXeD13Forces = 0;   // novo plug: até 6 modesets completos de novo
+			if (auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(controller))) gXeD13Svc = svc;
+			xeD13PowerOn(1, "hpd");
+			xeD13Publish();
+		}
+		gXeD13LastHpd = hpd;
+	}
 	FunctionCast(xeHotplugHook, gOrgHotplug)(controller, ddi, portMode);
 	if (ddi == gHdmiDdi && controller) {
 		// B1 (iter 3): extra inofensivo. O espelho do handler já pede PW_B no init (via overridePowerWellsState(true),
@@ -1634,7 +2114,7 @@ static void xeHotplugHook(void *controller, uint32_t ddi, uint32_t portMode) {
 		// ngreenhdmilight (FASE 1): energia (PG2->PW_B->DDI-B) + ungate do clock da DDI-B. SÓ aqui (contexto de
 		// thread, APÓS o original), só no display 13 e no máximo algumas vezes (anti-churn, como o ngreenhdmipw).
 		// Todo o resto do gating (TRANSCONF_B==0) está dentro de xeHdmiLightUp. Sem scanout.
-		if (gHdmiLight && !NGreen::callback->getIsRealTGL()) {
+		if (gHdmiLight == 1 && !NGreen::callback->getIsRealTGL()) {
 			static volatile UInt32 gLightRuns = 0;
 			if (OSIncrementAtomic(&gLightRuns) < 4) {
 				auto *svc = OSDynamicCast(IOService, reinterpret_cast<OSObject *>(controller));
@@ -1822,7 +2302,7 @@ static uint32_t xeHwDoGMBusRequest(void *that, uint32_t bus, uint32_t speed, voi
 }
 
 static void installHdmiTrigger(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-	if (!gHdmiTrigger && !gHdmiEdid && !gHdmiPath && !gHdmiProbe && !gHdmiSink && !gHdmiLanes && !gHdmiOnline && !gHdmiPw && !gHdmiDdc && !gHdmiModeset) return;
+	if (!gHdmiTrigger && !gHdmiEdid && !gHdmiPath && !gHdmiProbe && !gHdmiSink && !gHdmiLanes && !gHdmiOnline && !gHdmiPw && !gHdmiDdc && !gHdmiModeset && !gHdmiLight) return;
 	gSetFbStatus = patcher.solveSymbol(index,
 		"__ZN24AppleIntelBaseController22SetFbStatusOnNextProbeEP14AGDCFBOnline_t", address, size);
 	patcher.clearError();
@@ -1836,7 +2316,7 @@ static void installHdmiTrigger(KernelPatcher &patcher, size_t index, mach_vm_add
 	// ngreenhdmipw funcionar sozinho como os irmãos (S2), wantHook = o conjunto completo das 7 flags pré-pw MAIS
 	// gHdmiPw. Assim: qualquer das 7 originais instala o hook idêntico ao pre-impl; pw sozinho também instala;
 	// sem flag nenhuma o early-return já cortou. É um acréscimo puro sobre o pre-impl (nenhuma config perde o hook).
-	bool wantHook = gHdmiTrigger || gHdmiEdid || gHdmiPath || gHdmiProbe || gHdmiSink || gHdmiLanes || gHdmiOnline || gHdmiPw;
+	bool wantHook = gHdmiTrigger || gHdmiEdid || gHdmiPath || gHdmiProbe || gHdmiSink || gHdmiLanes || gHdmiOnline || gHdmiPw || gHdmiLight;
 	bool ok = false;
 	if (wantHook) {
 		RouteRequestPlus r[] = {
@@ -1888,8 +2368,45 @@ static void installHdmiTrigger(KernelPatcher &patcher, size_t index, mach_vm_add
 		if (!okd) patcher.clearError();
 	}
 	// Fase 2: instrumenta os 3 LightUp* (só quando gHdmiModeset) p/ ver qual é despachado pro FB1 no modeset forçado.
+	// XE-HDMI13 (ngreenhdmilight=2): o wrapper do LightUpTMDS também faz a preparação do pipe externo, e o
+	// enableClocks/disableClocks por porta são substituídos para a DDI do HDMI. Se alguma rota de clock ou símbolo
+	// faltar, o modo fica desligado (gXeD13Ready=false): o clock da Apple religaria o PLL do eDP.
+	if (gHdmiLight >= 2 && !NGreen::callback->getIsRealTGL()) {
+		gXeD13FnMailbox = patcher.solveSymbol(index, "__ZN24AppleIntelBaseController14hwWriteMailboxEjjb", address, size);
+		patcher.clearError();
+		gXeD13FnVolt = patcher.solveSymbol(index, "__ZN24AppleIntelBaseController21calculateVoltageLevelEv", address, size);
+		patcher.clearError();
+		gXeD13FnDdiOn = patcher.solveSymbol(index, "__ZN14AppleIntelPort18enablePowerWellDDIEv", address, size);
+		patcher.clearError();
+		gXeD13FnDdiOff = patcher.solveSymbol(index, "__ZN14AppleIntelPort19disablePowerWellDDIEv", address, size);
+		patcher.clearError();
+		// A chamada do hwRegsNeedUpdate dentro do hwSetMode(fb, path, timing) fica em +0x40a (e8 rel32) e volta em
+		// +0x40f, onde vem `test al,al; je +0x5b` (84 c0 74 5b). Confere os bytes: o gancho só decide para essa chamada.
+		const mach_vm_address_t hsm = patcher.solveSymbol(index,
+			"__ZN24AppleIntelBaseController9hwSetModeEP21AppleIntelFramebufferP21AppleIntelDisplayPathPK29IODetailedTimingInformationV2",
+			address, size);
+		patcher.clearError();
+		if (hsm) {
+			const auto *b = reinterpret_cast<const uint8_t *>(hsm + 0x40f);
+			if (b[-5] == 0xe8 && b[0] == 0x84 && b[1] == 0xc0 && b[2] == 0x74 && b[3] == 0x5b) gXeD13RnuRet = hsm + 0x40f;
+		}
+		bool okc = false;
+		if (gXeD13FnMailbox && gXeD13FnVolt && gXeD13FnDdiOn && gXeD13FnDdiOff && gXeD13RnuRet) {
+			RouteRequestPlus rc[] = {
+				{"__ZN24AppleIntelBaseController12enableClocksEP14AppleIntelPortS1_P11ClockParams", xeD13EnableClocks, gXeD13OrgEnClk},
+				{"__ZN24AppleIntelBaseController13disableClocksEP14AppleIntelPortS1_", xeD13DisableClocks, gXeD13OrgDisClk},
+			};
+			okc = RouteRequestPlus::routeAll(patcher, index, rc, address, size);
+			if (!okc) patcher.clearError();
+		}
+		gXeD13Ready = okc && gXeD13OrgEnClk && gXeD13OrgDisClk;
+		if (gXeD13Ready && !gXeD13LateTc) gXeD13LateTc = thread_call_allocate(xeD13LateWorker, nullptr);
+		SYSLOG("ngreen", "hdmi13: rotas de clock=%d mailbox=%d volt=%d ddi=%d/%d hwSetMode=%d -> ativo=%d", (int)okc,
+			   (int)(gXeD13FnMailbox != 0), (int)(gXeD13FnVolt != 0), (int)(gXeD13FnDdiOn != 0), (int)(gXeD13FnDdiOff != 0),
+			   (int)(gXeD13RnuRet != 0), (int)gXeD13Ready);
+	}
 	bool okm = false;
-	if (gHdmiModeset) {
+	if (gHdmiModeset || gXeD13Ready) {
 		RouteRequestPlus rm[] = {
 			{"__ZN24AppleIntelBaseController11LightUpTMDSEP21AppleIntelFramebufferP21AppleIntelDisplayPathPK29IODetailedTimingInformationV2", xeLightUpTMDS, gOrgLightUpTMDS},
 			{"__ZN24AppleIntelBaseController9LightUpDPEP21AppleIntelFramebufferP21AppleIntelDisplayPathPK29IODetailedTimingInformationV2", xeLightUpDP, gOrgLightUpDP},
@@ -2647,6 +3164,17 @@ bool Gen11::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
 				};
 
 			PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches , address, size), "ngreen", "kextG11FBT Failed to apply dbg patches!");
+			// XE-HDMI13 (ngreenhdmilight=2): o f10 acima troca o `je` depois do hwRegsNeedUpdate por `jmp`, então o
+			// hwSetMode sempre faz o "Partial modeset" e o LightUpTMDS nunca roda (no boot de 27/10 com
+			// ngreenhdmimodeset=2 o gancho devolveu 1 e o FB1 ainda logou "Partial modeset"). Com o modo ligado o f10
+			// é desfeito e o gancho do hwRegsNeedUpdate passa a decidir: o eDP continua no parcial (como o f10 fazia) e
+			// o pipe do HDMI faz o modeset completo. Se não der para desfazer, o modo inteiro fica desligado.
+			if (gXeD13Ready) {
+				LookupPatchPlus const undo[] = {{activeKext, r10, f10, arrsize(r10), 1}};
+				gXeD13F10Undone = LookupPatchPlus::applyAll(patcher, undo, address, size);
+				if (!gXeD13F10Undone) { patcher.clearError(); gXeD13Ready = false; }
+				SYSLOG("ngreen", "hdmi13: f10 desfeito=%d (ativo=%d)", (int)gXeD13F10Undone, (int)gXeD13Ready);
+			}
 			applyFixBootMode(patcher, activeKext, address, size);
 			if (enableTcon) {
 				LookupPatchPlus const tconPatches[] = {
@@ -4748,7 +5276,8 @@ static bool xeEnablePwB(AppleIntel::AppleIntelBaseController *that, bool enable)
 		}
 	} else {
 		// Release: só se o REQ estiver ligado. intel_de_rmw(REQ, 0); espera o STATE cair (1 ms).
-		if (c2before & kPwBReqBit)
+		// XE-HDMI13: com o pipe externo seguro por ngreenhdmilight=2 o PW_B não é solto aqui.
+		if ((c2before & kPwBReqBit) && !(xeD13KeepCtl2() & kPwBReqBit))
 			NGreen::callback->writeReg32(kPwrWellCtl2, c2before & ~kPwBReqBit);
 		for (int us = 0; us <= 1000; us += 10) {
 			if (!(NGreen::callback->readReg32(kPwrWellCtl2) & kPwBStateBit)) break;
@@ -5002,6 +5531,7 @@ static uint32_t xeBootHold(unsigned long reg, uint32_t val) {
 static uint32_t xeFixFilterWrite(unsigned long reg, uint32_t val) {
 	xeBootDiagRecord(reg, val);
 	val = xeBootHold(reg, val);
+	val = xeD13FilterWrite(reg, val);   // XE-HDMI13: inerte sem ngreenhdmilight=2 e sem o pipe externo seguro
 	if (!xeFixEnabled()) return val;
 	val = xeNoDpms((uint32_t)(reg & 0x1FFFFF), val);
 	// 20/10 (XE-BLR): o brilho ia só até ~50%. Como o BacklightRegistersFix do WhateverGreen: mantém o período do
@@ -5040,7 +5570,9 @@ static uint32_t xeFixFilterWrite(unsigned long reg, uint32_t val) {
 		case 0x42084: return val | 0x40000000u;
 		// GAMMA_MODE_A: o driver TGL liga gamma pós-CSC de 10 bits com tabela no formato errado para o
 		// display 13 -> texto/cores degradados. Provado ao vivo (17/10 20h): com 0 (bypass) a imagem fica certa.
+		// 30/10: o mesmo para os pipes B e C (HDMI externo, XE-HDMI13), só com ngreenhdmilight=2.
 		case 0x4A480: return 0;
+		case 0x4AC80: case 0x4B480: return gHdmiLight >= 2 ? 0 : val;
 	}
 	return val;
 }
@@ -6077,14 +6609,16 @@ void NGreen::adlpDcExit(const char *caller) {
 	// 1. Disable DC states so clock-gated blocks latch the writes below.
 	writeReg32(0x45504, 0);
 	// 2. Restore power wells (request enable on CTL1/2/3/4 + AUX A/B + DDI A/B).
+	//    XE-HDMI13: com o pipe externo seguro (ngreenhdmilight=2) mantém PW_2/PW_B e a DDI IO B, senão este restore
+	//    apagava o HDMI a cada modeset.
 	writeReg32(0x45400, uefiCtl1 | 0x401u);  // PWR_WELL_CTL1
-	writeReg32(0x45404, 0x0C03u);             // PWR_WELL_CTL2
+	writeReg32(0x45404, 0x0C03u | xeD13KeepCtl2());   // PWR_WELL_CTL2
 	writeReg32(0x45408, 0x40000000u);         // PWR_WELL_CTL3
 	writeReg32(0x4540C, 0x401u);              // PWR_WELL_CTL4
 	writeReg32(0x45440, 0x3u);               // ICL_PWR_WELL_CTL_AUX1 — AUX A
 	writeReg32(0x45444, 0x3u);               // ICL_PWR_WELL_CTL_AUX2 — AUX B
 	writeReg32(0x45450, 0x3u);               // ICL_PWR_WELL_CTL_DDI1 — DDI A
-	writeReg32(0x45454, 0x3u);               // ICL_PWR_WELL_CTL_DDI2 — DDI B
+	writeReg32(0x45454, 0x3u | xeD13KeepDdi2());   // ICL_PWR_WELL_CTL_DDI2 — DDI B
 	// 3. Restore ADL-P display engine context registers (saved by DMC on DC entry).
 	writeReg32(0x8F074, 0x00086FC0u);
 	writeReg32(0x8F034, 0xC003B400u);
@@ -6421,6 +6955,11 @@ uint8_t Gen11::hwRegsNeedUpdate
 	if (NGreen::callback->dmcIsAdlp)
 		NGreen::callback->adlpDcExit("hwRNU");
 
+	// XE-HDMI13 (ngreenhdmilight=2): com o f10 desfeito, decide aqui o modeset das chamadas do hwSetMode.
+	const int xeD13Decision = xeD13RnuDecision(that, param_1, param_2, __builtin_return_address(0));
+	if (xeD13Decision == 1)
+		return 1;
+
 	// Fase 2 (ngreenhdmimodeset): o FB1 (HDMI) sempre toma o ramo "Partial modeset by updating plane" da Apple —
 	// hwRegsNeedUpdate devolve false — então hwSetMode nunca chega ao despacho LightUp e o LightUpTMDS nunca roda
 	// (pipe B fica preto). Aqui, SÓ para o FB1 (fb->0x1dc == gHdmiFbIndex) em TGL spoofado e SÓ enquanto o transcoder
@@ -6445,7 +6984,9 @@ uint8_t Gen11::hwRegsNeedUpdate
 	}
 
 	// param_3 is the pending CRTCParams built by SetupParams.
-	if (!NGreen::callback->isRealTGL && param_3) {
+	// XE-HDMI13: com ngreenhdmilight=2 estas correções do eDP valem só para o pipe A; no pipe externo o V97P trocava a
+	// polaridade do hsync e o V97C copiava o TRANSCONF do pipe A. Sem o modo, comportamento igual ao de antes.
+	if (!NGreen::callback->isRealTGL && param_3 && xeD13IsPipeA(param_2)) {
 		auto *params = param_3;
 
 		// V97P: clear bit[16] in TRANS_DDI_FUNC_CTL.
@@ -6504,7 +7045,9 @@ uint8_t Gen11::hwRegsNeedUpdate
 	// by the computeLaneCount hook forcing 4 lanes.  Without register updates, the
 	// plane surface address and stride never get written, leaving the stale BIOS
 	// framebuffer on screen (grey/black vertical bars with only cursor visible).
-	return FunctionCast(hwRegsNeedUpdate, callback->ohwRegsNeedUpdate)(that, param_1, param_2, param_3, param_4, param_5);
+	const uint8_t rnuRet = FunctionCast(hwRegsNeedUpdate, callback->ohwRegsNeedUpdate)(that, param_1, param_2, param_3, param_4, param_5);
+	// XE-HDMI13: 0 = "Partial modeset", o mesmo que o f10 fazia com qualquer resultado (eDP; HDMI apagado sem HPD).
+	return xeD13Decision == 0 ? 0 : rnuRet;
 }
 
 int Gen11::wrapHwSetupMemory(AppleIntel::AppleIntelBaseController *that, AppleIntel::AppleIntelFramebuffer *fb, AppleIntel::AppleIntelDisplayPath *displayPath, AppleIntel::CRTCParams *params, bool isAperture)
