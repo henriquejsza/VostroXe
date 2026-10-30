@@ -363,3 +363,39 @@ O kext do teste foi compilado no Linux (clang 22 `--target=x86_64-apple-macos13.
 **O que olhar no teste:** `f10undone=1`; `-rnu` com `decision=1`; `lightups` > 0; em `-clk`, `lock=1`, `pll=0` e
 `DPCLKA` com o bit 11 limpo; em `-post`, `DDIBUF` sem o bit 7 e `TCONF=c0000000`; em `-late`, quadros > 0 e
 `underrun=0`. Tela interna estável o tempo todo.
+
+**Resultado (30/10, boot 69560725, 19:25–19:45, horário local): imagem no monitor externo.** O usuário viu a imagem sem rodar o
+`hdmi-diag.sh`; o que segue vem do log unificado desse boot, lido no Linux (apfs-fuse + macos-UnifiedLogs):
+
+- 19:25:07 `hdmi13: rotas de clock=1 mailbox=1 volt=1 ddi=1/1 hwSetMode=1 -> ativo=1` e `f10 desfeito=1`.
+- 19:25:18 HPD baixo; 19:25:19 HPD alto: `pw2=1/1 pwB=1/1 ctl2:0xc03->0x3c0f`, S2/S3 `0xc040c000->0xc041c000`
+  (o MBUS já estava sem join, `0x1c000700`).
+- 19:25:27.059 `fb=1 pipe=B state=1 tconf=0x0 ddibuf=0x80 lit=0 decision=1` → `FB1: Complete modeset` →
+  `XeLightUp: TMDS enter fb=1` → `exit ret=0x0` 4 ms depois.
+- Modo 1920×1080, pixel clock 159,84 MHz (HTOTAL `0x093f077f`, VTOTAL `0x04640437`: 2368 × 1125, 60 Hz).
+- Depois do `LightUpTMDS`: DPLL0 `0xcc000000` (ligado, com lock) com CFGCR0/1 = `0x008001f3`/`0x00000e84`
+  (DCO = (499 + 2 × 0x2000/0x8000) × 19,2 MHz = 9590,4 MHz, com a fração gravada pela metade; p2 q3 k2 → 799,2 MHz
+  = 5 × 159,84);
+  o DPLL1 do eDP ficou igual (`0x00e001a5`/`0x00000088`). `DPCLKA` `0x01e07805 → 0x01e07001` (PHY B no DPLL0,
+  sem gate). `TRANS_CLK_SEL_B = 0x20000000`, `DDI_BUF_CTL_B = 0x80000000`, `TRANSCONF_B = 0xc0000000`,
+  `PWDDI2 = 0xf`.
+- 2 s depois (`late`): `frames/100ms=6 iir=0x0 underrun=0`, plano 1B ligado (`PLANE_CTL 0x84000400`,
+  `PLANE_SURF 0x4e2fd000`), contador de quadros `0x7f`.
+- Os 6 modesets seguintes do FB1 foram parciais com `lit=1 decision=-1` (decisão da Apple). Nenhum
+  `runAUXCommand ... Time out` (com `ngreenhdmiaux=1`), nenhum erro de GPU depois do acendimento, e nenhum panic nem
+  `gpuRestart` em 30/10 (os últimos `gpuRestart` são de 27 e 29/10). O desligamento gerou um `shutdown_stall`, como
+  5 boots de 30/10 anteriores ao XE-HDMI13.
+
+Diferenças em relação ao Linux que não impediram a imagem:
+
+- `TRANS_DDI_FUNC_CTL_B = 0x91000000`: modo DVI (bits 26:24 = 1), sem infoframes (`DIP = 0`) e, portanto, sem
+  áudio. O Linux usa HDMI (`0x90030000`). Hipótese: o macOS só recebe o bloco base do EDID (o `ngreenhdmiddc=1` serve
+  o bloco 0, e a extensão CTA, que declara HDMI, fica com o GMBUS da Apple, que falha nesse pino).
+- `PLANE_BUF_CFG_1_B = 0x052c02aa` (blocos 682..1324, layout da Apple) contra `0x07db0000` no Linux; sem underrun.
+- Swing da PHY B escrito pela Apple: TX2 `0x1098`, TX5 `0x80390030` (Linux: `0x3098`, `0xa0290030`).
+- A linha `XeHDMI13 clk` não chegou ao log unificado (as de `pwr`, `rnu`, `pre`, `post` e `late` chegaram); o estado
+  do PLL acima vem do dump `post`.
+- O `SetupDPSSTTimings` da Apple roda também nos modesets do FB1 e logou 7 vezes `FB1: fActiveNumberOfLanes = 0,
+  linkSymbolClock = 0. One of them is 0 for FB1 - will lead to DivideByZero panic`. O boot seguiu sem panic.
+
+Falta testar: replug, repouso, o conjunto mínimo de boot-args.

@@ -27,7 +27,7 @@ Testado em um Vostro 3520 (i5-1235U, BIOS 1.43.0) com o macOS Tahoe 26.7.1 (25G2
 | Boot | ✅ boot acelerado, com as correções dos panics de `probePortState` e de divisão por zero (24/10) |
 | Teclado, USB, NVMe | ✅ |
 | Rede | ✅ um dispositivo de rede USB CDC-ECM (driver da Apple) · ❌ Wi-Fi e Bluetooth: o Realtek RTL8821CE não tem driver no macOS |
-| HDMI externo | 🚧 detectado e com o EDID lido usando boot-args opcionais, ainda sem imagem ([docs/HDMI.md](docs/HDMI.md)) |
+| HDMI externo | ✅ imagem em 1920×1080, 60 Hz num monitor 1080p, com boot-args opcionais (`zsh tools/hdmi-flags.sh light`, [docs/HDMI.md](docs/HDMI.md)) · ❌ áudio pelo HDMI (a porta funciona em modo DVI) · replug e repouso ainda não testados |
 | Na EFI, ainda sem confirmação | Ethernet (RealtekRTL8111), roteador USB RNDIS do Android (HoRNDIS), touchpad (VoodooI2C em polling), estado da bateria, os 12 threads da CPU (correção no `Cpuid1Data`), perfil XE-PM de turbo e repouso (`ngreenpm=20`) |
 | Ainda não conferido | teclas de brilho, repouso, webcam, leitor de digital |
 

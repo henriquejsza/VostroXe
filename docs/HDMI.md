@@ -1,9 +1,9 @@
 # External HDMI on the Vostro 3520
 
-Status: **not working yet.** macOS detects the monitor and reads its EDID with opt-in boot-args, and lists it as a
-second display, but the screen stays black. `ngreenhdmilight=2` (XE-HDMI13, 30 Oct) is the first attempt to run the
-whole pipe-B enable; it has not been tested on the laptop yet. The register captures and the notes of every
-iteration are in [HDMI-TMDS.md](HDMI-TMDS.md) (Portuguese).
+Status: **works with opt-in boot-args** (tested 30 Oct). With `ngreenhdmilight=2` (XE-HDMI13) and the detection
+boot-args, the test monitor (LG ULTRAGEAR, 1080p) shows a picture at 1920×1080, 60 Hz, and the internal panel keeps
+working. The port runs in DVI mode, so there is no HDMI audio, and replug and sleep have not been checked.
+The register captures and the notes of every iteration are in [HDMI-TMDS.md](HDMI-TMDS.md) (Portuguese).
 
 ## The hardware path
 
@@ -93,11 +93,41 @@ With `ngreenhdmilight=2` NootedGreen lets Apple's own HDMI enable run (`hwSetMod
 
 Without `ngreenhdmilight=2` the kext behaves as before.
 
-## Next step
+## Test, 30 Oct
 
-Boot with the monitor connected after `zsh tools/hdmi-flags.sh light`, then run
-`zsh tools/diagnostics/hdmi-diag.sh light`. The report shows whether `LightUpTMDS` ran (`ngreen-hdmi13`), whether
-the PLL locked (`-clk`), and whether the DDI buffer left idle and pipe B counts frames (`-post`, `-late`).
+macOS 26.7.1 booted from the USB with the boot-args of `zsh tools/hdmi-flags.sh light` and the monitor connected,
+and ran for 20 minutes. The kernel log of that boot, read afterwards from Linux:
+
+1. `hdmi13: f10 desfeito=1`. At HPD-high, PW_2 and PW_B came on (`0x45404`: `0x0c03` → `0x3c0f`), and so did DBUF
+   S2 and S3.
+2. The hook returned `decision=1` for framebuffer 1, which logged `FB1: Complete modeset`; `LightUpTMDS` returned 0.
+3. The mode is 1920×1080 with a 159.84 MHz pixel clock (60 Hz). Registers right after `LightUpTMDS`:
+
+   | Register | macOS, 30 Oct | Linux, HDMI on |
+   |---|---|---|
+   | DPLL0 / DPLL1 enable (`0x46010`, `0x46014`) | `0xcc000000` / `0xcc000000` | `0xcc000000` / `0xcc000000` |
+   | HDMI PLL CFGCR0 / CFGCR1 | DPLL0: `0x008001f3` / `0x00000e84` (159.84 MHz) | DPLL1: `0x001001d0` / `0x00000e84` (148.5 MHz) |
+   | `0x164280` DPCLKA_CFGCR0 | `0x01e07001` (eDP on DPLL1, HDMI on DPLL0) | `0x01e07004` (eDP on DPLL0, HDMI on DPLL1) |
+   | `0x46144` TRANS_CLK_SEL_B | `0x20000000` | `0x20000000` |
+   | `0x64100` DDI_BUF_CTL_B | `0x80000000` | `0x80000000` |
+   | `0x61400` TRANS_DDI_FUNC_CTL_B | `0x91000000` (DVI) | `0x90030000` (HDMI) |
+   | `0x71008` TRANSCONF_B | `0xc0000000` | `0xc0000000` |
+
+   The eDP's PLL kept its dividers (`0x00e001a5` / `0x00000088`).
+4. 2 s later pipe B counted 6 frames in 100 ms, with no underrun. The later mode sets of framebuffer 1 were partial,
+   with the pipe lit.
+5. No AUX timeouts and no GPU errors after the light-up; no panic or GPU restart report that day.
+
+Not checked yet: unplug and replug, sleep, other monitors and modes. Open points:
+
+- **Divide-by-zero warning.** Apple's DP timing code also runs in the mode sets of framebuffer 1 and logged
+  `FB1: fActiveNumberOfLanes = 0, linkSymbolClock = 0 ... will lead to DivideByZero panic` 7 times. No panic followed
+  in this boot.
+- **DVI mode.** Apple's `SetupParams` picks DVI for this sink (`TRANS_DDI_FUNC_CTL` mode 1), so there are no
+  infoframes and no audio. Probably macOS only gets the EDID base block: `ngreenhdmiddc=1` serves block 0, and the
+  CTA extension, which declares HDMI, is left to Apple's GMBUS code, which fails on this pin.
+- **Boot-args.** The test used the whole `light` set, which includes diagnostics (`msgbuf`, `ngreenhdmiregs`,
+  `ngreenhdmiedid`). Which ones are needed has not been tested, so none of them is in the default config yet.
 
 ## Boot-args
 
@@ -122,7 +152,7 @@ Opt-in:
 ## Tools
 
 ```sh
-zsh tools/hdmi-flags.sh light         # config.plist = config-accel.plist + the XE-HDMI13 test boot-args
+zsh tools/hdmi-flags.sh light         # config.plist = config-accel.plist + the boot-args of the 30 Oct test (picture)
 zsh tools/hdmi-flags.sh test          # config.plist = config-accel.plist + ngreenhdmiflags=0x202 ngreenhdmiddc=1
 zsh tools/hdmi-flags.sh testregs      # ... + ngreenhdmiregs=1
 zsh tools/hdmi-flags.sh off           # back to config-accel.plist

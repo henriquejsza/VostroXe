@@ -14,7 +14,7 @@ or method; [README.md](../README.md#what-works) says which parts are confirmed.
 | CPU | Intel Core i5-1235U (Alder Lake-U, 2P + 8E, 12 threads) | E-cores can stay on (OpenCore `Cpuid1Data` fix) |
 | GPU | Iris Xe `8086:46A8` rev 0c, subsystem `1028:0B94`, display version 13, 80 EU (5 DSS × 16, 6 L3 banks) | presented as Tiger Lake `9A49`, Apple's TGL driver through NootedGreen |
 | Panel | 1920×1080, 120 Hz, eDP on DDI A / PHY A | works |
-| HDMI | native HDMI 1.4 on DDI B / combo PHY B (VBT child `0x60D2`, DDC on GMBUS pin 2, no AUX, 165 MHz max) | not working yet, see [HDMI.md](HDMI.md) |
+| HDMI | native HDMI 1.4 on DDI B / combo PHY B (VBT child `0x60D2`, DDC on GMBUS pin 2, no AUX, 165 MHz max) | picture at 1920×1080, 60 Hz with opt-in boot-args (DVI mode, no audio), see [HDMI.md](HDMI.md) |
 | Audio | Intel HDA `8086:51C8` + Cirrus CS8409 bridge (subsystem `1028:0B94`, "Warlock MLK"), CS42L42 headset codec | speakers and microphones through CS8409HDA; headset jack not supported |
 | Ethernet | Realtek RTL8111 | RealtekRTL8111 3.0.0 |
 | Wi-Fi, Bluetooth | Realtek RTL8821CE / `0BDA:C829` | no macOS driver |
@@ -87,7 +87,8 @@ other ports: `ngreenportmode=N`.
 ### External HDMI
 
 The connector table describes con1 as HDMI on DDI 1 with GMBUS pin 2, and a set of opt-in boot-args drives the
-HDMI bring-up. See [HDMI.md](HDMI.md).
+HDMI bring-up. With `ngreenhdmilight=2` (XE-HDMI13) and the detection boot-args (`zsh tools/hdmi-flags.sh light`),
+the external monitor shows a picture at 1920×1080, 60 Hz (tested 30 Oct). See [HDMI.md](HDMI.md).
 
 ## Audio
 
@@ -119,7 +120,8 @@ Boot-args: `-cs8409off` (do not touch the hardware), `cs8409lingerms`, `cs8409ca
   and screen recording are denied silently. Grant them with
   `sudo zsh tools/tcc-permitir.sh microfone|camera|tela|... <app>`.
 - **With an HDMI monitor connected** the framebuffer logs a `runAUXCommand ddi = 1 Time out` about every 4 ms in
-  bursts: 8,439 in 73 s, starting 15 s after boot.
+  bursts: 8,439 in 73 s, starting 15 s after boot. `ngreenhdmiaux=1` (in `hdmi-flags.sh light`) answers these at
+  once: the 30 Oct test boot logged none.
 - Updating macOS past 26.7.1 (25G241) breaks the acceleration, as in the base project.
 
 ## Keeping up with the base project
@@ -140,7 +142,7 @@ and merge `kern_gen11.cpp` by hand. Then rebuild with `zsh install.sh` and check
 
 | Date | Change |
 |---|---|
-| 2026-10-30 | NootedGreen XE-HDMI13 (`ngreenhdmilight=2`): first attempt at the full HDMI enable through Apple's `LightUpTMDS`, not tested yet |
+| 2026-10-30 | NootedGreen XE-HDMI13 (`ngreenhdmilight=2`): external HDMI works, 1920×1080 at 60 Hz through Apple's `LightUpTMDS` (opt-in) |
 | 2026-10-30 | VostroXe: the Vostro work in its own repository, on top of the base project at 6f03560 |
 | 2026-10-27 | NootedGreen HDMI work on DDI-B (detection and EDID with opt-in boot-args, no picture yet); XE-PM and the rest of upstream 99631db |
 | 2026-10-25 | CS8409HDA: internal speakers and microphones |

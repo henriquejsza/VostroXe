@@ -27,7 +27,7 @@ Tested on one Vostro 3520 (i5-1235U, BIOS 1.43.0) with macOS Tahoe 26.7.1 (25G24
 | Boot | ✅ accelerated boot, with the fixes for the `probePortState` and divide-by-zero panics (24 Oct) |
 | Keyboard, USB, NVMe | ✅ |
 | Network | ✅ a USB CDC-ECM network device (Apple's driver) · ❌ Wi-Fi and Bluetooth: the Realtek RTL8821CE has no macOS driver |
-| External HDMI | 🚧 detected and EDID read with opt-in boot-args, no picture yet ([docs/HDMI.md](docs/HDMI.md)) |
+| External HDMI | ✅ picture at 1920×1080, 60 Hz on a 1080p monitor, with opt-in boot-args (`zsh tools/hdmi-flags.sh light`, [docs/HDMI.md](docs/HDMI.md)) · ❌ HDMI audio (the port runs in DVI mode) · replug and sleep not checked yet |
 | In the EFI, not confirmed yet | Ethernet (RealtekRTL8111), Android RNDIS tethering (HoRNDIS), touchpad (VoodooI2C in polling mode), battery status, all 12 CPU threads (`Cpuid1Data` fix), XE-PM turbo and idle profile (`ngreenpm=20`) |
 | Not checked yet | brightness keys, sleep, webcam, fingerprint reader |
 
