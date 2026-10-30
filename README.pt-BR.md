@@ -23,17 +23,17 @@ Testado em um Vostro 3520 (i5-1235U, BIOS 1.43.0) com o macOS Tahoe 26.7.1 (25G2
 | Área | Estado |
 |---|---|
 | Vídeo | ✅ Metal na Iris Xe (Informações do Sistema: Metal 2, 1536 MB), tela interna em 1920×1080 a 120 Hz |
-| CPU | ✅ E-cores ligados (correção no `Cpuid1Data`) · perfil XE-PM de turbo e repouso ligado, com limite sustentado de 20 W (`ngreenpm=20`) |
-| Alto-falantes, microfones | ✅ alto-falantes e microfones internos (CS8409HDA + XeSpeakers) · ❌ entrada de fone com microfone |
-| Teclado, touchpad | ✅ teclado PS/2, touchpad I2C em modo polling |
-| Ethernet, USB | ✅ Realtek RTL8111, portas USB (mapa USB), roteador USB do celular Android (HoRNDIS) |
-| Bateria, NVMe | ✅ |
-| Wi-Fi, Bluetooth | ❌ o Realtek RTL8821CE não tem driver no macOS: use Ethernet, o roteador USB do celular ou um adaptador USB que tenha driver |
+| Alto-falantes, microfones | ✅ alto-falantes e microfones internos (CS8409HDA + XeSpeakers; autoteste: o tom 62 dB acima do silêncio) · ❌ entrada de fone com microfone |
+| Boot | ✅ boot acelerado, com as correções dos panics de `probePortState` e de divisão por zero (24/10) |
+| Teclado, USB, NVMe | ✅ |
+| Rede | ✅ um dispositivo de rede USB CDC-ECM (driver da Apple) · ❌ Wi-Fi e Bluetooth: o Realtek RTL8821CE não tem driver no macOS |
 | HDMI externo | 🚧 detectado e com o EDID lido usando boot-args opcionais, ainda sem imagem ([docs/HDMI.md](docs/HDMI.md)) |
+| Na EFI, ainda sem confirmação | Ethernet (RealtekRTL8111), roteador USB RNDIS do Android (HoRNDIS), touchpad (VoodooI2C em polling), estado da bateria, os 12 threads da CPU (correção no `Cpuid1Data`), perfil XE-PM de turbo e repouso (`ngreenpm=20`) |
 | Ainda não conferido | teclas de brilho, repouso, webcam, leitor de digital |
 
-Problemas conhecidos: o `powermetrics` derruba o kernel, o WindowServer às vezes trava, e apps de terceiros nunca
-recebem o pedido de permissão de microfone, câmera ou gravação de tela (solução: `tools/tcc-permitir.sh`). Detalhes
+Problemas conhecidos: o `powermetrics` derruba o kernel, um travamento do WindowServer já terminou num panic do
+watchdog, e apps de terceiros nunca recebem o pedido de permissão de microfone, câmera ou gravação de tela (solução:
+`tools/tcc-permitir.sh`). Detalhes
 em [docs/VOSTRO.md](docs/VOSTRO.md#known-issues).
 
 ## Instalação
@@ -52,7 +52,8 @@ Copie `dist/EFI` e `dist/com.apple.recovery.boot` para a raiz de uma partição 
 agora guarda os números de série deste Mac: guarde esse arquivo e não publique nem ele nem a pasta `dist/`.
 
 **2. Instale o macOS.** Boote pelo pendrive (F12), escolha "macOS Base System", apague só o volume onde o macOS vai
-ficar (APFS) e reinstale. Se precisar, atualize até o 26.7.1 (25G241), e não passe dele.
+ficar (APFS) e reinstale. O instalador baixa o macOS e o Wi-Fi não funciona: antes, conecte um cabo de rede ou um
+dispositivo de rede USB. Se precisar, atualize até o 26.7.1 (25G241), e não passe dele.
 
 **3. Config acelerada.** No pendrive, copie `EFI/OC/config-accel.plist` por cima de `EFI/OC/config.plist` e
 reinicie. A GPU passa a aparecer como Tiger Lake (`9A49`), ainda sem aceleração.

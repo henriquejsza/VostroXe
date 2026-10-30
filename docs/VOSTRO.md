@@ -6,11 +6,12 @@ Dell XPS 13 Plus: the GPU work (kernel patches, Metal driver, shader compiler) i
 
 ## Hardware
 
-One machine so far: Vostro 3520 with BIOS 1.43.0, macOS Tahoe 26.7.1 (25G241).
+One machine so far: Vostro 3520 with BIOS 1.43.0, macOS Tahoe 26.7.1 (25G241). The macOS column names the driver
+or method; [README.md](../README.md#what-works) says which parts are confirmed.
 
 | Part | ID | macOS |
 |---|---|---|
-| CPU | Intel Core i5-1235U (Alder Lake-U, 2P + 8E, 12 threads) | all threads (OpenCore `Cpuid1Data` fix) |
+| CPU | Intel Core i5-1235U (Alder Lake-U, 2P + 8E, 12 threads) | E-cores can stay on (OpenCore `Cpuid1Data` fix) |
 | GPU | Iris Xe `8086:46A8` rev 0c, subsystem `1028:0B94`, display version 13, 80 EU (5 DSS × 16, 6 L3 banks) | presented as Tiger Lake `9A49`, Apple's TGL driver through NootedGreen |
 | Panel | 1920×1080, 120 Hz, eDP on DDI A / PHY A | works |
 | HDMI | native HDMI 1.4 on DDI B / combo PHY B (VBT child `0x60D2`, DDC on GMBUS pin 2, no AUX, 165 MHz max) | not working yet, see [HDMI.md](HDMI.md) |
@@ -111,8 +112,8 @@ Boot-args: `-cs8409off` (do not touch the hardware), `cs8409lingerms`, `cs8409ca
 - **`powermetrics` panics the kernel.** `IntelFBClientControl::doAttribute` → `pmtGetMiscCntr` →
   `CamelliaBase::ReadDpbResidency` dereferences the TCON object, which this panel does not have (three panics on
   25 Oct, one on 27 Oct). Don't run `powermetrics`.
-- **WindowServer hangs** happen. One ended in a watchdog panic on 27 Oct (`no successful checkins from
-  WindowServer in 120 seconds`).
+- **A WindowServer hang** ended in a watchdog panic on 27 Oct (`no successful checkins from WindowServer in
+  120 seconds`).
 - **Privacy prompts never appear** for third-party apps, because of `amfi_get_out_of_my_way=1`: microphone, camera
   and screen recording are denied silently. Grant them with
   `sudo zsh tools/tcc-permitir.sh microfone|camera|tela|... <app>`.

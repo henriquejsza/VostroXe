@@ -23,17 +23,16 @@ Tested on one Vostro 3520 (i5-1235U, BIOS 1.43.0) with macOS Tahoe 26.7.1 (25G24
 | Area | Status |
 |---|---|
 | Graphics | ✅ Metal on the Iris Xe (System Information: Metal 2, 1536 MB), internal panel at 1920×1080, 120 Hz |
-| CPU | ✅ E-cores enabled (`Cpuid1Data` fix) · XE-PM turbo and idle profile on, with a 20 W sustained limit (`ngreenpm=20`) |
-| Speakers, microphones | ✅ internal speakers and microphones (CS8409HDA + XeSpeakers) · ❌ headset jack |
-| Keyboard, touchpad | ✅ PS/2 keyboard, I2C touchpad in polling mode |
-| Ethernet, USB | ✅ Realtek RTL8111, USB ports (USB map), Android USB tethering (HoRNDIS) |
-| Battery, NVMe | ✅ |
-| Wi-Fi, Bluetooth | ❌ the Realtek RTL8821CE has no macOS driver: use Ethernet, USB tethering or a USB adapter that has one |
+| Speakers, microphones | ✅ internal speakers and microphones (CS8409HDA + XeSpeakers; self-test: the tone 62 dB above silence) · ❌ headset jack |
+| Boot | ✅ accelerated boot, with the fixes for the `probePortState` and divide-by-zero panics (24 Oct) |
+| Keyboard, USB, NVMe | ✅ |
+| Network | ✅ a USB CDC-ECM network device (Apple's driver) · ❌ Wi-Fi and Bluetooth: the Realtek RTL8821CE has no macOS driver |
 | External HDMI | 🚧 detected and EDID read with opt-in boot-args, no picture yet ([docs/HDMI.md](docs/HDMI.md)) |
+| In the EFI, not confirmed yet | Ethernet (RealtekRTL8111), Android RNDIS tethering (HoRNDIS), touchpad (VoodooI2C in polling mode), battery status, all 12 CPU threads (`Cpuid1Data` fix), XE-PM turbo and idle profile (`ngreenpm=20`) |
 | Not checked yet | brightness keys, sleep, webcam, fingerprint reader |
 
-Known issues: `powermetrics` panics the kernel, WindowServer sometimes hangs, and third-party apps never get the
-microphone, camera or screen-recording prompt (fix: `tools/tcc-permitir.sh`). Details in
+Known issues: `powermetrics` panics the kernel, a WindowServer hang once ended in a watchdog panic, and third-party
+apps never get the microphone, camera or screen-recording prompt (fix: `tools/tcc-permitir.sh`). Details in
 [docs/VOSTRO.md](docs/VOSTRO.md#known-issues).
 
 ## Install
@@ -52,7 +51,7 @@ Copy `dist/EFI` and `dist/com.apple.recovery.boot` to the root of a FAT32 partit
 `smbios.local` now holds this Mac's serial numbers: keep it, and don't publish it or `dist/`.
 
 **2. Install macOS.** Boot the USB (F12), pick "macOS Base System", erase only the volume macOS goes to (APFS), and
-reinstall. Update to 26.7.1 (25G241) if needed, and no further.
+reinstall. The installer downloads macOS, and Wi-Fi does not work: connect a cable or a USB network device first. Update to 26.7.1 (25G241) if needed, and no further.
 
 **3. Accelerated config.** On the USB, copy `EFI/OC/config-accel.plist` over `EFI/OC/config.plist` and reboot. The
 GPU now shows as Tiger Lake (`9A49`), still without acceleration.
