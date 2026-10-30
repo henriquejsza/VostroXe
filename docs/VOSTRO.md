@@ -113,7 +113,8 @@ Boot-args: `-cs8409off` (do not touch the hardware), `cs8409lingerms`, `cs8409ca
   `CamelliaBase::ReadDpbResidency` dereferences the TCON object, which this panel does not have (three panics on
   25 Oct, one on 27 Oct). Don't run `powermetrics`.
 - **A WindowServer hang** ended in a watchdog panic on 27 Oct (`no successful checkins from WindowServer in
-  120 seconds`).
+  120 seconds`). The GPU had been reporting channel errors for 5 minutes before it, and the forced HDMI mode set of
+  that boot never ran ([HDMI.md](HDMI.md), finding 5).
 - **Privacy prompts never appear** for third-party apps, because of `amfi_get_out_of_my_way=1`: microphone, camera
   and screen recording are denied silently. Grant them with
   `sudo zsh tools/tcc-permitir.sh microfone|camera|tela|... <app>`.
@@ -139,6 +140,7 @@ and merge `kern_gen11.cpp` by hand. Then rebuild with `zsh install.sh` and check
 
 | Date | Change |
 |---|---|
+| 2026-10-30 | NootedGreen XE-HDMI13 (`ngreenhdmilight=2`): first attempt at the full HDMI enable through Apple's `LightUpTMDS`, not tested yet |
 | 2026-10-30 | VostroXe: the Vostro work in its own repository, on top of the base project at 6f03560 |
 | 2026-10-27 | NootedGreen HDMI work on DDI-B (detection and EDID with opt-in boot-args, no picture yet); XE-PM and the rest of upstream 99631db |
 | 2026-10-25 | CS8409HDA: internal speakers and microphones |

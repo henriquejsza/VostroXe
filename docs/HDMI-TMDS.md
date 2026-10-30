@@ -297,3 +297,69 @@ e no XPS 13 Plus (kext byte-idêntico). Deltas esperados no `ngreenhdmiregs` ap�
 `clang++ -fsyntax-only` do `kern_gen11.cpp` e do baseline pre-light — ambos exit 0, 21 warnings, conjuntos
 idênticos; `zsh -n hdmi-diag.sh` OK. Engate em runtime (STATE sobe, deltas) **NÃO VERIFICADO** (precisa de boot no
 macOS/hardware).
+
+### Iteração 9 (30/10) — XE-HDMI13 (`ngreenhdmilight=2`): o acendimento completo pelo caminho da Apple
+
+Ainda **não testada** no notebook. Captura nova do Linux com o HDMI aceso (read-only,
+`tools/diagnostics/i915-regdump.py`):
+
+- Clocks: `DPCLKA_CFGCR0 0x164280 = 0x01e07004` (PHY A/eDP no DPLL0, PHY B/HDMI no DPLL1); `DPLL0_ENABLE 0x46010` e
+  `DPLL1_ENABLE 0x46014` = `0xcc000000`. DPLL1 `CFGCR0/1` (`0x16428C`/`0x164290`) = `0x001001d0`/`0x00000e84`
+  (148,5 MHz); DPLL0 (eDP, 270 MHz) = `0x00e001a5`/`0x00000088`. Referência 38,4 MHz (`SKL_DSSM 0x51004 = 0x40000000`).
+- DBUF: `DBUF_CTL_S0..S3` (`0x45008`, `0x44FE8`, `0x44300`, `0x44304`) = `0xc041c000` (tracker 8, min tracker 1);
+  `MBUS_CTL 0x4438C = 0x1c000700` (sem join). Plano 1B: `PLANE_BUF_CFG 0x7127c = 0x07db0000` (blocos 0..2011,
+  relativos ao banco B, que começa em S2).
+- Pipe B: `PIPE_ARB_CTL 0x71028 = 0x2a0f` (bit 13, Wa_22012358565), `PIPE_CHICKEN 0x71038 = 0x40008080`,
+  `PIPE_MBUS_DBOX_CTL 0x7103c = 0xb1038804`, `TRANS_CLK_SEL_B = 0x20000000`, `TRANS_DDI_FUNC_CTL_B = 0x90030000`,
+  `DDI_BUF_CTL_B = 0x80000000`, `TRANSCONF_B = 0xc0000000`.
+
+O que o binário 16.0.32 mostra (desmontagem delimitada por símbolo):
+
+1. **O f10 impede o modeset completo.** `hwSetMode(fb, path, timing)` @0x74c1e chama `hwRegsNeedUpdate` @0x75028;
+   `je 0x7508c` @0x7502f leva ao "Partial modeset" e o fall-through ao modeset completo (`disableDisplay`, despacho
+   `LightUpEDP/DP/TMDS` pelo kind da porta, estado do path = 2). O patch f10 do NootedGreen (lista do FB debug,
+   `e8 af e2 ff ff 84 c0 74 5b` → `… eb 5b`) troca o `je` por `jmp`: todo modeset é parcial. O eDP depende disso.
+   Por isso o `ngreenhdmimodeset=2` nunca funcionou: no boot de 27/10 18:17 UTC o gancho logou `force=1` quatro vezes e
+   o FB1 logou "Partial modeset" em todas. O path do FB1 estava com estado 1 (alocado, não ativo).
+2. **`enableClocks(port, other, ClockParams)` @0xa5dae** usa o DPLL de índice = DDI (`0x46010 + 4*ddi`) e grava os
+   divisores pela tabela @0xf3518 = `0x164000/0x164080/0x164200` (endereços do ICL), não nos `TGL_DPLL_CFGCR0/1`.
+   Para a DDI B: DPLL1, que no macOS é o PLL do eDP (`DPCLKA 0x01e07801`). O `disableClocks(port, other)` @0xa6ed4
+   desliga `DPLL[ddi]`. Os dois mandam o nível de tensão pelo mailbox 7 (3 antes, `calculateVoltageLevel` depois) e
+   ligam/desligam o poço da DDI IO.
+3. **`LightUpTMDS` @0x76376:** `enableClocks(fb, path)` → `TRANS_CLK_SEL` (0x46140 + 4·pipe) → plano desligado →
+   escalador → `enablePipe` (timings, `TRANS_DDI_FUNC_CTL`, `TRANSCONF`, interrupções) →
+   `setVoltageSwingAndPreEmphasis(0,0,0)` → `enablePort` (`DDI_BUF_CTL`, espera o IS_IDLE cair por 500 µs) →
+   infoframes. O `SetupParams` monta `TRANS_DDI_FUNC_CTL` com DDI B = `0x10000000` e modo HDMI pelo `fb+0x4289`.
+4. **adlpDcExit** gravava `CTL2 = 0x0C03` e `DDI2 = 0x3`, apagando os pedidos de PW_2/PW_B/DDI-IO-B.
+5. O panic de watchdog do WindowServer de 27/10 16:02 (boot C6A3612, com `ngreenhdmimodeset=2`) não veio do HDMI:
+   os erros de canal da GPU começaram às 18:55:25 UTC, 5 minutos antes do replug, e o FB1 não teve modeset nesse boot.
+
+**Implementação** (`kern_gen11.cpp`, bloco XE-HDMI13; só com `ngreenhdmilight=2` e fora do TGL real):
+
+- O f10 é desfeito logo depois de aplicado; o gancho do `hwRegsNeedUpdate`, só para a chamada vinda do `hwSetMode`
+  (endereço de retorno `hwSetMode+0x40f`, bytes conferidos na carga), devolve 0 para o eDP (como o f10), 1 para o
+  path do HDMI enquanto `TRANSCONF` e `DDI_BUF_CTL` dele não estiverem ligados (no máximo 6 por plug) e o resultado
+  da Apple depois de aceso. HPD baixo: 0.
+- `enableClocks`/`disableClocks(port)` substituídos para a porta HDMI: combo PLL que nenhuma PHY ligada usa (aqui o
+  DPLL0), WRPLL como o i915 (`icl_calc_wrpll`, Display WA 22010492432: metade da fração com ref 38,4 MHz; 148,5 MHz →
+  `0x001001d0`/`0x00000e84`), `combo_pll_enable` (POWER → STATE, CFGCR, ENABLE → LOCK), `DPCLKA` em duas escritas,
+  `port+0x140` = clock do link em Hz. O desligamento só apaga o PLL que é nosso.
+- Energia no HPD alto e antes de cada modeset do HDMI: PW_2 → PW_B (com os fuses), banco B do DBUF (S2/S3 com
+  tracker 8 e min tracker 1) e, se o MBUS estiver unido, a separação do i915 (min tracker 1 nas 4 fatias, crédito A
+  do DBOX do pipe A 6 → 4, `MBUS_CTL` 2x2 sem join). O adlpDcExit mantém os bits; com o pipe seguro, escritas da
+  Apple em `CTL2` mantêm PW_2/PW_B e as de `DC_STATE_EN` ficam sem DC5/DC6/DC3CO. Retenção até o próximo boot.
+- Antes do `LightUpTMDS`: `PIPE_ARB_CTL` bit 13 e `PIPE_CHICKEN 0x40008080`; o clock do modo vem do pixel clock do
+  timing. Depois: `PIPE_MBUS_DBOX_CTL` como o i915 no ADL-P e `GAMMA_MODE_B = 0` (bypass, como o pipe A). V97P/V97C
+  só no pipe A.
+- Diagnóstico: `ngreen-hdmi13` (resumo: `f10undone`, `held`, `pll`, `forces`, `lightups`, `clkon/clkoff`),
+  `-pwr`, `-rnu` (decisão), `-clk` (PLL, CFGCR, lock, DPCLKA), `-pre`/`-post` (retrato do caminho do pipe com `=`
+  igual ao Linux e `!` diferente) e `-late` (2 s depois: quadros em 100 ms e o bit de underrun do IIR do pipe), e as
+  linhas `XeHDMI13` no log do kernel (o `hdmi-diag.sh` tem uma seção para elas).
+
+O kext do teste foi compilado no Linux (clang 22 `--target=x86_64-apple-macos13.0 -mkernel`, com
+`-fno-use-cxa-atexit -mllvm -disable-atexit-based-global-dtor-lowering`, e o `ld64` do cctools-port com
+`-kext -static`); importa os mesmos símbolos que o build do macOS mais `IOSleep`, `OSBitOrAtomic` e `strlen`.
+
+**O que olhar no teste:** `f10undone=1`; `-rnu` com `decision=1`; `lightups` > 0; em `-clk`, `lock=1`, `pll=0` e
+`DPCLKA` com o bit 11 limpo; em `-post`, `DDIBUF` sem o bit 7 e `TCONF=c0000000`; em `-late`, quadros > 0 e
+`underrun=0`. Tela interna estável o tempo todo.

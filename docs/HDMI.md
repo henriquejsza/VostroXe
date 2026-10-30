@@ -1,8 +1,9 @@
 # External HDMI on the Vostro 3520
 
 Status: **not working yet.** macOS detects the monitor and reads its EDID with opt-in boot-args, and lists it as a
-second display, but the screen stays black. This page has what is known, the boot-args for the experiments and the
-next step. The register capture and the notes of every iteration are in [HDMI-TMDS.md](HDMI-TMDS.md) (Portuguese).
+second display, but the screen stays black. `ngreenhdmilight=2` (XE-HDMI13, 30 Oct) is the first attempt to run the
+whole pipe-B enable; it has not been tested on the laptop yet. The register captures and the notes of every
+iteration are in [HDMI-TMDS.md](HDMI-TMDS.md) (Portuguese).
 
 ## The hardware path
 
@@ -17,6 +18,8 @@ From Linux (i915, kernel 7.1) with a 1080p monitor in use as an extended desktop
 - VBT (`$VBT ALDERLAKE-P`, BDB 249): HDMI child device type `0x60D2` (HDMI, not DP++), port B, DDC on GMBUS
   pin 2, no AUX channel, no LSPCON, no Type-C or Thunderbolt flag, `hdmi_max_data_rate` 165 MHz.
 - Dell's spec for this port: HDMI 1.4, up to 1920×1080 at 60 Hz.
+- Clocks: the eDP runs from DPLL0 and the HDMI from DPLL1 (`DPCLKA_CFGCR0 = 0x01e07004`). Pipe B's display buffer
+  is DBUF slices S2 and S3, with MBUS not joined.
 
 So it is a native HDMI encoder on combo PHY B: no AUX, DDC over GMBUS pin 2, TMDS at 148.5 MHz.
 
@@ -53,24 +56,48 @@ Findings, in the order they were made:
    | `0x61400` TRANS_DDI_FUNC_CTL_B | `0` | `0x90030000` |
    | `0x71008` TRANSCONF_B | `0` | `0xc0000000` |
 
-5. **Apple's driver never runs its HDMI enable.** Framebuffer 1 always takes the "Partial modeset by updating plane"
-   branch, so `LightUpTMDS` is not called. `ngreenhdmimodeset=2` forces the full modeset; the internal panel
-   flickers, and whether it then reaches `LightUpTMDS` is not known yet.
-6. **The PLLs are swapped compared with Linux.** On macOS `DPCLKA_CFGCR0` has the eDP (PHY A) on DPLL1 and PHY B
-   on DPLL0 with its clock gated; Linux uses DPLL0 for the eDP and DPLL1 for HDMI. The HDMI therefore needs DPLL0
-   on macOS, and DPLL1 must not be touched while the internal panel is on.
+5. **Apple's driver never runs its HDMI enable.** Every mode set of framebuffer 1 ends in "Partial modeset by
+   updating plane", so `LightUpTMDS` is never called. The cause is NootedGreen's patch `f10`: it turns the `je`
+   after the `hwRegsNeedUpdate` call in `hwSetMode` into a `jmp`, so every mode set is partial whatever
+   `hwRegsNeedUpdate` returns. The internal panel depends on this, because Apple's driver cannot train its eDP link.
+   For the same reason `ngreenhdmimodeset=2` never had an effect: in the 27 Oct test the hook returned 1 four times
+   and each mode set was still partial.
+6. **Apple's clock code would take the internal panel's PLL.** `enableClocks` for a port uses DPLL number = DDI
+   number, so DDI B gets DPLL1, and it writes the dividers at the Ice Lake addresses (`0x164080`, `0x164084`)
+   instead of `TGL_DPLL_CFGCR0/1` (`0x16428C`, `0x164290`). The firmware leaves the eDP on DPLL1
+   (`DPCLKA_CFGCR0 = 0x01e07801`), so a real HDMI mode set would retune the internal panel's PLL and route it to the
+   HDMI port, and `disableClocks` would switch it off.
+7. **Pipe B has no power and no display buffer.** It needs PW_2 and PW_B (`0x45404` bits 3/2 and 13/12) and DBUF
+   slices S2/S3 (`0x44300`, `0x44304`). The Tiger Lake driver knows neither, and NootedGreen's DC-state exit wrote
+   `0x0c03` to `0x45404`, clearing both requests.
 
-`ngreenhdmilight=1` does the first part of the enable: power wells PW_2, PW_B and DDI-B, and ungates the DDI-B
-clock. It does not start the PLL, the DDI buffer or the transcoder.
+## ngreenhdmilight=2 (XE-HDMI13)
+
+With `ngreenhdmilight=2` NootedGreen lets Apple's own HDMI enable run (`hwSetMode` → `LightUpTMDS` →
+`enablePipe`, `enablePort`) and fixes what it gets wrong on this hardware:
+
+- **Mode set.** `f10` is undone. The `hwRegsNeedUpdate` hook keeps the internal panel on the partial path, as `f10`
+  did, and gives the HDMI path a complete mode set while its transcoder and DDI buffer are off (at most 6 times per
+  plug). Once the HDMI pipe is lit, Apple's own decision applies again.
+- **Clocks.** `enableClocks` and `disableClocks` are replaced for the HDMI port: a combo PLL the eDP is not using
+  (DPLL0 here), dividers computed the way i915 does (148.5 MHz gives the values Linux programs, `0x001001d0` and
+  `0x00000e84`), and `DPCLKA_CFGCR0` in two writes (PLL select, then ungate). The eDP's PLL is never touched.
+- **Power and display buffer.** At HPD-high and before each HDMI mode set: PW_2, PW_B and DBUF S2/S3, with MBUS
+  un-joined if the firmware left it joined. The DC-state exit keeps these bits, and DC5/DC6 stay off while the
+  HDMI pipe is held. After the first plug they stay on until the next boot.
+- **Pipe.** The ADL-P settings i915 uses for pipe B (`PIPE_ARB_CTL`, `PIPE_CHICKEN`, `PIPE_MBUS_DBOX_CTL`), gamma in
+  bypass as on pipe A, and the eDP fixes V97P/V97C on pipe A only.
+- **Diagnostics.** IORegistry properties `ngreen-hdmi13` (summary), `-pwr`, `-rnu`, `-clk`, `-pre`, `-post` and
+  `-late` (register dumps before and after `LightUpTMDS`, and 2 s later with pipe B's frame count over 100 ms), and
+  `XeHDMI13` lines in the kernel log.
+
+Without `ngreenhdmilight=2` the kext behaves as before.
 
 ## Next step
 
-Program the rest of the pipe-B enable in NootedGreen, using the Linux values in [HDMI-TMDS.md](HDMI-TMDS.md) as the
-target: DPLL0 for 148.5 MHz and PHY B's clock select, the combo PHY B HDMI swing, `DDI_BUF_CTL_B`,
-`TRANS_DDI_FUNC_CTL_B` in HDMI mode, `TRANS_CLK_SEL_B`, then transcoder, pipe and plane B. WhateverXe
-([b00t0x/WhateverXe](https://github.com/b00t0x/WhateverXe), BSD 3-clause) implements fixed HDMI on Display 13
-combo ports with Apple's driver; its sequence is the reference, not its offsets (it targets another framebuffer
-build).
+Boot with the monitor connected after `zsh tools/hdmi-flags.sh light`, then run
+`zsh tools/diagnostics/hdmi-diag.sh light`. The report shows whether `LightUpTMDS` ran (`ngreen-hdmi13`), whether
+the PLL locked (`-clk`), and whether the DDI buffer left idle and pipe B counts frames (`-post`, `-late`).
 
 ## Boot-args
 
@@ -87,17 +114,20 @@ Opt-in:
 | `ngreenhdmiedid=1` | NootedGreen's own GMBUS EDID read on hotplug, result in `ngreen-edid` |
 | `ngreenhdmiaux=1` / `=2` | answer `runAUXCommand` on the HDMI port at once with a timeout / success |
 | `ngreenhdmiregs=1` | read-only pipe-B register snapshot in `ngreen-hdmiregs1/2` |
-| `ngreenhdmilight=1` | power wells and DDI-B clock (no PLL, no scanout) |
-| `ngreenhdmimodeset=1` / `=2` | log the framebuffer 1 modeset decision / force the full modeset (the panel flickers) |
+| `ngreenhdmilight=1` | power wells and DDI-B clock only (no PLL, no scanout) |
+| `ngreenhdmilight=2` | XE-HDMI13: the full enable through Apple's `LightUpTMDS` (above) |
+| `ngreenhdmimodeset=1` / `=2` | log the framebuffer 1 mode-set decision / try to force the complete mode set (no effect, see finding 5) |
 | `ngreenhdmipw`, `ngreenhdmitrig`, `ngreenhdmisink`, `ngreenhdmilanes`, `ngreenhdmionline`, `ngreenhdmiprobe` | earlier experiments, see [HDMI-TMDS.md](HDMI-TMDS.md) |
 
 ## Tools
 
 ```sh
+zsh tools/hdmi-flags.sh light         # config.plist = config-accel.plist + the XE-HDMI13 test boot-args
 zsh tools/hdmi-flags.sh test          # config.plist = config-accel.plist + ngreenhdmiflags=0x202 ngreenhdmiddc=1
 zsh tools/hdmi-flags.sh testregs      # ... + ngreenhdmiregs=1
 zsh tools/hdmi-flags.sh off           # back to config-accel.plist
 zsh tools/diagnostics/hdmi-diag.sh replug   # read-only report: logs, displaypolicyd, AGDC, IORegistry, registers
+sudo python3 tools/diagnostics/i915-regdump.py   # on Linux, read-only: the display registers i915 programs
 ```
 
 `hdmi-flags.sh` edits `config.plist` on the partition labelled OPENCORE and needs `config-accel.plist` next to it,
