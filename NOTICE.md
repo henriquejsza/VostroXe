@@ -1,9 +1,18 @@
 # Licensing notice
 
+- **This repository is VostroXe, a modified version of
+  [Hackintosh-XPS13Plus-IrisXe-Tahoe](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe)** by
+  JulioNectar, forked at commit `6f03560` and adapted to the Dell Vostro 3520. The changes are described in
+  [docs/VOSTRO.md](docs/VOSTRO.md) and recorded in the git history.
 - **This repository** (the NootedGreen fork in `src/`, the scripts, `macos/`, `tools/` except the libfprint patch noted
   below, and the documentation) is distributed under the **Thou Shalt Not Profit License 1.0** (see [LICENSE](LICENSE)),
-  the license of the project it derives from, [NootedGreen](https://github.com/sgiammori/NootedGreen) by StezzaPilot.
-  Free to use, study, modify and share; not for profit.
+  the license of the projects it derives from, [NootedGreen](https://github.com/sgiammori/NootedGreen) by StezzaPilot
+  and the project above. Free to use, study, modify and share; not for profit. As section 17 of that license requires,
+  VostroXe's author declares that VostroXe is not-for-profit and that he derives no revenue from distributing it or
+  from support or services relating to it.
+- **`tools/CS8409HDA/`** (the Vostro's audio driver) is this repository's own code, under the same license. Its codec
+  programming reproduces the register writes the Linux `cs8409` and `cs42l42` drivers (Cirrus Logic, GPL-2.0) make on
+  this laptop, recorded in `tools/CS8409HDA/ref/`.
 - **`src/HookCase/`** is HookCase by Steven Michaud, as modified in the NootedGreen project, with two fixes from this
   repository (probePortMode NULL `callback`, strnstr signature). It is under the **MIT License**; see
   [src/LICENSE-HookCase](src/LICENSE-HookCase).

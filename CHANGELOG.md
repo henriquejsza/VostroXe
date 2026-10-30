@@ -1,5 +1,8 @@
 # Changelog
 
+> This is the changelog of the base project, Hackintosh-XPS13Plus-IrisXe-Tahoe (Dell XPS 13 Plus), kept as it is
+> upstream. VostroXe's own changes are listed in [docs/VOSTRO.md](docs/VOSTRO.md#changes).
+
 Every change is tested on the real XPS 13 Plus 9320 before it is marked **confirmed**. Status values:
 **confirmed** (works on hardware), **testing** (built and installed, being evaluated), **reverted**, **superseded** (replaced by a later entry).
 The full story behind each item is in [docs/HISTORY.md](docs/HISTORY.md).

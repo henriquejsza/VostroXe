@@ -41,7 +41,7 @@ banner() {
   print
   print -P "  %F{blue}%B╭────────────────────────────────────────────────────────────╮%b%f"
   print -P "  %F{blue}%B│%b%f  %BIris Xe acceleration · macOS Tahoe 26.7.1%b                 %F{blue}%B│%b%f"
-  print -P "  %F{blue}%B│%b%f  %F{8}XPS13Plus-Tahoe-IrisXe  ·  $rev%f$(printf '%*s' $((31 - ${#rev})) '')%F{blue}%B│%b%f"
+  print -P "  %F{blue}%B│%b%f  %F{8}VostroXe  ·  $rev%f$(printf '%*s' $((45 - ${#rev})) '')%F{blue}%B│%b%f"
   print -P "  %F{blue}%B╰────────────────────────────────────────────────────────────╯%b%f"
 }
 
