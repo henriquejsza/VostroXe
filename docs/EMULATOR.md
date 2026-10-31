@@ -2,7 +2,8 @@
 
 Status: **fix ready, not tested on the laptop yet.** The Android Studio emulator showed a black window: the
 guest's Linux kernel panics 0.4 s into its boot on an instruction the hypervisor does not allow.
-`zsh tools/emulador-android.sh corrigir` makes the guest kernel stop using it.
+`zsh tools/emulador-android.sh corrigir` makes the guest kernel stop using it. In the first try on 30 Oct the fix
+was not applied (see [First try](#first-try-30-oct)).
 
 Versions on this laptop: Android Studio 2026.2, emulator 37.2.12 (build 16428233), one AVD "Medium Phone API 37.0"
 (x86_64, Google Play image revision 7, Android 17, guest kernel 6.12.81-android16).
@@ -45,47 +46,70 @@ From the macOS disk, read from Linux: Android Studio's `idea.log` and the AVD fo
 - In VMX non-root mode TPAUSE raises #UD unless the hypervisor sets the "enable user wait and pause" control. KVM
   shows WAITPKG to a guest only when it can set that control (`cpu_has_vmx_waitpkg()`). The emulator's VM runs
   without it under Hypervisor.framework, hence the invalid opcode above.
+- The emulator's HVF code sets only "virtualize APIC accesses" among the secondary VMX controls
+  (`target/i386/hvf-all.c`), so "enable RDTSCP" is off as well. It hides RDTSCP from the guest (CPUID 0x80000001
+  EDX keeps only LM, SYSCALL and NX), but RDPID (leaf 7 ECX bit 22) passes through, and RDPID needs the same control:
+  KVM hides RDPID when it cannot set "enable RDTSCP" (`vmx_set_cpu_caps()`). Linux uses RDPID in the vDSO's
+  `getcpu()` (`vdso_read_cpunode()`), so Android programs would hit it after the kernel boots.
 
 Virtualization as such works: the emulator's VM ran the guest kernel, and Docker Desktop's Linux VM (Apple's
 Virtualization.framework, Linux 7.0.14) booted to its login prompt on 30 Oct.
 
 ## Fix
 
-The kernel parameter `clearcpuid=waitpkg` makes the guest kernel ignore WAITPKG, so `udelay()` uses the TSC loop.
-The emulator appends an AVD's `kernel.parameters` property to the guest command line
-(`android/android-emu/android/main-kernel-parameters.cpp`). On Linux under KVM, the same `kernel-ranchu` printed
-`Clearing CPUID bits: waitpkg` with this parameter and brought up 6 CPUs.
+The kernel parameter `clearcpuid=waitpkg,rdpid` makes the guest kernel ignore both features: `udelay()` uses the
+TSC loop and `getcpu()` uses LSL. The emulator appends an AVD's `kernel.parameters` property to the guest command
+line (`android/android-emu/android/main-kernel-parameters.cpp`). On Linux under KVM, the same `kernel-ranchu`
+printed `Clearing CPUID bits: waitpkg rdpid` with this parameter and brought up 6 CPUs.
 
 ```sh
 zsh tools/emulador-android.sh            # status: kern.hv_support, emulator -accel-check, AVDs, adb devices
 zsh tools/emulador-android.sh corrigir   # all AVDs, or the ones named; close the emulator first
-zsh tools/emulador-android.sh desfazer   # removes clearcpuid=waitpkg again
+zsh tools/emulador-android.sh desfazer   # removes waitpkg and rdpid from clearcpuid again
 ```
 
-`corrigir` adds `clearcpuid=waitpkg` to `kernel.parameters` in each AVD's `config.ini` and moves the quickboot
-snapshot `default_boot`, a guest that already panicked, into the backup, so the next start is a cold boot. Backups
-go to `~/Library/Application Support/xe-emulador/<date-time>/<AVD>/`. Run it again for each new AVD and after editing
-an AVD in Device Manager; the status shows which AVDs have the fix and what the last start used (`hardware-qemu.ini`).
+`corrigir` adds `clearcpuid=waitpkg,rdpid` to `kernel.parameters` in each AVD's `config.ini` and moves the quickboot
+snapshot `default_boot`, a guest that already panicked, into the backup, so the next start is a cold boot. It also
+removes the renderer choices the emulator's settings save in the AVD's `AVD.conf` (`glesBackendPreference`,
+`glesApiLevelPreference`, `guestGlesDriverPreference`), so the emulator picks the renderer itself again (SwiftShader
+for API 37). Backups go to `~/Library/Application Support/xe-emulador/<date-time>/<AVD>/`. Run it again for each new
+AVD and after editing an AVD in Device Manager. The status shows which AVDs have the fix, the renderer choices,
+what the last start used (`hardware-qemu.ini`), and the command to run when an AVD still lacks the fix.
 
 Limits:
 
 - `clearcpuid` only changes what the kernel uses. A guest program that reads CPUID itself still sees WAITPKG and
-  would get SIGILL on TPAUSE or UMWAIT.
+  RDPID and would get SIGILL on TPAUSE, UMWAIT or RDPID.
 - The guest GPU stays in software (SwiftShader): for API 37 the emulator needs GLES 3.1 from the host, and OpenGL on
-  this machine is software-only.
+  this machine is software-only. With the host renderer the emulator got `Apple Software Renderer` and
+  `OpenGL ES 2.0 (2.1 APPLE-23.1.1)` (30 Oct).
 
 ## adb
 
 Android Studio could not start the adb server: `idea.log` (25–29 Oct) has 97 `adb start-server` exits with code 255
 (`ADB server didn't ACK`). The server log it quotes shows an Android device on USB failing with
 `Could not open interface: e00002c5` (`kIOReturnExclusiveAccess`). Without adb, Studio cannot install an app on the
-emulator even after it boots. Not investigated yet; the status runs `adb devices`.
+emulator even after it boots. Not investigated yet; the status runs `adb devices`. On 30 Oct Studio connected to
+adb, with no `start-server` failure.
+
+## First try, 30 Oct
+
+The status ran (`zsh emulador-android.sh`, without `corrigir`), so the AVD did not change: `config.ini` still dated
+from 25 Oct, without `kernel.parameters`, and there was no backup folder. The emulator then ran twice:
+
+- 21:53, cold boot (the old snapshot failed to load: `error while loading state ... 'goldfish_pipe'`), SwiftShader.
+- 21:55, after renderer choices were saved in `AVD.conf` (`glesBackendPreference=6`, `glesApiLevelPreference=2`,
+  `guestGlesDriverPreference=2`): `gles_mode_selected:host`, `Apple Software Renderer`, OpenGL ES 2.0, and the
+  warning `API level '37' requires GLES 3.1`.
+
+The snapshot saved at 21:56 holds the same panic, now at 0.355561 s, with 83 records of `delay_halt_tpause` and no
+`clearcpuid` on the guest command line. Both windows stayed black.
 
 ## Test
 
 1. Close Android Studio's emulator, then run `zsh tools/emulador-android.sh corrigir` and
-   `zsh tools/emulador-android.sh`.
-2. Start the AVD from Device Manager. The first start is a cold boot with software rendering: the Android logo
-   should appear within a few minutes.
+   `zsh tools/emulador-android.sh`. The status must say `corrigido` for the AVD.
+2. Start the AVD from Device Manager without changing the emulator's renderer settings. The first start is a cold
+   boot with software rendering: the Android logo should appear within a few minutes.
 3. Run `zsh tools/emulador-android.sh` again and keep the output (it shows `kernel.parameters` of the last start and
    `adb devices`).

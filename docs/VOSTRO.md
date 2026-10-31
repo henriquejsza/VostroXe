@@ -126,6 +126,9 @@ Boot-args: `-cs8409off` (do not touch the hardware), `cs8409lingerms`, `cs8409ca
 - **Android emulator** (Android Studio, x86_64 AVDs): black window. The guest kernel panics 0.4 s into its boot on
   TPAUSE, which the emulator's QEMU lets the guest see on this CPU. Fix, not tested yet:
   `zsh tools/emulador-android.sh corrigir`. See [EMULATOR.md](EMULATOR.md).
+- **Minecraft Launcher** 2.6.12 crashes at start (4 crash reports, 29–30 Oct): `EXC_BAD_ACCESS` in `strlen()`
+  called from `mojang::platform::getOpenGLVersion()`, so the OpenGL version string it read was null. OpenGL here has
+  no hardware renderer, only the Apple Software Renderer ([EMULATOR.md](EMULATOR.md#fix), limits).
 
 ## Keeping up with the base project
 
@@ -145,7 +148,7 @@ and merge `kern_gen11.cpp` by hand. Then rebuild with `zsh install.sh` and check
 
 | Date | Change |
 |---|---|
-| 2026-10-30 | `tools/emulador-android.sh`: `clearcpuid=waitpkg` for the Android emulator's guest kernel (black window, guest panic on TPAUSE), not tested yet |
+| 2026-10-30 | `tools/emulador-android.sh`: `clearcpuid=waitpkg,rdpid` for the Android emulator's guest kernel (black window, guest panic on TPAUSE) and the renderer back to automatic, not tested yet |
 | 2026-10-30 | NootedGreen XE-HDMI13 (`ngreenhdmilight=2`): external HDMI works, 1920×1080 at 60 Hz through Apple's `LightUpTMDS` (opt-in) |
 | 2026-10-30 | VostroXe: the Vostro work in its own repository, on top of the base project at 6f03560 |
 | 2026-10-27 | NootedGreen HDMI work on DDI-B (detection and EDID with opt-in boot-args, no picture yet); XE-PM and the rest of upstream 99631db |
