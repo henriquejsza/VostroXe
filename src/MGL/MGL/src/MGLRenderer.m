@@ -21,6 +21,9 @@
  * - newRenderEncoder creates the Metal texture of an FBO colour attachment before using it.
  * - mtlReadDrawable implements glReadPixels from a framebuffer object.
  * - newRenderEncoder: glClear also clears the colour attachments of a bound framebuffer object.
+ * - The pointer sanity checks accept the whole x86_64 user address space (up to 0x800000000000).
+ *   Their upper bound was 0x100000000000 (~17 TB), and 4 GB in one check, so valid macOS pointers
+ *   were rejected and draw calls aborted.
  *
  */
 
@@ -3315,7 +3318,7 @@ void mtlBlitFramebuffer(GLMContext glm_ctx, GLint srcX0, GLint srcY0, GLint srcX
 
             // Validate sync pointer is within valid memory range
             uintptr_t sync_addr = (uintptr_t)sync;
-            if (sync_addr < 0x1000 || sync_addr > 0x100000000000ULL) {
+            if (sync_addr < 0x1000 || sync_addr > 0x800000000000ULL) {
                 NSLog(@"MGL ERROR: Invalid sync pointer 0x%lx at index %u - skipping", sync_addr, i);
                 continue;
             }
@@ -3324,7 +3327,7 @@ void mtlBlitFramebuffer(GLMContext glm_ctx, GLint srcX0, GLint srcY0, GLint srcX
             if (sync->mtl_event) {
                 // Validate the mtl_event pointer is within valid memory range
                 uintptr_t event_addr = (uintptr_t)sync->mtl_event;
-                if (event_addr < 0x1000 || event_addr > 0x100000000000ULL) {
+                if (event_addr < 0x1000 || event_addr > 0x800000000000ULL) {
                     NSLog(@"MGL ERROR: Invalid mtl_event pointer 0x%lx - skipping release", event_addr);
                     sync->mtl_event = NULL; // Clear invalid pointer
                     continue; // Skip this corrupted entry
@@ -3544,7 +3547,7 @@ void mtlBlitFramebuffer(GLMContext glm_ctx, GLint srcX0, GLint srcY0, GLint srcX
 
     // Validate device pointer bounds (more realistic bounds for 64-bit systems)
     uintptr_t device_addr = (uintptr_t)_device;
-    if (device_addr < 0x1000 || device_addr > 0x100000000000ULL) {
+    if (device_addr < 0x1000 || device_addr > 0x800000000000ULL) {
         NSLog(@"MGL ERROR: newCommandBufferAndRenderEncoder - Invalid device pointer: 0x%lx", device_addr);
         return false;
     }
@@ -3878,7 +3881,7 @@ void mtlBlitFramebuffer(GLMContext glm_ctx, GLint srcX0, GLint srcY0, GLint srcX
 
     // Validate context pointer is within reasonable bounds (more realistic for 64-bit systems)
     uintptr_t ctx_addr = (uintptr_t)ctx;
-    if (ctx_addr < 0x1000 || ctx_addr > 0x100000000000ULL) {
+    if (ctx_addr < 0x1000 || ctx_addr > 0x800000000000ULL) {
         NSLog(@"MGL ERROR: Invalid context pointer detected in bindFramebufferAttachmentTextures: 0x%lx", ctx_addr);
         return false;
     }
@@ -3893,7 +3896,7 @@ void mtlBlitFramebuffer(GLMContext glm_ctx, GLint srcX0, GLint srcY0, GLint srcX
 
     // Validate framebuffer pointer is within reasonable bounds (more realistic for 64-bit systems)
     uintptr_t fbo_addr = (uintptr_t)fbo;
-    if (fbo_addr < 0x1000 || fbo_addr > 0x100000000000ULL) {
+    if (fbo_addr < 0x1000 || fbo_addr > 0x800000000000ULL) {
         NSLog(@"MGL ERROR: Invalid framebuffer pointer detected in bindFramebufferAttachmentTextures: 0x%lx", fbo_addr);
         return false;
     }
@@ -3995,7 +3998,7 @@ void mtlBlitFramebuffer(GLMContext glm_ctx, GLint srcX0, GLint srcY0, GLint srcX
     static int max_recovery_attempts = 3;
 
     // Check for corrupted Metal objects that might cause crashes (more realistic bounds)
-    if (!_device || !_commandQueue || (_device && _commandQueue && ((uintptr_t)_device < 0x1000 || (uintptr_t)_device > 0x100000000000ULL || (uintptr_t)_commandQueue < 0x1000 || (uintptr_t)_commandQueue > 0x100000000000ULL))) {
+    if (!_device || !_commandQueue || (_device && _commandQueue && ((uintptr_t)_device < 0x1000 || (uintptr_t)_device > 0x800000000000ULL || (uintptr_t)_commandQueue < 0x1000 || (uintptr_t)_commandQueue > 0x800000000000ULL))) {
         NSLog(@"MGL CRITICAL: Metal state corruption detected in processGLState!");
         NSLog(@"MGL CRITICAL: device=0x%lx, queue=0x%lx", (uintptr_t)_device, (uintptr_t)_commandQueue);
 
@@ -4089,7 +4092,7 @@ void mtlBlitFramebuffer(GLMContext glm_ctx, GLint srcX0, GLint srcY0, GLint srcX
 
     // Validate context pointer is within reasonable bounds (more realistic for 64-bit systems)
     uintptr_t ctx_addr = (uintptr_t)ctx;
-    if (ctx_addr < 0x1000 || ctx_addr > 0x100000000000ULL) {
+    if (ctx_addr < 0x1000 || ctx_addr > 0x800000000000ULL) {
         NSLog(@"MGL ERROR: Invalid context pointer detected: 0x%lx", ctx_addr);
         return false;
     }
@@ -4105,8 +4108,10 @@ void mtlBlitFramebuffer(GLMContext glm_ctx, GLint srcX0, GLint srcY0, GLint srcX
                 if (ctx->state.framebuffer)
                 {
                     // Validate framebuffer pointer is within reasonable bounds
+                    // VostroXe: the upper bound was 0x100000000 (4 GB), which rejected every heap
+                    // pointer on macOS x86_64, so draws into a bound FBO aborted in processGLState.
                     uintptr_t fb_addr = (uintptr_t)ctx->state.framebuffer;
-                    if (fb_addr < 0x1000 || fb_addr > 0x100000000) {
+                    if (fb_addr < 0x1000 || fb_addr > 0x800000000000ULL) {
                         NSLog(@"MGL ERROR: Invalid framebuffer pointer detected: 0x%lx", fb_addr);
                         return false;
                     }
@@ -5096,7 +5101,7 @@ void mtlSwapBuffers (GLMContext glm_ctx)
     }
 
     // Validate the Metal object pointer (realistic bounds for 64-bit systems)
-    if (!glm_ctx->mtl_funcs.mtlObj || ((uintptr_t)glm_ctx->mtl_funcs.mtlObj < 0x1000) || ((uintptr_t)glm_ctx->mtl_funcs.mtlObj > 0x100000000000ULL)) {
+    if (!glm_ctx->mtl_funcs.mtlObj || ((uintptr_t)glm_ctx->mtl_funcs.mtlObj < 0x1000) || ((uintptr_t)glm_ctx->mtl_funcs.mtlObj > 0x800000000000ULL)) {
         NSLog(@"MGL CRITICAL: mtlSwapBuffers - Invalid Metal object pointer: %p", glm_ctx->mtl_funcs.mtlObj);
         NSLog(@"MGL CRITICAL: This indicates memory corruption or context destruction");
         return;
@@ -5563,7 +5568,7 @@ Buffer *getIndirectBuffer(GLMContext ctx)
     MTLPrimitiveType primitiveType;
 
     // AGGRESSIVE MEMORY SAFETY: Immediate validation before any Metal operations (realistic bounds)
-    if (!ctx || ((uintptr_t)ctx < 0x1000) || ((uintptr_t)ctx > 0x100000000000ULL)) {
+    if (!ctx || ((uintptr_t)ctx < 0x1000) || ((uintptr_t)ctx > 0x800000000000ULL)) {
         NSLog(@"MGL ERROR: mtlDrawArrays - Invalid context detected, aborting");
         return; // Early return to prevent crash
     }
@@ -5597,13 +5602,13 @@ void mtlDrawArrays(GLMContext glm_ctx, GLenum mode, GLint first, GLsizei count)
     // FINAL FAILSAFE: Catch any unhandled exceptions to prevent QEMU crashes
     @try {
         // Validate context before bridging (realistic bounds for 64-bit systems)
-        if (!glm_ctx || ((uintptr_t)glm_ctx < 0x1000) || ((uintptr_t)glm_ctx > 0x100000000000ULL)) {
+        if (!glm_ctx || ((uintptr_t)glm_ctx < 0x1000) || ((uintptr_t)glm_ctx > 0x800000000000ULL)) {
             NSLog(@"MGL CRITICAL: mtlDrawArrays - Invalid GLM context, aborting operation");
             return;
         }
 
         // Validate the Metal object pointer (realistic bounds for 64-bit systems)
-        if (!glm_ctx->mtl_funcs.mtlObj || ((uintptr_t)glm_ctx->mtl_funcs.mtlObj < 0x1000) || ((uintptr_t)glm_ctx->mtl_funcs.mtlObj > 0x100000000000ULL)) {
+        if (!glm_ctx->mtl_funcs.mtlObj || ((uintptr_t)glm_ctx->mtl_funcs.mtlObj < 0x1000) || ((uintptr_t)glm_ctx->mtl_funcs.mtlObj > 0x800000000000ULL)) {
             NSLog(@"MGL CRITICAL: mtlDrawArrays - Invalid Metal object, aborting operation");
             return;
         }
