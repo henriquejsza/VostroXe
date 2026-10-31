@@ -2,9 +2,10 @@
 
 Status: **fix ready, not tested on the laptop yet.** The Android Studio emulator showed a black window: the
 guest's Linux kernel panics 0.4 s into its boot on an instruction the hypervisor does not allow.
-`zsh tools/emulador-android.sh corrigir` makes the guest kernel stop using it. Two tries on 30 Oct did not test it:
-in the first the fix was not applied, in the second the boot never left the BIOS because of a half-removed quickboot
-snapshot ([First try](#first-try-30-oct), [Second try](#second-try-30-oct)).
+`zsh tools/emulador-android.sh corrigir` makes the guest kernel stop using it. Three tries on 30 Oct did not test it
+yet: the fix was not applied, then not applied again, then applied but the emulator kept loading a broken quickboot
+snapshot that has never loaded on this machine ([First try](#first-try-30-oct), [Second try](#second-try-30-oct),
+[Third try](#third-try-30-oct)).
 
 Versions on this laptop: Android Studio 2026.2, emulator 37.2.12 (build 16428233), one AVD "Medium Phone API 37.0"
 (x86_64, Google Play image revision 7, Android 17, guest kernel 6.12.81-android16).
@@ -66,24 +67,32 @@ printed `Clearing CPUID bits: waitpkg rdpid` with this parameter and brought up 
 ```sh
 zsh tools/emulador-android.sh            # status: kern.hv_support, emulator -accel-check, AVDs, snapshots, adb devices
 zsh tools/emulador-android.sh corrigir   # all AVDs, or the ones named; close the emulator first
-zsh tools/emulador-android.sh desfazer   # removes waitpkg and rdpid from clearcpuid again
+zsh tools/emulador-android.sh desfazer   # removes the fix and sets forceColdBoot=no again
 zsh tools/emulador-android.sh boot-frio  # only removes the quickboot snapshot
 zsh tools/emulador-android.sh testar     # cold boot of the first AVD with the guest kernel log in a file
 ```
 
-`corrigir` adds `clearcpuid=waitpkg,rdpid` to `kernel.parameters` in each AVD's `config.ini` and removes the
-quickboot snapshot `default_boot`, a guest that already panicked, so the next start is a cold boot. The snapshot has
-two parts and both go: the guest RAM in `snapshots/default_boot`, moved into the backup, and the CPU and device state,
-an internal qcow2 snapshot named `default_boot` in the AVD's `.qcow2` disks, deleted with the SDK's
-`emulator/qemu-img snapshot -d` after a copy of each disk into the backup (an APFS clone when possible). If the SDK's
-`qemu-img` does not run,
-nothing is removed (see [Second try](#second-try-30-oct) for why half a snapshot is worse than none). `corrigir` also
-removes the renderer choices the emulator's settings save in the AVD's `AVD.conf` (`glesBackendPreference`,
+`corrigir` makes three changes to each AVD, with a backup first:
+
+1. Adds `clearcpuid=waitpkg,rdpid` to `kernel.parameters` in the AVD's `config.ini`.
+2. Sets `fastboot.forceColdBoot=yes`, so the emulator never loads a quickboot snapshot and always does a clean cold
+   boot, including launches from Device Manager. Quickboot has never loaded on this machine: every attempt since
+   25 Oct failed (`error while loading state ... 'goldfish_pipe'`, or `Error -5 while loading VM state`), and a
+   half-applied load leaves the VM dirty and the fallback cold boot stuck in the BIOS (second and third tries). This
+   trades fast boot (which never worked here) for a reliable boot.
+3. Removes the quickboot snapshot `default_boot`, a guest that already panicked. It has two parts and both go: the
+   guest RAM in `snapshots/default_boot`, moved into the backup, and the CPU and device state, an internal qcow2
+   snapshot named `default_boot` in the AVD's `.qcow2` disks, deleted with the SDK's `emulator/qemu-img snapshot -d`
+   after a copy of each disk into the backup (an APFS clone when possible). If the SDK's `qemu-img` does not run,
+   nothing is removed, but `forceColdBoot=yes` already keeps the snapshot from being loaded.
+
+It also removes the renderer choices the emulator's settings save in the AVD's `AVD.conf` (`glesBackendPreference`,
 `glesApiLevelPreference`, `guestGlesDriverPreference`), so the emulator picks the renderer itself again (SwiftShader
 for API 37). Backups go to `~/Library/Application Support/xe-emulador/<date-time>/<AVD>/`. Run it again for each new
-AVD and after editing an AVD in Device Manager. The status shows which AVDs have the fix, the renderer choices,
-what the last start used (`hardware-qemu.ini`), the quickboot snapshot (flagged when only one part exists), and the
-next command to run.
+AVD and after editing an AVD in Device Manager. `corrigir` acts even when `kernel.parameters` is already set, because
+the snapshot can come back (the emulator saves it on exit). `desfazer` undoes 1 and 2. The status shows which AVDs
+have the fix, the cold-boot setting, the renderer choices, what the last start used (`hardware-qemu.ini`), the
+quickboot snapshot, and the next command to run.
 
 `testar` removes the quickboot snapshot and starts the emulator with `-no-snapshot-load -no-snapshot-save
 -show-kernel`, so the guest kernel's console goes to a log file (`~/Library/Logs/xe-emulador/` by default). It
@@ -147,13 +156,25 @@ after Linux had set the CMOS shutdown code to 0x0A and the warm-reset vector at 
 RAM has 40:67 = `9900:0000`). SeaBIOS's reset path (`handle_resume`) reads that code, clears it (CMOS 0x0F was 0 at
 exit) and for 0x0A jumps through 40:67. Without the old RAM the vector is `0000:0000`, which it was at exit.
 
-So the fix was not tested in this run. The tool now removes both parts of the snapshot, and `testar` starts the
-emulator without loading or saving any snapshot and keeps the guest kernel's log.
+So the fix was not tested in this run. The tool then removed both parts of the snapshot.
+
+## Third try, 30 Oct
+
+`CORRIGIR-EMULADOR.command` ran `corrigir` at 23:46, but the AVD already had `kernel.parameters=clearcpuid=waitpkg,rdpid`
+from 22:37, and that version of `corrigir` only removed the snapshot when it changed `kernel.parameters`. So it printed
+`já corrigido` and left the snapshot that the 22:40 exit had saved whole. `testar` did not run (no `-no-snapshot-load`
+in `idea.log`); the emulator was launched from Device Manager at 23:47 and 23:58, both loaded the snapshot, both failed
+(`error while loading state ... 'goldfish_pipe'`, `Error -5`), both black.
+
+Two fixes followed: `corrigir` now acts even when `kernel.parameters` is already set (it removes the snapshot and sets
+cold boot), and it sets `fastboot.forceColdBoot=yes` so a Device Manager launch can never load the snapshot. Quickboot
+has never loaded on this machine, so forcing cold boot costs nothing here.
 
 ## Test
 
 1. Close Android Studio's emulator, then run `zsh tools/emulador-android.sh corrigir` and
-   `zsh tools/emulador-android.sh`. The status must say `corrigido` for the AVD and no `PELA METADE` snapshot.
-2. Run `zsh tools/emulador-android.sh testar`. It starts a cold boot with software rendering: the Android logo
-   should appear within a few minutes. Close the window when done.
-3. Keep the log it names (`~/Library/Logs/xe-emulador/<AVD>-<date-time>.txt`): it holds the guest kernel's console.
+   `zsh tools/emulador-android.sh`. The status must say `corrigido`, `cold boot yes`, and `snapshot: nenhum`.
+2. Start the AVD from Device Manager, or run `zsh tools/emulador-android.sh testar`. Either way it cold-boots with
+   software rendering: the Android logo should appear within a few minutes. `testar` also keeps the guest kernel log.
+3. If it is still black, keep the log `testar` names (`~/Library/Logs/xe-emulador/<AVD>-<date-time>.txt`): it holds
+   the guest kernel's console.

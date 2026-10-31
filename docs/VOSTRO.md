@@ -148,7 +148,7 @@ and merge `kern_gen11.cpp` by hand. Then rebuild with `zsh install.sh` and check
 
 | Date | Change |
 |---|---|
-| 2026-10-30 | `tools/emulador-android.sh`: `clearcpuid=waitpkg,rdpid` for the Android emulator's guest kernel (black window, guest panic on TPAUSE), the renderer back to automatic, the quickboot snapshot removed whole (RAM and qcow2), `testar` with the guest kernel log; not tested yet |
+| 2026-10-30 | `tools/emulador-android.sh`: `clearcpuid=waitpkg,rdpid` for the Android emulator's guest kernel (black window, guest panic on TPAUSE), the renderer back to automatic, `fastboot.forceColdBoot=yes` and the quickboot snapshot removed whole (quickboot never loaded here), `testar` with the guest kernel log; not tested yet |
 | 2026-10-30 | NootedGreen XE-HDMI13 (`ngreenhdmilight=2`): external HDMI works, 1920×1080 at 60 Hz through Apple's `LightUpTMDS` (opt-in) |
 | 2026-10-30 | VostroXe: the Vostro work in its own repository, on top of the base project at 6f03560 |
 | 2026-10-27 | NootedGreen HDMI work on DDI-B (detection and EDID with opt-in boot-args, no picture yet); XE-PM and the rest of upstream 99631db |
