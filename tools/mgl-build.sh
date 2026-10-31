@@ -82,6 +82,17 @@ err=0
     echo "== patch VostroXe MGLRenderer: já aplicado"
   fi
 
+  # ---- patch VostroXe D: o glReadPixels de um FBO não foi implementado neste MGL (o ramo readbuffer do
+  #      mtlReadDrawable só faz NSLog+return). Implementa: pega a textura do anexo de cor, finaliza o
+  #      render pendente e faz blit textura -> MTLBuffer compartilhado -> memcpy pro buffer do glReadPixels.
+  if ! grep -q 'VostroXe: FBO readback' "$RF"; then
+    echo "== patch VostroXe: implementar glReadPixels de FBO no mtlReadDrawable ($RF)"
+    perl -0777 -i -pe 's!drawbuffer = ctx->state\.read_buffer - GL_COLOR_ATTACHMENT0;.*?//assert\(texture\);!drawbuffer = (((GLint)ctx->state.read_buffer - (GLint)GL_COLOR_ATTACHMENT0) < 0) ? 0u : (GLuint)((GLint)ctx->state.read_buffer - (GLint)GL_COLOR_ATTACHMENT0); if (drawbuffer > (GLuint)STATE(max_color_attachments)) drawbuffer = 0u; { Texture *_rtex = [self framebufferAttachmentTexture: \&fbo->color_attachments[drawbuffer]]; assert(_rtex); if (_rtex->mtl_data == NULL) [self bindMTLTexture: _rtex]; texture = (__bridge id<MTLTexture>)(_rtex->mtl_data); assert(texture); [self endRenderEncoding]; if (_currentCommandBuffer \&\& _currentCommandBuffer.status < MTLCommandBufferStatusCommitted) { [_currentCommandBuffer commit]; [_currentCommandBuffer waitUntilCompleted]; } [self newCommandBuffer]; NSUInteger _bpr = bytesPerRow; NSUInteger _len = _bpr * region.size.height; id<MTLBuffer> _rbuf = [_device newBufferWithLength:_len options:MTLResourceStorageModeShared]; id<MTLBlitCommandEncoder> _blit = [_currentCommandBuffer blitCommandEncoder]; [_blit copyFromTexture:texture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(region.origin.x, region.origin.y, 0) sourceSize:MTLSizeMake(region.size.width, region.size.height, 1) toBuffer:_rbuf destinationOffset:0 destinationBytesPerRow:_bpr destinationBytesPerImage:_len]; [_blit endEncoding]; [_currentCommandBuffer commit]; [_currentCommandBuffer waitUntilCompleted]; memcpy(pixelBytes, [_rbuf contents], _len); [self newCommandBuffer]; /* VostroXe: FBO readback */ return; }!s' "$RF"
+    grep -q 'VostroXe: FBO readback' "$RF" && echo "   patch readback aplicado" || { echo "   AVISO: nao aplicou"; err=1; }
+  else
+    echo "== patch VostroXe readback: já aplicado"
+  fi
+
   # ---- MGL ----
   echo "== compilando o MGL (make) — log em mgl-make-log.txt"
   make > "$MAKELOG" 2>&1; echo "   make rc=$? ; últimas linhas:"; tail -25 "$MAKELOG"
