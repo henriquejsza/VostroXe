@@ -104,6 +104,18 @@ err=0
     echo "== patch VostroXe clear-FBO: já aplicado"
   fi
 
+  # ---- patch VostroXe F: 11 checks "de seguranca" rejeitam o contexto/dispositivo quando o ponteiro passa
+  #      de 0x100000000000 (~17 TB) — um teto pensado pra QEMU. No macOS x86_64 os ponteiros de heap/objeto
+  #      ficam logo abaixo de 2^47 (~140 TB), acima desse teto, então glDrawArrays abortava com
+  #      "Invalid GLM context". Sobe o teto para 0x800000000000 (2^47 = topo do espaço de usuário x86_64).
+  if grep -q '0x100000000000ULL' "$RF"; then
+    echo "== patch VostroXe: subir teto de ponteiro 0x100000000000 -> 0x800000000000 ($RF)"
+    perl -pi -e 's/0x100000000000ULL/0x800000000000ULL/g' "$RF"
+    grep -q '0x100000000000ULL' "$RF" && { echo "   AVISO: ainda sobra"; err=1; } || echo "   patch ponteiro aplicado"
+  else
+    echo "== patch VostroXe ponteiro: já aplicado"
+  fi
+
   # ---- MGL ----
   echo "== compilando o MGL (make) — log em mgl-make-log.txt"
   make > "$MAKELOG" 2>&1; echo "   make rc=$? ; últimas linhas:"; tail -25 "$MAKELOG"
