@@ -19,6 +19,7 @@
  * Modified by VostroXe, 2026-10-31 (changes marked "VostroXe:"; see docs/OPENGL.md in the VostroXe
  * repository):
  * - newRenderEncoder creates the Metal texture of an FBO colour attachment before using it.
+ * - mtlReadDrawable implements glReadPixels from a framebuffer object.
  *
  */
 
@@ -5208,19 +5209,52 @@ void mtlFlushBufferRange(GLMContext glm_ctx, Buffer *buf, GLintptr offset, GLsiz
         GLuint drawbuffer;
 
         fbo = ctx->state.readbuffer;
-        drawbuffer = ctx->state.read_buffer - GL_COLOR_ATTACHMENT0;
-        assert(drawbuffer >= 0);
-        assert(drawbuffer <= STATE(max_color_attachments));
 
-        // CRITICAL FIX: Handle assertion gracefully instead of crashing
-            NSLog(@"MGL ERROR: Assertion hit in MGLRenderer.m at line %d", __LINE__);
+        // VostroXe: reading from a framebuffer object was not implemented here: this branch only
+        // logged "Assertion hit" and returned, so glReadPixels left the caller's buffer untouched.
+        // Read the colour attachment chosen by glReadBuffer (attachment 0 if it is out of range):
+        // finish the pending rendering, blit the attachment into a shared buffer, copy it out.
+        drawbuffer = (((GLint)ctx->state.read_buffer - (GLint)GL_COLOR_ATTACHMENT0) < 0) ? 0u : (GLuint)((GLint)ctx->state.read_buffer - (GLint)GL_COLOR_ATTACHMENT0);
+        if (drawbuffer > (GLuint)STATE(max_color_attachments))
+            drawbuffer = 0u;
+        {
+            Texture *_rtex = [self framebufferAttachmentTexture: &fbo->color_attachments[drawbuffer]];
+            assert(_rtex);
+            if (_rtex->mtl_data == NULL)
+                [self bindMTLTexture: _rtex];
+            texture = (__bridge id<MTLTexture>)(_rtex->mtl_data);
+            assert(texture);
+
+            [self endRenderEncoding];
+            if (_currentCommandBuffer && _currentCommandBuffer.status < MTLCommandBufferStatusCommitted)
+            {
+                [_currentCommandBuffer commit];
+                [_currentCommandBuffer waitUntilCompleted];
+            }
+            [self newCommandBuffer];
+
+            NSUInteger _bpr = bytesPerRow;
+            NSUInteger _len = _bpr * region.size.height;
+            id<MTLBuffer> _rbuf = [_device newBufferWithLength:_len options:MTLResourceStorageModeShared];
+
+            id<MTLBlitCommandEncoder> _blit = [_currentCommandBuffer blitCommandEncoder];
+            [_blit copyFromTexture:texture
+                       sourceSlice:0
+                       sourceLevel:0
+                      sourceOrigin:MTLOriginMake(region.origin.x, region.origin.y, 0)
+                        sourceSize:MTLSizeMake(region.size.width, region.size.height, 1)
+                          toBuffer:_rbuf
+                 destinationOffset:0
+            destinationBytesPerRow:_bpr
+          destinationBytesPerImage:_len];
+            [_blit endEncoding];
+            [_currentCommandBuffer commit];
+            [_currentCommandBuffer waitUntilCompleted];
+
+            memcpy(pixelBytes, [_rbuf contents], _len);
+            [self newCommandBuffer];
             return;
-        
-        //tex = [self framebufferAttachmentTexture: &fbo->color_attachments[drawbuffer]];
-        //assert(tex);
-
-        //texture = (__bridge id<MTLTexture>)(tex->mtl_data);
-        //assert(texture);
+        }
     }
     else
     {
