@@ -104,14 +104,15 @@ err=0
     echo "== patch VostroXe clear-FBO: já aplicado"
   fi
 
-  # ---- patch VostroXe F: 11 checks "de seguranca" rejeitam o contexto/dispositivo quando o ponteiro passa
-  #      de 0x100000000000 (~17 TB) — um teto pensado pra QEMU. No macOS x86_64 os ponteiros de heap/objeto
-  #      ficam logo abaixo de 2^47 (~140 TB), acima desse teto, então glDrawArrays abortava com
-  #      "Invalid GLM context". Sobe o teto para 0x800000000000 (2^47 = topo do espaço de usuário x86_64).
-  if grep -q '0x100000000000ULL' "$RF"; then
-    echo "== patch VostroXe: subir teto de ponteiro 0x100000000000 -> 0x800000000000 ($RF)"
+  # ---- patch VostroXe F: vários checks "de seguranca" rejeitam ponteiros acima de tetos pensados pra QEMU:
+  #      0x100000000000 (~17 TB, 12x) e 0x100000000 (4 GB!, 1x, na checagem de ctx->state.framebuffer).
+  #      No macOS x86_64 os ponteiros ficam logo abaixo de 2^47 (~140 TB), acima desses tetos, então
+  #      glDrawArrays abortava ("Invalid GLM context" / "Invalid framebuffer pointer"). Sobe ambos para 2^47.
+  if grep -qE '0x100000000000ULL|fb_addr > 0x100000000\)' "$RF"; then
+    echo "== patch VostroXe: subir tetos de ponteiro bogus (17 TB e 4 GB) -> 0x800000000000 ($RF)"
     perl -pi -e 's/0x100000000000ULL/0x800000000000ULL/g' "$RF"
-    grep -q '0x100000000000ULL' "$RF" && { echo "   AVISO: ainda sobra"; err=1; } || echo "   patch ponteiro aplicado"
+    perl -pi -e 's/fb_addr > 0x100000000\)/fb_addr > 0x800000000000ULL)/g' "$RF"
+    if grep -qE '0x100000000000ULL|fb_addr > 0x100000000\)' "$RF"; then echo "   AVISO: ainda sobra"; err=1; else echo "   patch ponteiro aplicado"; fi
   else
     echo "== patch VostroXe ponteiro: já aplicado"
   fi
