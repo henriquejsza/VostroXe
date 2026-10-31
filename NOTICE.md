@@ -16,6 +16,14 @@
 - **`src/HookCase/`** is HookCase by Steven Michaud, as modified in the NootedGreen project, with two fixes from this
   repository (probePortMode NULL `callback`, strnstr signature). It is under the **MIT License**; see
   [src/LICENSE-HookCase](src/LICENSE-HookCase).
+- **`src/MGL/`** is [MGL](https://github.com/openglonmetal/MGL) by Michael Larson and contributors (OpenGL 4.6 on
+  Metal), imported at upstream commit `de0ded04` without its Xcode project, golden images and code generators. This
+  repository's changes, which make it run on the Vostro's GPU, are listed in [docs/OPENGL.md](docs/OPENGL.md) and
+  marked in each changed file. MGL and these changes are under the **Apache License 2.0**
+  ([src/MGL/LICENSE](src/MGL/LICENSE)). The GLFW it bundles (`src/MGL/external/glfw/`, modified by the MGL project)
+  is under the **zlib/libpng License** ([src/MGL/external/glfw/LICENSE.md](src/MGL/external/glfw/LICENSE.md)). Its
+  build dependencies (SPIRV-Cross, SPIRV-Tools, SPIRV-Headers, glslang, OpenGL-Registry, ezxml) are not included:
+  `src/MGL/external/clone_external.sh` downloads them.
 - **Third-party components in `EFI/`** keep their own licenses: OpenCore, Lilu, WhateverGreen, VirtualSMC, NVMeFix,
   RestrictEvents, BrightnessKeys, CpuTopologyRebuild (acidanthera and contributors); VoodooI2C and VoodooPS2 (their
   authors); USBToolBox (dhinakg); XHCI-unsupported (RehabMan). See each project for its terms.

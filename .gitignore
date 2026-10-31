@@ -13,3 +13,14 @@ tools/xe-hapticbar.app/
 # SMBIOS serials of this machine (created by make-efi.py): never commit them
 smbios.local
 __pycache__/
+# MGL (src/MGL): build products, the symlinks its Makefile drops next to it, and the dependencies that
+# external/clone_external.sh downloads and external/build_external.sh builds (not part of this repository)
+src/MGL/build/
+src/MGL/lib*.dylib
+src/MGL/external/OpenGL-Registry/
+src/MGL/external/SPIRV-Cross/
+src/MGL/external/SPIRV-Headers/
+src/MGL/external/SPIRV-Tools/
+src/MGL/external/ezxml/
+src/MGL/external/glslang/
+src/MGL/external/glfw/build/
