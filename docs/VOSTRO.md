@@ -126,7 +126,7 @@ Boot-args: `-cs8409off` (do not touch the hardware), `cs8409lingerms`, `cs8409ca
 - **Android emulator** (Android Studio, x86_64 AVDs): black window. The guest kernel panicked 0.4 s into its boot on
   TPAUSE; with that cleared it boots and runs Android init, then hangs on a second CPUID mismatch (PKU: `CR4.PKE`
   on, but no PKRU in the guest XSAVE). Fix, not fully booted yet:
-  `zsh tools/emulador-android.sh corrigir` (clears waitpkg, rdpid, pku; forces cold boot). See [EMULATOR.md](EMULATOR.md).
+  `zsh tools/emulador-android.sh corrigir` (`clearcpuid=waitpkg,rdpid nopku`, forces cold boot). See [EMULATOR.md](EMULATOR.md).
 - **Minecraft Launcher** 2.6.12 crashes at start (4 crash reports, 29–30 Oct): `EXC_BAD_ACCESS` in `strlen()`
   called from `mojang::platform::getOpenGLVersion()`, so the OpenGL version string it read was null. OpenGL here has
   no hardware renderer, only the Apple Software Renderer ([EMULATOR.md](EMULATOR.md#fix), limits).
@@ -149,7 +149,7 @@ and merge `kern_gen11.cpp` by hand. Then rebuild with `zsh install.sh` and check
 
 | Date | Change |
 |---|---|
-| 2026-10-30 | `tools/emulador-android.sh`: `clearcpuid=waitpkg,rdpid,pku` for the Android emulator's guest kernel (TPAUSE panic, then PKU/PKRU xstate hang), the renderer back to automatic, `fastboot.forceColdBoot=yes` and the quickboot snapshot removed whole (quickboot never loaded here), `testar` with the guest kernel log; boots Android init, not to the UI yet |
+| 2026-10-30 | `tools/emulador-android.sh`: guest-kernel params `clearcpuid=waitpkg,rdpid nopku` for the Android emulator (TPAUSE panic, then PKU/PKRU xstate hang), the renderer back to automatic, `fastboot.forceColdBoot=yes` and the quickboot snapshot removed whole (quickboot never loaded here), `testar` with the guest kernel log; boots Android init, not to the UI yet |
 | 2026-10-30 | NootedGreen XE-HDMI13 (`ngreenhdmilight=2`): external HDMI works, 1920×1080 at 60 Hz through Apple's `LightUpTMDS` (opt-in) |
 | 2026-10-30 | VostroXe: the Vostro work in its own repository, on top of the base project at 6f03560 |
 | 2026-10-27 | NootedGreen HDMI work on DDI-B (detection and EDID with opt-in boot-args, no picture yet); XE-PM and the rest of upstream 99631db |

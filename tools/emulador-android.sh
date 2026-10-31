@@ -10,8 +10,11 @@
 # A PKU (chaves de proteção de memória, CPUID.7.0:ECX bit 3) é o terceiro caso: o emulador anuncia PKU no leaf 7,
 # o guest liga CR4.PKE, mas o XSAVE do guest (leaf 0xD) não traz o componente PKRU (fica só x87/SSE/AVX = 0x7).
 # Ao montar o quadro de sinal, o kernel procura o PKRU no XSAVE, não acha, dá WARNING em xstate.c e o init (PID 1)
-# trava no meio da entrega do sinal, pendurando a VM inteira (RCU stalls). Por isso a pku também é limpa.
-# A correção é o parâmetro clearcpuid=waitpkg,rdpid,pku no kernel do guest, pela propriedade kernel.parameters do
+# trava no meio da entrega do sinal, pendurando a VM inteira (RCU stalls). Aqui NÃO se usa clearcpuid=pku: limpar o
+# bit do PKU cedo demais confunde a montagem do XSAVE neste HVF e o kernel nem carrega (teste de 31/10, 00:58: preso
+# no BIOS, sem console). O certo é o parâmetro dedicado "nopku", que não mexe no CPUID: só não liga o CR4.PKE, então
+# o PKRU não entra no quadro de sinal.
+# A correção é, no kernel do guest, clearcpuid=waitpkg,rdpid mais nopku, pela propriedade kernel.parameters do
 # config.ini de cada AVD, que o emulador acrescenta à linha de comando do kernel.
 # O corrigir também volta ao automático o renderizador escolhido nas configurações do emulador (AVD.conf). O OpenGL
 # do Mac aqui é só o renderizador por software da Apple (OpenGL ES 2.0 para o guest), e o Android 37 precisa de
@@ -43,7 +46,9 @@ BKROOT="$HOME/Library/Application Support/xe-emulador"
 LOGROOT="$HOME/Library/Logs/xe-emulador"
 EMU="$SDK/emulator/emulator"
 QEMU_IMG="$SDK/emulator/qemu-img"
-FIX=(waitpkg rdpid pku)
+CLEAR=(waitpkg rdpid)   # ids que devem estar em clearcpuid=
+UNCLEAR=(pku)           # ids que NÃO podem estar em clearcpuid= (quebraram o boot em 31/10)
+EXTRA=(nopku)           # parâmetros avulsos que devem estar presentes
 GLKEYS=(glesBackendPreference glesApiLevelPreference guestGlesDriverPreference)
 
 avd_names() { local f; for f in "$AVDROOT"/*.ini; do print -r -- "${${f:t}%.ini}"; done; }
@@ -69,27 +74,33 @@ cfg_set() {   # grava $2=$3 no arquivo $1 no lugar da chave (ou no fim); valor v
     END { if (!done && v != "") print k "=" v }' "$1" > "$tmp"
   mv "$tmp" "$1"
 }
-with_fix() {      # parâmetros $1 com todos os ids de $FIX no clearcpuid
-  local -a out ids; local t id found=0
-  for t in ${=1}; do
-    if [[ $t == clearcpuid=* ]]; then
-      found=1
-      ids=(${(s:,:)${t#clearcpuid=}})
-      for id in $FIX; do (( ${ids[(Ie)$id]} )) || ids+=$id; done
-      t="clearcpuid=${(j:,:)ids}"
-    fi
-    out+=$t
-  done
-  (( found )) || out+="clearcpuid=${(j:,:)FIX}"
-  print -r -- "${(j: :)out}"
+with_fix() {      # parâmetros $1 corrigidos: clearcpuid com CLEAR (e sem UNCLEAR) + os avulsos de EXTRA
+  local -a toks ids; local i id
+  toks=(${=1})
+  if (( ${toks[(I)clearcpuid=*]} )); then
+    for (( i = 1; i <= $#toks; i++ )); do
+      [[ ${toks[i]} == clearcpuid=* ]] || continue
+      ids=(${(s:,:)${toks[i]#clearcpuid=}})
+      for id in $UNCLEAR; do ids=(${ids:#$id}); done
+      for id in $CLEAR; do (( ${ids[(Ie)$id]} )) || ids+=$id; done
+      toks[i]="clearcpuid=${(j:,:)ids}"
+    done
+  else
+    toks+="clearcpuid=${(j:,:)CLEAR}"
+  fi
+  for id in $EXTRA; do (( ${toks[(Ie)$id]} )) || toks+=$id; done
+  print -r -- "${(j: :)toks}"
 }
-without_fix() {   # parâmetros $1 sem os ids de $FIX (e sem o clearcpuid, se ficar vazio)
-  local -a out ids; local t id
-  for t in ${=1}; do
+without_fix() {   # parâmetros $1 sem CLEAR/UNCLEAR no clearcpuid (tira o clearcpuid se ficar vazio) e sem EXTRA
+  local -a toks out ids; local t id
+  toks=(${=1})
+  for t in $toks; do
     if [[ $t == clearcpuid=* ]]; then
       ids=(${(s:,:)${t#clearcpuid=}})
-      for id in $FIX; do ids=(${ids:#$id}); done
+      for id in $CLEAR $UNCLEAR; do ids=(${ids:#$id}); done
       (( ${#ids} )) && out+="clearcpuid=${(j:,:)ids}"
+    elif (( ${EXTRA[(Ie)$t]} )); then
+      :
     else
       out+=$t
     fi

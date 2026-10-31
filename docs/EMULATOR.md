@@ -3,9 +3,9 @@
 Status: **fix ready, not tested on the laptop yet.** The Android Studio emulator showed a black window: the
 guest's Linux kernel panics 0.4 s into its boot on an instruction the hypervisor does not allow.
 `zsh tools/emulador-android.sh corrigir` makes the guest kernel stop using it. On 31 Oct this got the guest kernel
-past the TPAUSE panic and through Android init (confirmed in the guest kernel log), but it then hung on a second
-CPUID mismatch (PKU); `corrigir` now clears that too. Still not booted to the UI on the laptop
-([the tries](#first-try-30-oct)).
+past the TPAUSE panic and through Android init (confirmed in the guest kernel log). It then hit two more issues: a
+PKU/PKRU signal-frame hang, and a wrong first fix (`clearcpuid=pku`) that stopped the kernel booting; `corrigir` now
+uses `nopku` instead. Still not booted to the UI on the laptop ([the tries](#first-try-30-oct)).
 
 Versions on this laptop: Android Studio 2026.2, emulator 37.2.12 (build 16428233), one AVD "Medium Phone API 37.0"
 (x86_64, Google Play image revision 7, Android 17, guest kernel 6.12.81-android16).
@@ -58,7 +58,10 @@ From the macOS disk, read from Linux: Android Studio's `idea.log` and the AVD fo
   does not carry the PKRU component: `x86/fpu: Enabled xstate features 0x7` (x87, SSE, AVX only). No real CPU is
   inconsistent like that. When the kernel saves a process's FPU state into a signal frame it looks up the PKRU
   component (feature 9) and warns (`get_xsave_addr_user`, `xstate.c`), and `init` (PID 1) wedges in signal
-  delivery, which hangs the whole VM.
+  delivery, which hangs the whole VM. Clearing PKU with `clearcpuid=pku` does **not** work here: removing the CPUID
+  bit that early breaks the kernel's XSAVE setup under this HVF and the kernel never boots (fifth try: stuck in the
+  BIOS, no console). The fix is Linux's dedicated `nopku` parameter, which keeps the CPUID bit but does not set
+  `CR4.PKE`, so PKRU never enters a signal frame.
 
 Virtualization as such works: the emulator's VM ran the guest kernel, and Docker Desktop's Linux VM (Apple's
 Virtualization.framework, Linux 7.0.14) booted to its login prompt on 30 Oct.
@@ -66,10 +69,12 @@ Virtualization.framework, Linux 7.0.14) booted to its login prompt on 30 Oct.
 ## Fix
 
 The kernel parameter `clearcpuid=waitpkg,rdpid,pku` makes the guest kernel ignore all three features: `udelay()` uses the
-TSC loop, `getcpu()` uses LSL, and no process enables protection keys (no PKRU in the signal frame). The emulator
-appends an AVD's `kernel.parameters` property to the guest command line
+The kernel parameters `clearcpuid=waitpkg,rdpid nopku` make the guest kernel ignore all three features: `udelay()`
+uses the TSC loop, `getcpu()` uses LSL, and no process enables protection keys (no PKRU in the signal frame). The
+emulator appends an AVD's `kernel.parameters` property to the guest command line
 (`android/android-emu/android/main-kernel-parameters.cpp`). On Linux under KVM, the same `kernel-ranchu` printed
-`Clearing CPUID bits: waitpkg rdpid pku` with this parameter and brought up 6 CPUs.
+`Clearing CPUID bits: waitpkg rdpid` and `x86: 'nopku' specified, disabling Memory Protection Keys`, and brought up
+6 CPUs.
 
 ```sh
 zsh tools/emulador-android.sh            # status: kern.hv_support, emulator -accel-check, AVDs, snapshots, adb devices
@@ -81,7 +86,8 @@ zsh tools/emulador-android.sh testar     # cold boot of the first AVD with the g
 
 `corrigir` makes three changes to each AVD, with a backup first:
 
-1. Adds `clearcpuid=waitpkg,rdpid,pku` to `kernel.parameters` in the AVD's `config.ini`.
+1. Adds `clearcpuid=waitpkg,rdpid nopku` to `kernel.parameters` in the AVD's `config.ini` (and removes a stale
+   `pku` from `clearcpuid` if a previous version had put it there).
 2. Sets `fastboot.forceColdBoot=yes`, so the emulator never loads a quickboot snapshot and always does a clean cold
    boot, including launches from Device Manager. Quickboot has never loaded on this machine: every attempt since
    25 Oct failed (`error while loading state ... 'goldfish_pipe'`, or `Error -5 while loading VM state`), and a
@@ -190,14 +196,28 @@ same signal-delivery path. The window stayed black.
 
 Why: the guest has `CR4.PKE = 1` (PKU enabled) but `Enabled xstate features 0x7` (no PKRU in XSAVE), the leaf-7 /
 leaf-0xD mismatch above. Saving a signal frame for `init` looks up the missing PKRU component, warns, and wedges
-`init`, which stalls the VM. Fix: add `pku` to `clearcpuid`. The KVM test accepts `clearcpuid=waitpkg,rdpid,pku`
-(`Clearing CPUID bits: waitpkg rdpid pku`). Not tested on the laptop yet.
+`init`, which stalls the VM. First fix tried: add `pku` to `clearcpuid` (see the fifth try for why that was wrong).
+
+## Fifth try, 31 Oct (clearcpuid=pku broke the boot; use nopku)
+
+`corrigir` + `testar` ran at 00:58 with `clearcpuid=waitpkg,rdpid,pku`. The guest kernel log (`-show-kernel`) had
+**no kernel line at all** (0 vs. 1801 the run before), only the emulator's own output and three SeaBIOS
+`Unimplemented handler ... for 75`. The AVD disks were not written (`userdata-qemu.img.qcow2` mtime stayed at 00:26,
+from the fourth try; `qemu-img check` clean). So the kernel never ran: adding `pku` to `clearcpuid` made the kernel
+fail to boot (removing the CPUID bit that early breaks XSAVE setup under this HVF; the CPU resets and loops in the
+BIOS). Black again.
+
+Fix: drop `pku` from `clearcpuid` and use the dedicated `nopku` parameter instead, so the parameters are
+`clearcpuid=waitpkg,rdpid nopku`. `nopku` keeps the CPUID bit (XSAVE setup unchanged, the part that booted in the
+fourth try) and only skips enabling `CR4.PKE`. The KVM test accepts it (`x86: 'nopku' specified, disabling Memory
+Protection Keys`). `corrigir` migrates an AVD that still has `...,pku` to `...,rdpid nopku`. Not tested on the laptop
+yet.
 
 ## Test
 
 1. Close Android Studio's emulator, then run `zsh tools/emulador-android.sh corrigir` and
    `zsh tools/emulador-android.sh`. The status must say `corrigido`, `cold boot yes`, `snapshot: nenhum`, and
-   `kernel.parameters=clearcpuid=waitpkg,rdpid,pku`.
+   `kernel.parameters=clearcpuid=waitpkg,rdpid nopku`.
 2. Start the AVD from Device Manager, or run `zsh tools/emulador-android.sh testar`. Either way it cold-boots with
    software rendering: the Android logo should appear within a few minutes. `testar` also keeps the guest kernel log.
 3. If it is still black, keep the log `testar` names (`~/Library/Logs/xe-emulador/<AVD>-<date-time>.txt`): it holds
