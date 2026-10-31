@@ -7,7 +7,11 @@
 # ligar as outras CPUs, e a janela do emulador fica preta. Nenhum Mac Intel de verdade tem WAITPKG.
 # A RDPID (CPUID.7.0:ECX bit 22) também passa para o guest, e o QEMU do emulador não liga o controle da VMX de que
 # ela depende ("enable RDTSCP"); o vDSO do Linux usa a RDPID no getcpu(). Por precaução ela sai junto.
-# A correção é o parâmetro clearcpuid=waitpkg,rdpid no kernel do guest, pela propriedade kernel.parameters do
+# A PKU (chaves de proteção de memória, CPUID.7.0:ECX bit 3) é o terceiro caso: o emulador anuncia PKU no leaf 7,
+# o guest liga CR4.PKE, mas o XSAVE do guest (leaf 0xD) não traz o componente PKRU (fica só x87/SSE/AVX = 0x7).
+# Ao montar o quadro de sinal, o kernel procura o PKRU no XSAVE, não acha, dá WARNING em xstate.c e o init (PID 1)
+# trava no meio da entrega do sinal, pendurando a VM inteira (RCU stalls). Por isso a pku também é limpa.
+# A correção é o parâmetro clearcpuid=waitpkg,rdpid,pku no kernel do guest, pela propriedade kernel.parameters do
 # config.ini de cada AVD, que o emulador acrescenta à linha de comando do kernel.
 # O corrigir também volta ao automático o renderizador escolhido nas configurações do emulador (AVD.conf). O OpenGL
 # do Mac aqui é só o renderizador por software da Apple (OpenGL ES 2.0 para o guest), e o Android 37 precisa de
@@ -39,7 +43,7 @@ BKROOT="$HOME/Library/Application Support/xe-emulador"
 LOGROOT="$HOME/Library/Logs/xe-emulador"
 EMU="$SDK/emulator/emulator"
 QEMU_IMG="$SDK/emulator/qemu-img"
-FIX=(waitpkg rdpid)
+FIX=(waitpkg rdpid pku)
 GLKEYS=(glesBackendPreference glesApiLevelPreference guestGlesDriverPreference)
 
 avd_names() { local f; for f in "$AVDROOT"/*.ini; do print -r -- "${${f:t}%.ini}"; done; }
