@@ -4,8 +4,9 @@ macOS Tahoe has no Tiger Lake OpenGL driver, so native GL on this laptop falls b
 Renderer** (GL 4.1, CPU). This page is the work to get **hardware-accelerated OpenGL on the Iris Xe** through
 [MGL](https://github.com/openglonmetal/MGL), which implements OpenGL 4.6 directly on Metal.
 
-> **Confirmed on the Vostro 3520, 2026-10-31.** An offscreen OpenGL 4.6 render runs on the GPU and reads back
-> correct. It is **not** system-wide GL: an app has to be built against MGL. See the scope notes at the end.
+> **Confirmed on the Vostro 3520, 2026-10-31.** Offscreen OpenGL 4.6 runs on the GPU: a clear and an RGB-triangle
+> shader draw both render on the Iris Xe and read back correct. It is **not** system-wide GL: an app has to be built
+> against MGL. See the scope notes at the end.
 
 ## Why not native GL, Vulkan or Zink
 
@@ -35,20 +36,35 @@ The Metal device MGL renders on is the Intel Iris Xe, the render-encoder/command
 is correct. `GL_RENDERER` is the fixed string `"MGL"`, not the GPU name; the GPU proof is the Metal device line and
 the read-back pixel.
 
+A second probe (`tools/mgl-triangle.sh`) goes further: it compiles a GLSL 460 vertex+fragment shader, uploads a
+VBO/VAO and draws the classic RGB triangle with `glDrawArrays`, offscreen, then reads it back and writes a BMP:
+
+```
+shader vertex: compilou · shader fragment: compilou · programa: linkou
+glGetError pos-draw = 0x0
+pixels: fundo=49336 triangulo=16200  (vermelho=3766 verde=3786 azul=3786)
+```
+
+So the whole pipeline runs on the GPU: GLSL compiled to Metal (MGL's glslang → SPIR-V → SPIRV-Cross → MSL
+toolchain), vertex buffers, a draw call, rasterisation and colour interpolation. The saved image
+(`mgl-triangulo.bmp`) is a red/green/blue gradient triangle. MGL reads an FBO top-origin (Metal's convention), so
+the probe flips the image vertically to GL's bottom-origin orientation.
+
 ## Building and testing
 
 Needs the Command Line Tools (`xcode-select --install`) and, for the first build, an internet connection (the script
 clones MGL and its dependencies). Everything is driven from the USB with double-click launchers, or from a Terminal:
 
 ```sh
-zsh tools/mgl-build.sh     # COMPILAR-MGL.command — clones + builds MGL, applies the patches below, builds libmgl.dylib
-zsh tools/mgl-test.sh      # TESTAR-MGL.command   — the offscreen GPU probe above
+zsh tools/mgl-build.sh     # COMPILAR-MGL.command   — clones + builds MGL, applies the patches below, builds libmgl.dylib
+zsh tools/mgl-test.sh      # TESTAR-MGL.command     — the offscreen clear+readback GPU probe above
+zsh tools/mgl-triangle.sh  # TRIANGULO-MGL.command  — the RGB-triangle shader demo, writes mgl-triangulo.bmp
 ```
 
 `mgl-build.sh` is resumable: it reuses the cloned sources and the already-built dependencies, re-applies the patches
 (idempotent) and relinks. Products are `~/MGL/build/libmgl.dylib`, `libmgl_es.dylib` and `libglfw.dylib`.
 
-## The five patches to MGL
+## The six patches to MGL
 
 MGL as published does not run here unmodified; `mgl-build.sh` applies these to the checkout before `make` (each is
 idempotent and re-applied on every build):
@@ -60,9 +76,10 @@ idempotent and re-applied on every build):
 | C | `MGL/src/MGLRenderer.m` | In `newRenderEncoder`, realise the FBO colour attachment's Metal texture (`is_render_target = true` + `bindMTLTexture`) before use. It was only realised lazily when a texture was *sampled*, so rendering **to** an FBO texture hit `assert(tex->mtl_data)`. |
 | D | `MGL/src/MGLRenderer.m` | Implement `glReadPixels` from an FBO in `mtlReadDrawable`. The read-from-framebuffer branch was stubbed (it logged and returned); it now blits the attachment texture to a shared `MTLBuffer` and copies it out. |
 | E | `MGL/src/MGLRenderer.m` | Honour a global `glClear` on FBO attachments. The per-attachment loop only cleared when the `glClearBufferfv` bitmask was set and forced `loadAction = Load` otherwise, so a plain `glClear(GL_COLOR_BUFFER_BIT)` never cleared a bound FBO. |
+| F | `MGL/src/MGLRenderer.m` | Raise the bogus pointer "safety" ceilings. This fork rejects context/device/framebuffer pointers above QEMU-era limits — `0x100000000000` (~17 TB, 12×) and one `0x100000000` (4 GB!). macOS x86_64 pointers sit just below 2^47 (~140 TB), above both, so `glDrawArrays` aborted ("Invalid GLM context" / "Invalid framebuffer pointer"). Both ceilings go to `0x800000000000` (2^47). |
 
-Patch A alone gets MGL past startup; C/D/E are what make an offscreen render actually draw and read back. All are in
-`tools/mgl-build.sh`, applied with `perl` and guarded so a re-run is a no-op.
+Patch A gets MGL past startup; C/D/E make an offscreen FBO actually clear, draw and read back; F lets draw calls run
+at all on macOS pointers. All are in `tools/mgl-build.sh`, applied with `perl` and guarded so a re-run is a no-op.
 
 ## Scope and honest limits
 
@@ -73,9 +90,12 @@ Patch A alone gets MGL past startup; C/D/E are what make an offscreen render act
   read-back pixel, not the renderer string.
 - **Coverage is partial** (MGL is not a conformant GL): vertex/fragment/compute shaders, buffers, textures, FBOs,
   most draw calls, instancing. **No geometry shaders and no `double` in shaders** (Metal limits).
-- **Confirmed path is offscreen (FBO) + readback.** MGL's windowed path (its modified GLFW, `glfwCreateWindow`) did
+- **Confirmed path is offscreen (FBO): clear, shader draw and readback.** A GL 4.6 clear and an RGB-triangle shader
+  draw both render on the GPU and read back correct. MGL's windowed path (its modified GLFW, `glfwCreateWindow`) did
   not create a window from a plain command-line binary here (it fell back to a headless renderer and returned NULL);
   that is the open item for driving an on-screen GL app.
+- **FBO readback is top-origin** (Metal's texture convention), the opposite of GL's bottom-origin; a consumer that
+  reads an FBO (screenshots, `glReadPixels`) must flip, as the triangle demo does.
 - The Android emulator's slow GL is a **separate** problem (its own ANGLE/gfxstream, not this stack);
   see [EMULATOR.md](EMULATOR.md).
 

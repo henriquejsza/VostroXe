@@ -49,7 +49,7 @@ static void writeBMP(const char* path, const unsigned char* rgba, int w, int h){
     hdr[26]=1; hdr[28]=24;
     fwrite(hdr,1,54,f);
     unsigned char* row=(unsigned char*)malloc(rowbytes+pad); for(int i=0;i<pad;i++) row[rowbytes+i]=0;
-    for(int y=0;y<h;y++){                     /* glReadPixels e BMP sao ambos bottom-up: sem flip */
+    for(int y=h-1;y>=0;y--){                  /* MGL lê a textura do FBO top-origin; inverte p/ orientação GL (apex em cima) */
         const unsigned char* s = rgba + (size_t)y*w*4;
         for(int x=0;x<w;x++){ row[x*3+0]=s[x*4+2]; row[x*3+1]=s[x*4+1]; row[x*3+2]=s[x*4+0]; }
         fwrite(row,1,rowbytes+pad,f);
