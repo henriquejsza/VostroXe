@@ -32,8 +32,9 @@ Tested on one Vostro 3520 (i5-1235U, BIOS 1.43.0) with macOS Tahoe 26.7.1 (25G24
 | Not checked yet | brightness keys, sleep, webcam, fingerprint reader |
 
 Known issues: `powermetrics` panics the kernel, a WindowServer hang once ended in a watchdog panic, and third-party
-apps never get the microphone, camera or screen-recording prompt (fix: `tools/tcc-permitir.sh`). Details in
-[docs/VOSTRO.md](docs/VOSTRO.md#known-issues).
+apps never get the microphone, camera or screen-recording prompt (fix: `tools/tcc-permitir.sh`). The Android
+emulator shows a black window (fix not tested yet: `tools/emulador-android.sh`, [docs/EMULATOR.md](docs/EMULATOR.md)).
+Details in [docs/VOSTRO.md](docs/VOSTRO.md#known-issues).
 
 ## Install
 
@@ -99,8 +100,10 @@ tools/XeSpeakers/        the macOS sound device (AudioServerPlugIn)
 tools/hdmi-flags.sh      switches the HDMI experiment boot-args
 tools/diagnostics/       hdmi-diag.sh, i915-regdump.py (Linux) and the base project's GPU test programs
 tools/tcc-permitir.sh    privacy permissions that amfi_get_out_of_my_way=1 blocks
+tools/emulador-android.sh  Android emulator fix for x86_64 AVDs (guest kernel parameter)
 docs/VOSTRO.md           this laptop: hardware, EFI, patches, known issues, changes
 docs/HDMI.md             the HDMI work
+docs/EMULATOR.md         the Android emulator
 ```
 
 The other tools (AudShim, touchscreen, fingerprint, haptics and more) and the other documents in `docs/` come from
