@@ -260,7 +260,7 @@ test_gpu() {      # testar-gpu: como testar, mas força o Vulkan por um ICD de h
   [[ -x $EMU ]] || { echo "emulador não encontrado: $EMU"; exit 1; }
   local -a names; names=(${(f)"$(avd_names)"})
   (( ${#names} )) || { echo "nenhum AVD em $AVDROOT"; exit 1; }
-  local n=${1:-${names[1]}} icd=${2:-moltenvk} gpumode=${3:-host} d kp log icdjson
+  local n=${1:-${names[1]}} icd=${2:-moltenvk} gpumode=${3:-auto} d kp log icdjson
   d=$(avd_dir "$n") || { echo "$n: AVD não encontrado. AVDs: ${(j:, :)names}"; exit 1; }
   kp=$(cfg_get "$d/config.ini" kernel.parameters)
   if [[ $(with_fix "$kp") != "$kp" ]]; then
@@ -278,13 +278,15 @@ test_gpu() {      # testar-gpu: como testar, mas força o Vulkan por um ICD de h
   drop_quickboot "$d" "$BKROOT/$(date +%Y%m%d-%H%M%S)/$n" || true
   mkdir -p "$LOGROOT"
   log="$LOGROOT/$n-gpu-$icd-$(date +%Y%m%d-%H%M%S).txt"
-  echo "abrindo o emulador pela GPU: ANDROID_EMU_VK_ICD=$icd, -gpu $gpumode (Vulkan -> Metal)"
+  echo "abrindo o emulador pela GPU: ICD=$icd + SKIP_GPU_CHECKS=1, -gpu $gpumode (Vulkan -> Metal)"
+  echo "   (sem -gpu host: aquele cai no OpenGL de software da Apple, GLES 2.1, e dá tela preta)"
   echo "   log em: $log"
   echo "espere até 5 minutos pelo logo do Android; depois feche a janela do emulador"
-  ANDROID_EMU_VK_ICD=$icd "$EMU" -avd "$n" -gpu "$gpumode" -no-snapshot-load -no-snapshot-save -show-kernel > "$log" 2>&1 || true
+  ANDROID_EMU_VK_ICD=$icd ANDROID_EMU_VK_SELECT_ICD=$icd ANDROID_EMU_SKIP_GPU_CHECKS=1 \
+    "$EMU" -avd "$n" -gpu "$gpumode" -no-snapshot-load -no-snapshot-save -show-kernel > "$log" 2>&1 || true
   echo "emulador fechado; log: $log ($(wc -l < "$log" | tr -d ' ') linhas)"
   echo "== renderizador escolhido (queremos ver o device da Iris Xe/Metal, não 'SwiftShader'):"
-  grep -a -m14 -E "Graphics backend|vulkan_mode_selected|initIcdPaths|ICD set to|Selecting Vulkan device|GPU Renderer|GPU Version|MoltenVK|\[mvk|Metal device|Could not|failed" \
+  grep -a -m16 -E "Graphics backend|vulkan_mode_selected|initIcdPaths|ICD set to|resetting to MoltenVK|Selecting Vulkan device|Selecting GPU|GPU Renderer|GPU Version|MoltenVK|\[mvk|forcing software|Host Vulkan|Could not|failed" \
     "$log" | cut -c1-200 || true
   return 0
 }
