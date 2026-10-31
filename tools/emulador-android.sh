@@ -14,8 +14,11 @@
 # GLES 3.1; no automático o emulador usa o SwiftShader.
 # O snapshot de boot rápido salvo antes guarda um guest que já entrou em panic, e sai inteiro: a pasta
 # snapshots/default_boot (a RAM) e o snapshot interno "default_boot" de cada disco .qcow2 do AVD (CPUs e
-# dispositivos), este com o qemu-img do SDK. Só com a RAM fora, o emulador carrega metade do estado antigo e o boot
-# a frio fica preso no BIOS (teste de 30/10, 22:37).
+# dispositivos), este com o qemu-img do SDK.
+# O boot rápido (quickboot) nunca carregou nesta máquina (sempre "error while loading state ... goldfish_pipe",
+# desde 25/10): meio estado carregado deixa a VM suja e o boot a frio seguinte trava no BIOS (testes de 30/10). Por
+# isso o corrigir também liga fastboot.forceColdBoot=yes no config.ini, para o emulador nunca tentar carregar o
+# snapshot (nem pelo Device Manager) e sempre fazer um boot a frio limpo. O desfazer volta forceColdBoot=no.
 #
 # Uso:   zsh tools/emulador-android.sh [status]            (não muda os AVDs; o "adb devices" pode iniciar o adb)
 #        zsh tools/emulador-android.sh corrigir [AVD ...]   (sem nomes: todos os AVDs)
@@ -119,6 +122,11 @@ qcow_qb() {       # discos .qcow2 da pasta $1 que têm o snapshot interno defaul
   done
   return 0
 }
+has_quickboot() { # 0 se o AVD $1 tem snapshot de boot rápido (a RAM ou um qcow2 interno)
+  [[ -d $1/snapshots/default_boot ]] && return 0
+  qimg_ok || return 1
+  local -a q; q=(${(f)"$(qcow_qb "$1")"}); (( ${#q} ))
+}
 clone_copy() { cp -cp "$1" "$2" 2>/dev/null || cp -p "$1" "$2"; }   # no APFS o -c clona, sem gastar espaço
 drop_quickboot() {   # tira o snapshot de boot rápido do AVD $1 inteiro, com backup em $2
   local d=$1 bk=$2 f   # volta 0: tirou; 1: não deu (sem qemu-img); 2: não havia snapshot
@@ -152,7 +160,7 @@ change() {        # $1 = corrigir | desfazer; resto = AVDs
   need_closed
   local -a names; names=(${(f)"$(pick "$@")"})
   (( ${#names} )) || { echo "nenhum AVD em $AVDROOT"; exit 1; }
-  local stamp n d cfg conf cur new gl bk changed=0
+  local stamp n d cfg conf cur new cb wantcb gl bk changed=0 kpch cbch snap
   stamp=$(date +%Y%m%d-%H%M%S)
   for n in $names; do
     d=$(avd_dir "$n") || { echo "$n: AVD não encontrado em $AVDROOT"; continue; }
@@ -160,32 +168,30 @@ change() {        # $1 = corrigir | desfazer; resto = AVDs
     conf="$d/AVD.conf"
     [[ -f $cfg ]] || { echo "$n: sem config.ini em $d"; continue; }
     cur=$(cfg_get "$cfg" kernel.parameters)
-    gl=""
+    cb=$(cfg_get "$cfg" fastboot.forceColdBoot)
+    gl=""; snap=0; kpch=0; cbch=0
     if [[ $mode == corrigir ]]; then
-      new=$(with_fix "$cur")
+      new=$(with_fix "$cur"); wantcb=yes
       gl=$(gl_prefs "$conf")
+      has_quickboot "$d" && snap=1
+      [[ $cb != yes ]] && cbch=1
     else
-      new=$(without_fix "$cur")
+      new=$(without_fix "$cur"); wantcb=no
+      [[ $cb == yes ]] && cbch=1
     fi
-    if [[ $new == "$cur" && -z $gl ]]; then
-      [[ $mode == corrigir ]] && echo "$n: já corrigido (kernel.parameters=$cur)" || echo "$n: não tem a correção"
+    [[ $new != "$cur" ]] && kpch=1
+    if (( !kpch && !cbch && !snap )) && [[ -z $gl ]]; then
+      [[ $mode == corrigir ]] && echo "$n: já corrigido (kernel.parameters=${cur:-vazio}, cold boot ${cb:-no}, sem snapshot)" \
+                               || echo "$n: não tem a correção"
       continue
     fi
-    bk="$BKROOT/$stamp/$n"
-    mkdir -p "$bk"
+    bk="$BKROOT/$stamp/$n"; mkdir -p "$bk"
     cp -p "$cfg" "$bk/config.ini"
     [[ -f $conf ]] && cp -p "$conf" "$bk/AVD.conf"
-    if [[ $new != "$cur" ]]; then
-      cfg_set "$cfg" kernel.parameters "$new"
-      echo "$n: kernel.parameters=${new:-(removido)}"
-      if [[ $mode == corrigir ]]; then
-        drop_quickboot "$d" "$bk" || true
-      fi
-    fi
-    if [[ -n $gl ]]; then
-      gl_reset "$conf"
-      echo "$n: renderização de volta ao automático (tirado do AVD.conf: $gl)"
-    fi
+    (( kpch )) && { cfg_set "$cfg" kernel.parameters "$new"; echo "$n: kernel.parameters=${new:-(removido)}"; }
+    (( cbch )) && { cfg_set "$cfg" fastboot.forceColdBoot "$wantcb"; echo "$n: fastboot.forceColdBoot=$wantcb ($([[ $wantcb == yes ]] && echo 'boot a frio sempre' || echo 'volta ao boot rápido'))"; }
+    [[ $mode == corrigir ]] && { drop_quickboot "$d" "$bk" || true; }
+    [[ -n $gl ]] && { gl_reset "$conf"; echo "$n: renderização de volta ao automático (tirado do AVD.conf: $gl)"; }
     changed=1
   done
   (( changed )) && echo "backup: $BKROOT/$stamp"
@@ -210,20 +216,21 @@ cold() {          # boot-frio: só tira o snapshot de boot rápido
 test_boot() {     # testar: boot a frio sem carregar nem salvar snapshot, com o log do kernel do guest
   need_closed
   [[ -x $EMU ]] || { echo "emulador não encontrado: $EMU"; exit 1; }
-  local n=${1:--} d kp log rc
-  [[ $n == - ]] && n=${${(f)"$(avd_names)"}[1]:-}
-  [[ -n $n ]] || { echo "nenhum AVD em $AVDROOT"; exit 1; }
-  d=$(avd_dir "$n") || { echo "$n: AVD não encontrado em $AVDROOT"; exit 1; }
+  local -a names; names=(${(f)"$(avd_names)"})
+  (( ${#names} )) || { echo "nenhum AVD em $AVDROOT"; exit 1; }
+  local n=${1:-${names[1]}} d kp log
+  d=$(avd_dir "$n") || { echo "$n: AVD não encontrado. AVDs: ${(j:, :)names}"; exit 1; }
   kp=$(cfg_get "$d/config.ini" kernel.parameters)
   if [[ $(with_fix "$kp") != "$kp" ]]; then
     echo "$n: falta a correção; rode antes:  zsh ${(q)SELF} corrigir"
     exit 1
   fi
   echo "$n:"
-  drop_quickboot "$d" "$BKROOT/$(date +%Y%m%d-%H%M%S)/$n" && rc=0 || rc=$?
+  drop_quickboot "$d" "$BKROOT/$(date +%Y%m%d-%H%M%S)/$n" || true
   mkdir -p "$LOGROOT"
-  log=${2:-$LOGROOT/$n-$(date +%Y%m%d-%H%M%S).txt}
-  echo "abrindo o emulador: boot a frio, sem snapshot, com o log do kernel do Android em $log"
+  log="$LOGROOT/$n-$(date +%Y%m%d-%H%M%S).txt"
+  echo "abrindo o emulador: boot a frio, sem snapshot, log do kernel do Android em:"
+  echo "   $log"
   echo "espere até 5 minutos pelo logo do Android; depois feche a janela do emulador"
   "$EMU" -avd "$n" -no-snapshot-load -no-snapshot-save -show-kernel > "$log" 2>&1 || true
   echo "emulador fechado; log: $log ($(wc -l < "$log" | tr -d ' ') linhas)"
@@ -252,11 +259,12 @@ status() {
     d=$(avd_dir "$n") || { echo "$n: pasta não encontrada"; continue; }
     cfg="$d/config.ini"
     kp=$(cfg_get "$cfg" kernel.parameters)
+    local cb=$(cfg_get "$cfg" fastboot.forceColdBoot)
     gl=$(gl_prefs "$d/AVD.conf")
     ok=1
-    [[ $(with_fix "$kp") == "$kp" && -z $gl ]] || { ok=0; missing=1; }
+    [[ $(with_fix "$kp") == "$kp" && $cb == yes && -z $gl ]] || { ok=0; missing=1; }
     echo "$n: $( (( ok )) && echo corrigido || echo 'SEM a correção')" \
-         "| imagem $(cfg_get "$cfg" image.sysdir.1) | gpu $(cfg_get "$cfg" hw.gpu.mode)" \
+         "| imagem $(cfg_get "$cfg" image.sysdir.1) | gpu $(cfg_get "$cfg" hw.gpu.mode) | cold boot ${cb:-no}" \
          "| kernel.parameters=${kp:-(vazio)}"
     [[ -n $gl ]] && echo "   renderização escolhida no emulador (AVD.conf): $gl"
     hq="$d/hardware-qemu.ini"
