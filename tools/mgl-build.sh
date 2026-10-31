@@ -29,7 +29,7 @@ err=0
   export PATH="${CMAKE:h}:$PATH"
 
   # ---- fonte do MGL ----
-  if [[ -d $MGLDIR/.git ]]; then echo "== MGL já em $MGLDIR (git pull)"; ( cd "$MGLDIR" && git pull --ff-only 2>&1 | tail -2 )
+  if [[ -d $MGLDIR/.git ]]; then echo "== MGL já em $MGLDIR (git pull)"; ( cd "$MGLDIR" && git checkout -- MGL/src/glm_params.c 2>/dev/null; git pull --ff-only 2>&1 | tail -2 )
   else echo "== clonando MGL em $MGLDIR"; git clone https://github.com/openglonmetal/MGL.git "$MGLDIR" 2>&1 | tail -4 || { echo "clone MGL FALHOU"; exit 1; }; fi
   cd "$MGLDIR" || { echo "sem $MGLDIR"; exit 1; }
 
@@ -38,9 +38,26 @@ err=0
   if [[ ! -d SPIRV-Tools || ! -d glslang || ! -d SPIRV-Cross ]]; then
     echo "== clonando dependências (clone_external.sh)"; bash clone_external.sh 2>&1 | tail -12
   else echo "== dependências já clonadas"; fi
-  echo "== compilando dependências (build_external.sh) — vários minutos; log em mgl-deps-log.txt"
-  bash build_external.sh > "$DEPLOG" 2>&1; echo "   build_external rc=$? ; últimas linhas:"; tail -20 "$DEPLOG"
+  if [[ -f SPIRV-Cross/build/libspirv-cross-core.a && -f glslang/build/glslang/libglslang.a && -f SPIRV-Tools/build/source/lint/libSPIRV-Tools-lint.a ]]; then
+    echo "== dependências já compiladas (pulando build_external.sh)"
+  else
+    echo "== compilando dependências (build_external.sh) — vários minutos; log em mgl-deps-log.txt"
+    bash build_external.sh > "$DEPLOG" 2>&1; echo "   build_external rc=$? ; últimas linhas:"; tail -20 "$DEPLOG"
+  fi
   cd "$MGLDIR"
+
+  # ---- patch VostroXe: getMacOSDefaults pede um pixel format CGL ACELERADO (kCGLPFAAccelerated),
+  #      que falha nesta GPU (issue #21: 0 formats acelerados). Esse contexto CGL só serve pra ler
+  #      os defaults do estado GL; sem "accelerated" ele cai pro renderer por software (GL 4.1),
+  #      lê os MESMOS defaults da spec, e o MGL segue renderizando no Metal/GPU. Idempotente.
+  PF="MGL/src/glm_params.c"
+  if grep -q 'kCGLPFAAccelerated' "$PF"; then
+    echo "== patch VostroXe: removendo kCGLPFAAccelerated de getMacOSDefaults ($PF)"
+    perl -0pi -e 's/attributes\[4\] = \{\n\s*kCGLPFAAccelerated,[^\n]*\n/attributes[3] = {\n/' "$PF"
+    if grep -q 'kCGLPFAAccelerated' "$PF"; then echo "   AVISO: patch NAO aplicou (confira $PF)"; err=1; else echo "   patch aplicado (attributes[3], sem acelerado)"; fi
+  else
+    echo "== patch VostroXe getMacOSDefaults: já aplicado"
+  fi
 
   # ---- MGL ----
   echo "== compilando o MGL (make) — log em mgl-make-log.txt"
