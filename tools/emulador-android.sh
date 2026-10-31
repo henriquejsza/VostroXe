@@ -33,6 +33,8 @@
 #        zsh tools/emulador-android.sh boot-frio [AVD ...]  (só tira o snapshot de boot rápido)
 #        zsh tools/emulador-android.sh testar [AVD] [log]   (boot a frio, com o log do kernel do Android em log)
 #        zsh tools/emulador-android.sh testar-gpu [AVD] [icd] (boot a frio tentando a GPU: Vulkan por MoltenVK/Metal)
+#        zsh tools/emulador-android.sh testar-gpu-hack [AVD]  (gambiarra: aponta o ICD do swiftshader pro MoltenVK só neste teste)
+#        zsh tools/emulador-android.sh restaurar-icd          (desfaz a gambiarra do ICD, se tiver ficado trocado)
 # Feche o emulador antes. Rode o corrigir de novo para cada AVD novo.
 # Backups: ~/Library/Application Support/xe-emulador/<data-hora>/<AVD>/ (config.ini, AVD.conf, snapshot, discos).
 set -euo pipefail
@@ -291,6 +293,70 @@ test_gpu() {      # testar-gpu: como testar, mas força o Vulkan por um ICD de h
   return 0
 }
 
+icd_path() { print -r -- "$SDK/emulator/lib64/vulkan/vk_swiftshader_icd.json"; }
+icd_is_hacked() { local j; j=$(icd_path); [[ -f $j ]] && grep -q MoltenVK "$j" 2>/dev/null; }
+icd_restore() {   # volta o ICD do swiftshader ao original (do backup .xe-orig, ou reescreve o padrão)
+  local j; j=$(icd_path)
+  if [[ -f $j.xe-orig ]]; then mv -f "$j.xe-orig" "$j"; return 0; fi
+  if icd_is_hacked; then
+    cat > "$j" <<'JSON'
+{
+  "file_format_version": "1.0.0",
+  "ICD": {
+    "library_path": "./libvk_swiftshader.dylib",
+    "api_version": "1.0.5"
+  }
+}
+JSON
+    return 0
+  fi
+  return 1
+}
+
+test_gpu_hack() { # testar-gpu-hack: GAMBIARRA — faz o "ICD do swiftshader" apontar pro MoltenVK só neste lançamento
+  need_closed    # (o emulador é forçado a usar o ICD do swiftshader no macOS; aqui esse ICD vira o MoltenVK = Metal)
+  [[ -x $EMU ]] || { echo "emulador não encontrado: $EMU"; exit 1; }
+  local v="$SDK/emulator/lib64/vulkan" j mvk
+  j=$(icd_path); mvk="$v/libMoltenVK.dylib"
+  [[ -f $j && -f $mvk ]] || { echo "não achei o ICD do swiftshader ou o libMoltenVK em $v"; exit 1; }
+  local -a names; names=(${(f)"$(avd_names)"}); (( ${#names} )) || { echo "nenhum AVD em $AVDROOT"; exit 1; }
+  local n=${1:-${names[1]}} d kp log bk
+  d=$(avd_dir "$n") || { echo "$n: AVD não encontrado. AVDs: ${(j:, :)names}"; exit 1; }
+  kp=$(cfg_get "$d/config.ini" kernel.parameters)
+  [[ $(with_fix "$kp") == "$kp" ]] || { echo "$n: falta a correção da tela preta; rode antes:  zsh ${(q)SELF} corrigir"; exit 1; }
+  bk="$BKROOT/$(date +%Y%m%d-%H%M%S)-gpuhack/$n"; mkdir -p "$bk"
+  cp -p "$j" "$bk/vk_swiftshader_icd.json.orig"
+  cp -p "$j" "$j.xe-orig"
+  trap 'icd_restore && echo "   ICD do swiftshader restaurado (saída)"' EXIT INT TERM HUP
+  cat > "$j" <<'JSON'
+{
+  "file_format_version": "1.0.0",
+  "ICD": {
+    "library_path": "./libMoltenVK.dylib",
+    "api_version": "1.4.0",
+    "is_portability_driver": true
+  }
+}
+JSON
+  echo "$n: (GAMBIARRA) o 'ICD do swiftshader' agora aponta pro MoltenVK (Metal). Backup: $bk"
+  drop_quickboot "$d" "$bk" || true
+  mkdir -p "$LOGROOT"; log="$LOGROOT/$n-gpuhack-$(date +%Y%m%d-%H%M%S).txt"
+  echo "abrindo o emulador (MoltenVK). Espere até 5 min pelo logo; depois FECHE a janela."
+  echo "   log: $log"
+  "$EMU" -avd "$n" -gpu auto -no-snapshot-load -no-snapshot-save -show-kernel > "$log" 2>&1 || true
+  icd_restore && echo "ICD do swiftshader restaurado"
+  trap - EXIT INT TERM HUP
+  echo "log: $log ($(wc -l < "$log" | tr -d ' ') linhas)"
+  echo "== device Vulkan (queremos Apple/Iris Xe/Metal, NÃO 'SwiftShader'):"
+  grep -a -m18 -E "vulkan_mode_selected|ICD set to|Selecting Vulkan device|GPU Renderer|GPU Version|MoltenVK|\[mvk|Metal|forcing software|VK_ERROR|vkCreateInstance|could not|Could not|failed|cannot|abort" \
+    "$log" | cut -c1-200 || true
+  return 0
+}
+
+restaurar_icd() {
+  if icd_restore; then echo "ICD do swiftshader restaurado ao padrão."; else echo "ICD já está no padrão (não estava trocado)."; fi
+}
+
 status() {
   local l7 adb n d cfg kp gl hq ok sn missing=0 half=0
   local -a q
@@ -306,6 +372,7 @@ status() {
     echo "não encontrado"
   fi
   emu_running && echo "(o emulador está aberto agora)"
+  icd_is_hacked && echo ">>> ATENÇÃO: o ICD do swiftshader está apontando pro MoltenVK (gambiarra de GPU). Para voltar:  zsh ${(q)SELF} restaurar-icd"
   echo "== AVDs ($AVDROOT)"
   for n in ${(f)"$(avd_names)"}; do
     d=$(avd_dir "$n") || { echo "$n: pasta não encontrada"; continue; }
@@ -358,5 +425,7 @@ case ${1:-status} in
   boot-frio) shift; cold "$@";;
   testar) shift; test_boot "$@";;
   testar-gpu|gpu) shift; test_gpu "$@";;
+  testar-gpu-hack|gpu-hack) shift; test_gpu_hack "$@";;
+  restaurar-icd) restaurar_icd;;
   *) sed -n '/^# Uso:/,/^# Backups:/p' "$0" | sed 's/^# \{0,1\}//'; exit 1;;
 esac
