@@ -8,17 +8,22 @@
 # A RDPID (CPUID.7.0:ECX bit 22) também passa para o guest, e o QEMU do emulador não liga o controle da VMX de que
 # ela depende ("enable RDTSCP"); o vDSO do Linux usa a RDPID no getcpu(). Por precaução ela sai junto.
 # A correção é o parâmetro clearcpuid=waitpkg,rdpid no kernel do guest, pela propriedade kernel.parameters do
-# config.ini de cada AVD, que o emulador acrescenta à linha de comando do kernel. O snapshot de boot rápido salvo
-# antes guarda um guest que já entrou em panic: ele vai para o backup, e o próximo início é um boot a frio.
+# config.ini de cada AVD, que o emulador acrescenta à linha de comando do kernel.
 # O corrigir também volta ao automático o renderizador escolhido nas configurações do emulador (AVD.conf). O OpenGL
 # do Mac aqui é só o renderizador por software da Apple (OpenGL ES 2.0 para o guest), e o Android 37 precisa de
 # GLES 3.1; no automático o emulador usa o SwiftShader.
+# O snapshot de boot rápido salvo antes guarda um guest que já entrou em panic, e sai inteiro: a pasta
+# snapshots/default_boot (a RAM) e o snapshot interno "default_boot" de cada disco .qcow2 do AVD (CPUs e
+# dispositivos), este com o qemu-img do SDK. Só com a RAM fora, o emulador carrega metade do estado antigo e o boot
+# a frio fica preso no BIOS (teste de 30/10, 22:37).
 #
-# Uso:   zsh tools/emulador-android.sh [status]           (não muda os AVDs; o "adb devices" pode iniciar o adb)
-#        zsh tools/emulador-android.sh corrigir [AVD ...]  (sem nomes: todos os AVDs)
+# Uso:   zsh tools/emulador-android.sh [status]            (não muda os AVDs; o "adb devices" pode iniciar o adb)
+#        zsh tools/emulador-android.sh corrigir [AVD ...]   (sem nomes: todos os AVDs)
 #        zsh tools/emulador-android.sh desfazer [AVD ...]
-# Feche o emulador antes de corrigir ou desfazer. Rode o corrigir de novo para cada AVD novo.
-# Backups: ~/Library/Application Support/xe-emulador/<data-hora>/<AVD>/ (config.ini, AVD.conf, snapshot).
+#        zsh tools/emulador-android.sh boot-frio [AVD ...]  (só tira o snapshot de boot rápido)
+#        zsh tools/emulador-android.sh testar [AVD] [log]   (boot a frio, com o log do kernel do Android em log)
+# Feche o emulador antes. Rode o corrigir de novo para cada AVD novo.
+# Backups: ~/Library/Application Support/xe-emulador/<data-hora>/<AVD>/ (config.ini, AVD.conf, snapshot, discos).
 set -euo pipefail
 setopt null_glob
 zmodload -F zsh/stat b:zstat
@@ -28,6 +33,9 @@ SELF=${0:A}
 AVDROOT=${ANDROID_AVD_HOME:-${ANDROID_USER_HOME:-$HOME/.android}/avd}
 SDK=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}
 BKROOT="$HOME/Library/Application Support/xe-emulador"
+LOGROOT="$HOME/Library/Logs/xe-emulador"
+EMU="$SDK/emulator/emulator"
+QEMU_IMG="$SDK/emulator/qemu-img"
 FIX=(waitpkg rdpid)
 GLKEYS=(glesBackendPreference glesApiLevelPreference guestGlesDriverPreference)
 
@@ -97,10 +105,51 @@ emu_running() { pgrep -f '/emulator/qemu/[^/ ]+/qemu-system-' >/dev/null 2>&1; }
 pick() {          # nomes dados, ou todos
   if (( $# )); then print -rl -- "$@"; else avd_names; fi
 }
+need_closed() {
+  if emu_running; then echo "o emulador está aberto: feche a janela dele e rode de novo"; exit 1; fi
+}
+
+qimg_ok() { [[ -x $QEMU_IMG ]] && "$QEMU_IMG" --version >/dev/null 2>&1; }
+qcow_qb() {       # discos .qcow2 da pasta $1 que têm o snapshot interno default_boot (um por linha)
+  local f
+  for f in "$1"/*.qcow2; do
+    if "$QEMU_IMG" snapshot -l "$f" 2>/dev/null | awk '$2 == "default_boot" { f = 1 } END { exit !f }'; then
+      print -r -- "$f"
+    fi
+  done
+  return 0
+}
+clone_copy() { cp -cp "$1" "$2" 2>/dev/null || cp -p "$1" "$2"; }   # no APFS o -c clona, sem gastar espaço
+drop_quickboot() {   # tira o snapshot de boot rápido do AVD $1 inteiro, com backup em $2
+  local d=$1 bk=$2 f   # volta 0: tirou; 1: não deu (sem qemu-img); 2: não havia snapshot
+  local -a imgs
+  if ! qimg_ok; then
+    echo "   não consegui rodar $QEMU_IMG, o snapshot de boot rápido ficou como estava;" \
+         "use o testar, ou no Device Manager o Cold Boot Now"
+    return 1
+  fi
+  imgs=(${(f)"$(qcow_qb "$d")"})
+  if [[ ! -d $d/snapshots/default_boot ]] && (( ${#imgs} == 0 )); then
+    return 2
+  fi
+  mkdir -p "$bk"
+  local what=""
+  if [[ -d $d/snapshots/default_boot ]]; then
+    mv "$d/snapshots/default_boot" "$bk/snapshot-default_boot"
+    what="a RAM (snapshots/default_boot)"
+  fi
+  for f in $imgs; do
+    clone_copy "$f" "$bk/${f:t}"
+    "$QEMU_IMG" snapshot -d default_boot "$f"
+  done
+  (( ${#imgs} )) && what="$what${what:+ e }o estado de ${#imgs} disco(s) .qcow2"
+  echo "   snapshot de boot rápido tirado ($what): o próximo início é um boot a frio"
+  return 0
+}
 
 change() {        # $1 = corrigir | desfazer; resto = AVDs
   local mode=$1; shift
-  if emu_running; then echo "o emulador está aberto: feche a janela dele e rode de novo"; exit 1; fi
+  need_closed
   local -a names; names=(${(f)"$(pick "$@")"})
   (( ${#names} )) || { echo "nenhum AVD em $AVDROOT"; exit 1; }
   local stamp n d cfg conf cur new gl bk changed=0
@@ -129,9 +178,8 @@ change() {        # $1 = corrigir | desfazer; resto = AVDs
     if [[ $new != "$cur" ]]; then
       cfg_set "$cfg" kernel.parameters "$new"
       echo "$n: kernel.parameters=${new:-(removido)}"
-      if [[ $mode == corrigir && -d $d/snapshots/default_boot ]]; then
-        mv "$d/snapshots/default_boot" "$bk/snapshot-default_boot"
-        echo "$n: snapshot default_boot movido para o backup (o próximo início é um boot a frio)"
+      if [[ $mode == corrigir ]]; then
+        drop_quickboot "$d" "$bk" || true
       fi
     fi
     if [[ -n $gl ]]; then
@@ -144,17 +192,57 @@ change() {        # $1 = corrigir | desfazer; resto = AVDs
   return 0
 }
 
+cold() {          # boot-frio: só tira o snapshot de boot rápido
+  need_closed
+  local -a names; names=(${(f)"$(pick "$@")"})
+  (( ${#names} )) || { echo "nenhum AVD em $AVDROOT"; exit 1; }
+  local stamp n d rc
+  stamp=$(date +%Y%m%d-%H%M%S)
+  for n in $names; do
+    d=$(avd_dir "$n") || { echo "$n: AVD não encontrado em $AVDROOT"; continue; }
+    echo "$n:"
+    drop_quickboot "$d" "$BKROOT/$stamp/$n" && rc=0 || rc=$?
+    (( rc != 2 )) || echo "   sem snapshot de boot rápido"
+  done
+  return 0
+}
+
+test_boot() {     # testar: boot a frio sem carregar nem salvar snapshot, com o log do kernel do guest
+  need_closed
+  [[ -x $EMU ]] || { echo "emulador não encontrado: $EMU"; exit 1; }
+  local n=${1:--} d kp log rc
+  [[ $n == - ]] && n=${${(f)"$(avd_names)"}[1]:-}
+  [[ -n $n ]] || { echo "nenhum AVD em $AVDROOT"; exit 1; }
+  d=$(avd_dir "$n") || { echo "$n: AVD não encontrado em $AVDROOT"; exit 1; }
+  kp=$(cfg_get "$d/config.ini" kernel.parameters)
+  if [[ $(with_fix "$kp") != "$kp" ]]; then
+    echo "$n: falta a correção; rode antes:  zsh ${(q)SELF} corrigir"
+    exit 1
+  fi
+  echo "$n:"
+  drop_quickboot "$d" "$BKROOT/$(date +%Y%m%d-%H%M%S)/$n" && rc=0 || rc=$?
+  mkdir -p "$LOGROOT"
+  log=${2:-$LOGROOT/$n-$(date +%Y%m%d-%H%M%S).txt}
+  echo "abrindo o emulador: boot a frio, sem snapshot, com o log do kernel do Android em $log"
+  echo "espere até 5 minutos pelo logo do Android; depois feche a janela do emulador"
+  "$EMU" -avd "$n" -no-snapshot-load -no-snapshot-save -show-kernel > "$log" 2>&1 || true
+  echo "emulador fechado; log: $log ($(wc -l < "$log" | tr -d ' ') linhas)"
+  grep -a -m8 -E "Command line:|Clearing CPUID|Kernel panic|invalid opcode|Run /init|init: init (first|second) stage|bootanim" \
+    "$log" | cut -c1-160 || true
+  return 0
+}
+
 status() {
-  local l7 emu adb n d cfg kp gl hq ok missing=0
+  local l7 adb n d cfg kp gl hq ok sn missing=0 half=0
+  local -a q
   echo "== macOS"
   echo "Hypervisor.framework (kern.hv_support): $(sysctl -n kern.hv_support 2>/dev/null || echo '?')"
   l7=$(sysctl -n machdep.cpu.leaf7_features 2>/dev/null || true)
   echo "WAITPKG na CPU (machdep.cpu.leaf7_features): $([[ " $l7 " == *" WAITPKG "* ]] && echo sim || echo 'não listado')"
-  emu="$SDK/emulator/emulator"
-  echo "== emulador ($emu)"
-  if [[ -x $emu ]]; then
-    "$emu" -version 2>/dev/null | head -1 || true
-    "$emu" -accel-check 2>&1 | head -6 || true
+  echo "== emulador ($EMU)"
+  if [[ -x $EMU ]]; then
+    "$EMU" -version 2>/dev/null | head -1 || true
+    "$EMU" -accel-check 2>&1 | head -6 || true
   else
     echo "não encontrado"
   fi
@@ -173,18 +261,33 @@ status() {
     [[ -n $gl ]] && echo "   renderização escolhida no emulador (AVD.conf): $gl"
     hq="$d/hardware-qemu.ini"
     [[ -f $hq ]] && echo "   último início ($(mtime "$hq")): kernel.parameters = ${$(cfg_get "$hq" kernel.parameters):-(vazio)}"
-    [[ -d $d/snapshots/default_boot ]] && echo "   snapshot default_boot de $(mtime "$d/snapshots/default_boot")"
+    sn=""
+    [[ -d $d/snapshots/default_boot ]] && sn="RAM de $(mtime "$d/snapshots/default_boot")"
+    if ! emu_running && qimg_ok; then
+      q=(${(f)"$(qcow_qb "$d")"})
+      (( ${#q} )) && sn="$sn${sn:+; }discos: ${(j:, :)${(@)q:t}}"
+      if [[ -d $d/snapshots/default_boot ]]; then
+        (( ${#q} )) || { sn="$sn (PELA METADE)"; half=1; }
+      else
+        (( ${#q} == 0 )) || { sn="$sn (PELA METADE)"; half=1; }
+      fi
+    fi
+    echo "   snapshot de boot rápido: ${sn:-nenhum}"
   done
   adb="$SDK/platform-tools/adb"
   echo "== adb ($adb)"
   if [[ -x $adb ]]; then
-    perl -e 'alarm 20; exec @ARGV' "$adb" devices 2>&1 | head -8 || echo "adb devices falhou ou passou de 20 s"
+    perl -e 'alarm 10; exec @ARGV' "$adb" devices 2>&1 | head -8 || echo "adb devices falhou ou passou de 10 s"
   else
     echo "não encontrado"
   fi
+  echo
   if (( missing )); then
-    echo
     echo ">>> Falta aplicar a correção. Feche o emulador e rode:  zsh ${(q)SELF} corrigir"
+  elif (( half )); then
+    echo ">>> Snapshot de boot rápido pela metade. Feche o emulador e rode:  zsh ${(q)SELF} boot-frio"
+  else
+    echo ">>> Para um boot a frio com o log do kernel do Android:  zsh ${(q)SELF} testar"
   fi
   return 0
 }
@@ -192,5 +295,7 @@ status() {
 case ${1:-status} in
   status) status;;
   corrigir|desfazer) change "$@";;
+  boot-frio) shift; cold "$@";;
+  testar) shift; test_boot "$@";;
   *) sed -n '/^# Uso:/,/^# Backups:/p' "$0" | sed 's/^# \{0,1\}//'; exit 1;;
 esac
