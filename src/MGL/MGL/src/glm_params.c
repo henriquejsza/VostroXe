@@ -16,6 +16,9 @@
  * glm_params.c
  * MGL
  *
+ * Modified by VostroXe, 2026-10-31: getMacOSDefaults() no longer asks for an accelerated CGL pixel
+ * format. See docs/OPENGL.md in the VostroXe repository.
+ *
  */
 
 #include <assert.h>
@@ -46,8 +49,11 @@ void getMacOSDefaults(GLMContext glm_ctx)
 
     CGLContextObj ctx;
 
-    CGLPixelFormatAttribute attributes[4] = {
-      kCGLPFAAccelerated,   // no software rendering
+    // VostroXe: no kCGLPFAAccelerated. This CGL context only serves to read the default GL state below,
+    // and on GPUs without an Apple OpenGL driver (the Vostro's Iris Xe on Tahoe) no accelerated pixel
+    // format exists, so CGLChoosePixelFormat failed and the assert stopped MGL at startup. The software
+    // renderer reports the same default state; MGL itself still renders through Metal.
+    CGLPixelFormatAttribute attributes[3] = {
       kCGLPFAOpenGLProfile, // core profile with the version stated below
       (CGLPixelFormatAttribute) kCGLOGLPVersion_GL4_Core,
       (CGLPixelFormatAttribute) 0
