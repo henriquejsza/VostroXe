@@ -16,6 +16,10 @@
  * MGLRenderer.m
  * MGL
  *
+ * Modified by VostroXe, 2026-10-31 (changes marked "VostroXe:"; see docs/OPENGL.md in the VostroXe
+ * repository):
+ * - newRenderEncoder creates the Metal texture of an FBO colour attachment before using it.
+ *
  */
 
 #import <Foundation/Foundation.h>
@@ -2941,6 +2945,13 @@ void mtlBlitFramebuffer(GLMContext glm_ctx, GLint srcX0, GLint srcY0, GLint srcX
 
                 tex = [self framebufferAttachmentTexture: &fbo->color_attachments[i]];
                 assert(tex);
+
+                // VostroXe: a texture's Metal object is only created when the texture is bound for
+                // sampling, so a texture used only as a colour attachment had none and the assert below
+                // fired. Mark it as a render target (so it gets RenderTarget usage) and create it here.
+                tex->is_render_target = true;
+                if (tex->mtl_data == NULL)
+                    [self bindMTLTexture: tex];
 
                 assert(tex->mtl_data);
                 _renderPassDescriptor.colorAttachments[i].texture = (__bridge id<MTLTexture> _Nullable)(tex->mtl_data);
