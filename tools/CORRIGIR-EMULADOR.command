@@ -1,15 +1,18 @@
 #!/bin/zsh
-# Dois cliques no Finder (no macOS): aplica a correção do emulador do Android e o abre num boot a frio.
-# Fica ao lado do emulador-android.sh (ex.: ~/xe-tools/). Não precisa de pendrive nem de senha.
+# Dois cliques no Finder (macOS): aplica a correção do emulador do Android e o abre num boot a frio.
+# Funciona do pendrive (ao lado da pasta emulador/) ou de ~/xe-tools (ao lado do emulador-android.sh).
 D=${0:A:h}
-S="$D/emulador-android.sh"
-LOG="$D/emulador-status.txt"
-if [[ ! -x $S ]]; then
-  echo "não achei o emulador-android.sh ao lado deste arquivo ($D)."
+S=""
+for cand in "$D/emulador-android.sh" "$D/emulador/emulador-android.sh"; do
+  [[ -f $cand ]] && { S=$cand; break; }
+done
+if [[ -z $S ]]; then
+  echo "não achei o emulador-android.sh (nem ao lado, nem em emulador/). Pasta: $D"
   read -k 1 "?Aperte uma tecla para fechar. "; exit 1
 fi
+LOG="$D/emulador-status.txt"
 {
-  echo "== $(date '+%d/%m %H:%M') corrigir"
+  echo "== $(date '+%d/%m %H:%M') corrigir   (script: $S)"
   zsh "$S" corrigir
   echo
   zsh "$S" status
