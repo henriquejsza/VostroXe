@@ -29,7 +29,7 @@ err=0
   export PATH="${CMAKE:h}:$PATH"
 
   # ---- fonte do MGL ----
-  if [[ -d $MGLDIR/.git ]]; then echo "== MGL já em $MGLDIR (git pull)"; ( cd "$MGLDIR" && git checkout -- MGL/src/glm_params.c 2>/dev/null; git pull --ff-only 2>&1 | tail -2 )
+  if [[ -d $MGLDIR/.git ]]; then echo "== MGL já em $MGLDIR (git pull)"; ( cd "$MGLDIR" && git checkout -- MGL/src/glm_params.c MGL/src/MGLRenderer.m Makefile 2>/dev/null; git pull --ff-only 2>&1 | tail -2 )
   else echo "== clonando MGL em $MGLDIR"; git clone https://github.com/openglonmetal/MGL.git "$MGLDIR" 2>&1 | tail -4 || { echo "clone MGL FALHOU"; exit 1; }; fi
   cd "$MGLDIR" || { echo "sem $MGLDIR"; exit 1; }
 
@@ -57,6 +57,29 @@ err=0
     if grep -q 'kCGLPFAAccelerated' "$PF"; then echo "   AVISO: patch NAO aplicou (confira $PF)"; err=1; else echo "   patch aplicado (attributes[3], sem acelerado)"; fi
   else
     echo "== patch VostroXe getMacOSDefaults: já aplicado"
+  fi
+
+  # ---- patch VostroXe B: o Makefile do MGL tem um typo ($(mgl_gl_obj), vazio) no alvo da lib core,
+  #      então o libmgl.dylib sai SEM os pontos de entrada glXxx (gl_core.o). Isso quebra a GLFW do MGL
+  #      (getProcAddress via dlsym) e o uso por apps. O certo é $(mgl_core_obj) (como a lib ES já faz).
+  MF="Makefile"
+  if grep -q 'mgl_gl_obj' "$MF"; then
+    echo "== patch VostroXe: Makefile libmgl core (mgl_gl_obj -> mgl_core_obj, inclui gl_core.o)"
+    perl -pi -e 's/\$\(mgl_gl_obj\)/\$(mgl_core_obj)/g' "$MF"
+    grep -q 'mgl_gl_obj' "$MF" && { echo "   AVISO: nao aplicou"; err=1; } || echo "   patch Makefile aplicado"
+  else
+    echo "== patch VostroXe Makefile: já aplicado"
+  fi
+
+  # ---- patch VostroXe C: no render para um FBO com textura de cor, o MGL não "realiza" o Metal texture
+  #      do anexo (mtl_data fica nulo -> assert em newRenderEncoder). Marca como render target e realiza.
+  RF="MGL/src/MGLRenderer.m"
+  if ! grep -q 'VostroXe: realize FBO color attachment' "$RF"; then
+    echo "== patch VostroXe: realizar mtl_data do anexo de cor do FBO ($RF)"
+    perl -0pi -e 's/\Qassert(tex->mtl_data);\E/\/* VostroXe: realize FBO color attachment *\/ tex->is_render_target = true; if (tex->mtl_data == NULL) [self bindMTLTexture: tex]; assert(tex->mtl_data);/' "$RF"
+    grep -q 'VostroXe: realize FBO color attachment' "$RF" && echo "   patch MGLRenderer aplicado" || { echo "   AVISO: nao aplicou"; err=1; }
+  else
+    echo "== patch VostroXe MGLRenderer: já aplicado"
   fi
 
   # ---- MGL ----
