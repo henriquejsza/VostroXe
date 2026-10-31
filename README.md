@@ -94,6 +94,7 @@ EFI/                     OpenCore EFI of the Vostro 3520, serials blanked (make-
 make-efi.py              builds dist/EFI on Linux or macOS: SMBIOS, HfsPlus.efi, ocvalidate, recovery
 src/NootedGreen/         the kernel plugin, with the Vostro changes (boot fixes, HDMI work)
 src/HookCase/            HookCase as modified for NootedGreen (MIT)
+src/MGL/                 MGL (OpenGL 4.6 on Metal, Apache-2.0) with the fixes that run it on the Iris Xe
 macos/                   user-space stack: Metal driver patcher, libxedrv, shader compiler, installer
 tools/CS8409HDA/         audio driver for the Vostro's Cirrus CS8409, with a Linux test harness
 tools/XeSpeakers/        the macOS sound device (AudioServerPlugIn)
@@ -101,9 +102,11 @@ tools/hdmi-flags.sh      switches the HDMI experiment boot-args
 tools/diagnostics/       hdmi-diag.sh, i915-regdump.py (Linux) and the base project's GPU test programs
 tools/tcc-permitir.sh    privacy permissions that amfi_get_out_of_my_way=1 blocks
 tools/emulador-android.sh  Android emulator fix for x86_64 AVDs (guest kernel parameter)
+tools/mgl-build.sh       builds src/MGL; mgl-test.sh and mgl-triangle.sh check OpenGL on the GPU
 docs/VOSTRO.md           this laptop: hardware, EFI, patches, known issues, changes
 docs/HDMI.md             the HDMI work
 docs/EMULATOR.md         the Android emulator
+docs/OPENGL.md           hardware OpenGL through MGL
 ```
 
 The other tools (AudShim, touchscreen, fingerprint, haptics and more) and the other documents in `docs/` come from
@@ -120,6 +123,8 @@ the base project and describe the Dell XPS 13 Plus. Its [CHANGELOG](CHANGELOG.md
   **VoodooPS2**, **USBToolBox** (dhinakg), **Mieze** (RealtekRTL8111), **jwise** (HoRNDIS).
 - The Linux `cs8409` and `cs42l42` drivers (Cirrus Logic): the reference for CS8409HDA's codec programming.
 - **b00t0x**, [WhateverXe](https://github.com/b00t0x/WhateverXe): the reference for Display 13 HDMI.
+- **Michael Larson** and contributors, [MGL](https://github.com/openglonmetal/MGL): OpenGL 4.6 on Metal, the base of
+  `src/MGL`.
 
 ## License
 

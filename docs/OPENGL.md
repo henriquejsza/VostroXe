@@ -2,7 +2,8 @@
 
 macOS Tahoe has no Tiger Lake OpenGL driver, so native GL on this laptop falls back to the **Apple Software
 Renderer** (GL 4.1, CPU). This page is the work to get **hardware-accelerated OpenGL on the Iris Xe** through
-[MGL](https://github.com/openglonmetal/MGL), which implements OpenGL 4.6 directly on Metal.
+[MGL](https://github.com/openglonmetal/MGL), which implements OpenGL 4.6 directly on Metal. MGL is kept in this
+repository, with the fixes it needs here, as `src/MGL`.
 
 > **Confirmed on the Vostro 3520, 2026-10-31.** Offscreen OpenGL 4.6 runs on the GPU: a clear and an RGB-triangle
 > shader draw both render on the Iris Xe and read back correct. It is **not** system-wide GL: an app has to be built
@@ -50,36 +51,48 @@ toolchain), vertex buffers, a draw call, rasterisation and colour interpolation.
 (`mgl-triangulo.bmp`) is a red/green/blue gradient triangle. MGL reads an FBO top-origin (Metal's convention), so
 the probe flips the image vertically to GL's bottom-origin orientation.
 
+## The MGL source: `src/MGL`
+
+MGL is kept in this repository as `src/MGL`: upstream commit `de0ded04` (Apache-2.0), without its Xcode project,
+golden images and code generators, plus the six fixes below as ordinary commits (`git log -- src/MGL`). Each changed
+file says so in its header, and each change is marked `VostroXe:` in the code. The build dependencies (SPIRV-Cross,
+SPIRV-Tools, SPIRV-Headers, glslang, OpenGL-Registry, ezxml) are not in the repository: MGL's
+`external/clone_external.sh` downloads them.
+
 ## Building and testing
 
-Needs the Command Line Tools (`xcode-select --install`) and, for the first build, an internet connection (the script
-clones MGL and its dependencies). Everything is driven from the USB with double-click launchers, or from a Terminal:
+Needs the Command Line Tools (`xcode-select --install`). Everything is driven from the USB with double-click
+launchers, or from a Terminal:
 
 ```sh
-zsh tools/mgl-build.sh     # COMPILAR-MGL.command   — clones + builds MGL, applies the patches below, builds libmgl.dylib
+zsh tools/mgl-build.sh     # COMPILAR-MGL.command   — builds src/MGL: libmgl.dylib, libmgl_es.dylib, libglfw.dylib
 zsh tools/mgl-test.sh      # TESTAR-MGL.command     — the offscreen clear+readback GPU probe above
 zsh tools/mgl-triangle.sh  # TRIANGULO-MGL.command  — the RGB-triangle shader demo, writes mgl-triangulo.bmp
 ```
 
-`mgl-build.sh` is resumable: it reuses the cloned sources and the already-built dependencies, re-applies the patches
-(idempotent) and relinks. Products are `~/MGL/build/libmgl.dylib`, `libmgl_es.dylib` and `libglfw.dylib`.
+In a VostroXe checkout, `mgl-build.sh` builds `src/MGL` in place (products in `src/MGL/build/`). On the USB stick it
+uses `mgl-src.tar.gz`, an archive of `src/MGL` made with
+`git archive --format=tar.gz --add-virtual-file=.vostroxe-commit:$(git rev-parse HEAD) -o mgl-src.tar.gz HEAD:src/MGL`,
+and copies it to `~/VostroXe-MGL`, replacing only the files that changed so `make` rebuilds only those. The
+dependencies are built once, which needs internet; later builds reuse them, including the ones an earlier version of
+the script built under `~/MGL/external`. The probes link `libmgl.dylib` alone, as an app would.
 
-## The six patches to MGL
+## The six fixes to MGL
 
-MGL as published does not run here unmodified; `mgl-build.sh` applies these to the checkout before `make` (each is
-idempotent and re-applied on every build):
+MGL as published does not run on this machine. These are the changes in `src/MGL`, one commit each:
 
-| # | File | What and why |
-|---|---|---|
-| A | `MGL/src/glm_params.c` | Drop `kCGLPFAAccelerated` from `getMacOSDefaults`. MGL bootstraps its default GL state from a CGL context; an **accelerated** CGL pixel format is exactly what fails on this GPU (issue #21), so it aborted at startup. Without the flag the defaults come from the software renderer (same spec values) and MGL still renders on Metal. |
-| B | `Makefile` | `$(mgl_gl_obj)` → `$(mgl_core_obj)`. An upstream typo left `gl_core.o` (the `glXxx` entry points) out of `libmgl.dylib`, so the library exported no GL functions (the GLFW backend's `dlsym` and any app would fail to link). The ES library already did this correctly. |
-| C | `MGL/src/MGLRenderer.m` | In `newRenderEncoder`, realise the FBO colour attachment's Metal texture (`is_render_target = true` + `bindMTLTexture`) before use. It was only realised lazily when a texture was *sampled*, so rendering **to** an FBO texture hit `assert(tex->mtl_data)`. |
-| D | `MGL/src/MGLRenderer.m` | Implement `glReadPixels` from an FBO in `mtlReadDrawable`. The read-from-framebuffer branch was stubbed (it logged and returned); it now blits the attachment texture to a shared `MTLBuffer` and copies it out. |
-| E | `MGL/src/MGLRenderer.m` | Honour a global `glClear` on FBO attachments. The per-attachment loop only cleared when the `glClearBufferfv` bitmask was set and forced `loadAction = Load` otherwise, so a plain `glClear(GL_COLOR_BUFFER_BIT)` never cleared a bound FBO. |
-| F | `MGL/src/MGLRenderer.m` | Raise the bogus pointer "safety" ceilings. This fork rejects context/device/framebuffer pointers above QEMU-era limits — `0x100000000000` (~17 TB, 12×) and one `0x100000000` (4 GB!). macOS x86_64 pointers sit just below 2^47 (~140 TB), above both, so `glDrawArrays` aborted ("Invalid GLM context" / "Invalid framebuffer pointer"). Both ceilings go to `0x800000000000` (2^47). |
+| # | Commit | File | What and why |
+|---|---|---|---|
+| A | `2c10a17` | `MGL/src/glm_params.c` | Drop `kCGLPFAAccelerated` from `getMacOSDefaults`. MGL bootstraps its default GL state from a CGL context; an **accelerated** CGL pixel format is exactly what fails on this GPU (issue #21), so it aborted at startup. Without the flag the defaults come from the software renderer (same spec values) and MGL still renders on Metal. |
+| B | `dadfbdf` | `Makefile` | `$(mgl_gl_obj)` → `$(mgl_core_obj)`. An upstream typo left `gl_core.o` (the `glXxx` entry points) out of `libmgl.dylib`, so the library exported no GL functions (the GLFW backend's `dlsym` and any app would fail to link). The ES library already did this correctly. |
+| C | `3174ec2` | `MGL/src/MGLRenderer.m` | In `newRenderEncoder`, create the FBO colour attachment's Metal texture (`is_render_target = true` + `bindMTLTexture`) before use. It was only created lazily when a texture was *sampled*, so rendering **to** an FBO texture hit `assert(tex->mtl_data)`. |
+| D | `3711e09` | `MGL/src/MGLRenderer.m` | Implement `glReadPixels` from an FBO in `mtlReadDrawable`. The read-from-framebuffer branch was stubbed (it logged and returned); it now blits the attachment texture to a shared `MTLBuffer` and copies it out. |
+| E | `e391506` | `MGL/src/MGLRenderer.m` | Honour a global `glClear` on FBO attachments. The per-attachment loop only cleared when the `glClearBufferfv` bitmask was set and forced `loadAction = Load` otherwise, so a plain `glClear(GL_COLOR_BUFFER_BIT)` never cleared a bound FBO. |
+| F | `fd69261` | `MGL/src/MGLRenderer.m` | Raise MGL's pointer "safety" ceilings. It rejected context, device and framebuffer pointers above `0x100000000000` (~17 TB, 12 checks) and, in one check, above `0x100000000` (4 GB). macOS x86_64 pointers sit just below 2^47 (~140 TB), above both, so `glDrawArrays` aborted ("Invalid GLM context", then "Invalid framebuffer pointer"). Every check now uses `0x800000000000` (2^47). |
 
-Patch A gets MGL past startup; C/D/E make an offscreen FBO actually clear, draw and read back; F lets draw calls run
-at all on macOS pointers. All are in `tools/mgl-build.sh`, applied with `perl` and guarded so a re-run is a no-op.
+Fix A gets MGL past startup; C, D and E make an offscreen FBO clear, draw and read back; F lets draw calls run at all
+on macOS pointers. Until 31 Oct the build script applied these with `perl` to a clone of MGL; the commits are, token
+for token (comments and whitespace aside), the patched sources that passed the GPU tests above.
 
 ## Scope and honest limits
 

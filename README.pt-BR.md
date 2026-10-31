@@ -96,6 +96,7 @@ EFI/                     EFI OpenCore do Vostro 3520, sem os números de série 
 make-efi.py              gera dist/EFI no Linux ou no macOS: SMBIOS, HfsPlus.efi, ocvalidate, recovery
 src/NootedGreen/         o plugin do kernel, com as mudanças do Vostro (correções de boot, HDMI)
 src/HookCase/            o HookCase modificado para o NootedGreen (MIT)
+src/MGL/                 o MGL (OpenGL 4.6 sobre Metal, Apache-2.0) com as correções que o fazem rodar na Iris Xe
 macos/                   espaço do usuário: patcher do driver Metal, libxedrv, compilador de shaders, instalador
 tools/CS8409HDA/         driver de áudio para o Cirrus CS8409 do Vostro, com um harness de teste no Linux
 tools/XeSpeakers/        o dispositivo de som do macOS (AudioServerPlugIn)
@@ -103,9 +104,11 @@ tools/hdmi-flags.sh      troca os boot-args dos experimentos de HDMI
 tools/diagnostics/       hdmi-diag.sh, i915-regdump.py (Linux) e os programas de teste de GPU do projeto base
 tools/tcc-permitir.sh    permissões de privacidade que o amfi_get_out_of_my_way=1 bloqueia
 tools/emulador-android.sh  correção do emulador do Android para AVDs x86_64 (parâmetro do kernel do guest)
+tools/mgl-build.sh       compila o src/MGL; mgl-test.sh e mgl-triangle.sh testam o OpenGL na GPU
 docs/VOSTRO.md           este notebook: hardware, EFI, patches, problemas conhecidos, mudanças
 docs/HDMI.md             o trabalho no HDMI
 docs/EMULATOR.md         o emulador do Android
+docs/OPENGL.md           OpenGL na GPU pelo MGL
 ```
 
 As outras ferramentas (AudShim, tela de toque, digital, vibração do touchpad e outras) e os outros documentos em
@@ -124,6 +127,8 @@ projeto original.
   **VoodooPS2**, **USBToolBox** (dhinakg), **Mieze** (RealtekRTL8111), **jwise** (HoRNDIS).
 - Os drivers `cs8409` e `cs42l42` do Linux (Cirrus Logic): a referência para a programação do codec no CS8409HDA.
 - **b00t0x**, [WhateverXe](https://github.com/b00t0x/WhateverXe): a referência para o HDMI no Display 13.
+- **Michael Larson** e colaboradores, [MGL](https://github.com/openglonmetal/MGL): OpenGL 4.6 sobre Metal, a base do
+  `src/MGL`.
 
 ## Licença
 
