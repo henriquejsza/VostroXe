@@ -47,10 +47,14 @@ int main(void){
     return 0;
 }
 C
-  echo "== compilando o probe (clang, Command Line Tools):"
-  clang "$SRC" -o "$BIN" -I"$MGLDIR/MGL/include" \
+  echo "== compilando o probe + gl_core.c (clang, Command Line Tools):"
+  clang "$SRC" "$MGLDIR/MGL/src/gl_core.c" -o "$BIN" -DMGL_GL_CORE \
+    -I"$MGLDIR/MGL/include" -I"$MGLDIR/MGL/include/GL" \
+    -I"$MGLDIR/external/SPIRV-Cross" -I"$MGLDIR/external/SPIRV-Tools/include" \
+    -I"$MGLDIR/external/glslang/glslang/Include" -I"$MGLDIR/MGL/SPIRV/SPIRV-Cross" \
+    -DENABLE_OPT=0 -DSPIRV_CROSS_C_API_MSL=1 -DSPIRV_CROSS_C_API_GLSL=1 -DSPIRV_CROSS_C_API_CPP=1 -DSPIRV_CROSS_C_API_REFLECT=1 \
     "$MGLDIR/build/libmgl.dylib" \
-    -framework Metal -framework Foundation -framework QuartzCore -framework Cocoa -framework CoreGraphics -framework IOKit 2>&1 | tail -20
+    -framework Metal -framework Foundation -framework QuartzCore -framework Cocoa -framework CoreGraphics -framework IOKit 2>&1 | tail -25
   if [[ ! -x $BIN ]]; then echo "a compilacao do probe FALHOU (ver acima)"; exit 1; fi
   echo "== rodando (as linhas 'MGL INFO: Metal device created: ...' mostram a GPU de verdade):"
   DYLD_LIBRARY_PATH="$MGLDIR/build" DYLD_FALLBACK_LIBRARY_PATH="$MGLDIR/build" "$BIN" 2>&1
