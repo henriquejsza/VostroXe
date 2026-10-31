@@ -2,8 +2,9 @@
 
 Status: **fix ready, not tested on the laptop yet.** The Android Studio emulator showed a black window: the
 guest's Linux kernel panics 0.4 s into its boot on an instruction the hypervisor does not allow.
-`zsh tools/emulador-android.sh corrigir` makes the guest kernel stop using it. In the first try on 30 Oct the fix
-was not applied (see [First try](#first-try-30-oct)).
+`zsh tools/emulador-android.sh corrigir` makes the guest kernel stop using it. Two tries on 30 Oct did not test it:
+in the first the fix was not applied, in the second the boot never left the BIOS because of a half-removed quickboot
+snapshot ([First try](#first-try-30-oct), [Second try](#second-try-30-oct)).
 
 Versions on this laptop: Android Studio 2026.2, emulator 37.2.12 (build 16428233), one AVD "Medium Phone API 37.0"
 (x86_64, Google Play image revision 7, Android 17, guest kernel 6.12.81-android16).
@@ -63,18 +64,30 @@ line (`android/android-emu/android/main-kernel-parameters.cpp`). On Linux under 
 printed `Clearing CPUID bits: waitpkg rdpid` with this parameter and brought up 6 CPUs.
 
 ```sh
-zsh tools/emulador-android.sh            # status: kern.hv_support, emulator -accel-check, AVDs, adb devices
+zsh tools/emulador-android.sh            # status: kern.hv_support, emulator -accel-check, AVDs, snapshots, adb devices
 zsh tools/emulador-android.sh corrigir   # all AVDs, or the ones named; close the emulator first
 zsh tools/emulador-android.sh desfazer   # removes waitpkg and rdpid from clearcpuid again
+zsh tools/emulador-android.sh boot-frio  # only removes the quickboot snapshot
+zsh tools/emulador-android.sh testar     # cold boot of the first AVD with the guest kernel log in a file
 ```
 
-`corrigir` adds `clearcpuid=waitpkg,rdpid` to `kernel.parameters` in each AVD's `config.ini` and moves the quickboot
-snapshot `default_boot`, a guest that already panicked, into the backup, so the next start is a cold boot. It also
+`corrigir` adds `clearcpuid=waitpkg,rdpid` to `kernel.parameters` in each AVD's `config.ini` and removes the
+quickboot snapshot `default_boot`, a guest that already panicked, so the next start is a cold boot. The snapshot has
+two parts and both go: the guest RAM in `snapshots/default_boot`, moved into the backup, and the CPU and device state,
+an internal qcow2 snapshot named `default_boot` in the AVD's `.qcow2` disks, deleted with the SDK's
+`emulator/qemu-img snapshot -d` after a copy of each disk into the backup (an APFS clone when possible). If the SDK's
+`qemu-img` does not run,
+nothing is removed (see [Second try](#second-try-30-oct) for why half a snapshot is worse than none). `corrigir` also
 removes the renderer choices the emulator's settings save in the AVD's `AVD.conf` (`glesBackendPreference`,
 `glesApiLevelPreference`, `guestGlesDriverPreference`), so the emulator picks the renderer itself again (SwiftShader
 for API 37). Backups go to `~/Library/Application Support/xe-emulador/<date-time>/<AVD>/`. Run it again for each new
 AVD and after editing an AVD in Device Manager. The status shows which AVDs have the fix, the renderer choices,
-what the last start used (`hardware-qemu.ini`), and the command to run when an AVD still lacks the fix.
+what the last start used (`hardware-qemu.ini`), the quickboot snapshot (flagged when only one part exists), and the
+next command to run.
+
+`testar` removes the quickboot snapshot and starts the emulator with `-no-snapshot-load -no-snapshot-save
+-show-kernel`, so the guest kernel's console goes to a log file (`~/Library/Logs/xe-emulador/` by default). It
+leaves no snapshot behind.
 
 Limits:
 
@@ -92,6 +105,11 @@ Android Studio could not start the adb server: `idea.log` (25–29 Oct) has 97 `
 emulator even after it boots. Not investigated yet; the status runs `adb devices`. On 30 Oct Studio connected to
 adb, with no `start-server` failure.
 
+In the 22:37 run of 30 Oct adb failed again (`ADB server didn't ACK`), and the emulator's crash handler (which adb
+inherits as its child) wrote 13 minidumps in 3 minutes (`/tmp/android-<user>/emu-crash-37.2.12.db/completed/`). Each
+one is the adb server killed by the system: `EXC_CRASH` with code `0x09c0....`, that is `SIGKILL` after a guard
+exception (`EXC_GUARD`), on its `RunLoop` thread inside `IOUSBLib`, while it scans USB devices.
+
 ## First try, 30 Oct
 
 The status ran (`zsh emulador-android.sh`, without `corrigir`), so the AVD did not change: `config.ini` still dated
@@ -105,11 +123,37 @@ from 25 Oct, without `kernel.parameters`, and there was no backup folder. The em
 The snapshot saved at 21:56 holds the same panic, now at 0.355561 s, with 83 records of `delay_halt_tpause` and no
 `clearcpuid` on the guest command line. Both windows stayed black.
 
+## Second try, 30 Oct
+
+`corrigir` ran at 22:37 (report on the USB: `kernel.parameters=clearcpuid=waitpkg,rdpid`, renderer choices removed,
+`snapshot default_boot` moved), and the start at 22:37:57 used it (`hardware-qemu.ini`:
+`kernel.parameters = clearcpuid=waitpkg,rdpid`, SwiftShader). The window stayed black for the 2 min 50 s it ran. The
+state saved at exit, read from the AVD's `cache.img.qcow2` (VM state) and `ram.bin` on Linux:
+
+- The guest never left the BIOS. Its RAM had 71 non-zero pages: the interrupt table, SeaBIOS, ACPI tables, no kernel.
+- vCPU0 was in real mode at `f000:ff53`, the `iret` of SeaBIOS's default interrupt handler, with `0000:0003` as the
+  return address on its stack. It had jumped to `0000:0000` and was running the interrupt table as code: the bytes at
+  `0000:0003` are `f0 53` (`lock push bx`), an invalid opcode, and the #UD handler (`f000:ff53`) returns to the same
+  instruction.
+- vCPU4 was in SeaBIOS's CPU scan (`smp_scan`), waiting with `CountCPUs = 5` for 6 (`RBX = 6`). vCPUs 1, 2, 3 and 5
+  had reported in and halted; vCPU0 never did.
+
+Why: `corrigir` had moved only the RAM part of the old quickboot snapshot (`snapshots/default_boot`). The rest is an
+internal snapshot `default_boot` in the AVD's `.qcow2` disks (the CPU and device state is in `cache.img.qcow2`), and it
+stayed. The emulator
+started loading it, failed (`Error -1 from the snapshot callback`), and the boot that followed did not start from a
+clean machine. The most likely path to `0000:0000`: the old state is a guest that panicked inside `native_kick_ap`,
+after Linux had set the CMOS shutdown code to 0x0A and the warm-reset vector at 40:67 to its trampoline (the 21:56
+RAM has 40:67 = `9900:0000`). SeaBIOS's reset path (`handle_resume`) reads that code, clears it (CMOS 0x0F was 0 at
+exit) and for 0x0A jumps through 40:67. Without the old RAM the vector is `0000:0000`, which it was at exit.
+
+So the fix was not tested in this run. The tool now removes both parts of the snapshot, and `testar` starts the
+emulator without loading or saving any snapshot and keeps the guest kernel's log.
+
 ## Test
 
 1. Close Android Studio's emulator, then run `zsh tools/emulador-android.sh corrigir` and
-   `zsh tools/emulador-android.sh`. The status must say `corrigido` for the AVD.
-2. Start the AVD from Device Manager without changing the emulator's renderer settings. The first start is a cold
-   boot with software rendering: the Android logo should appear within a few minutes.
-3. Run `zsh tools/emulador-android.sh` again and keep the output (it shows `kernel.parameters` of the last start and
-   `adb devices`).
+   `zsh tools/emulador-android.sh`. The status must say `corrigido` for the AVD and no `PELA METADE` snapshot.
+2. Run `zsh tools/emulador-android.sh testar`. It starts a cold boot with software rendering: the Android logo
+   should appear within a few minutes. Close the window when done.
+3. Keep the log it names (`~/Library/Logs/xe-emulador/<AVD>-<date-time>.txt`): it holds the guest kernel's console.
