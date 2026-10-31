@@ -48,7 +48,7 @@ int main(void){
 }
 C
   echo "== compilando o probe (clang, Command Line Tools):"
-  clang -x c "$SRC" -o "$BIN" -I"$MGLDIR/MGL/include" \
+  clang "$SRC" -o "$BIN" -I"$MGLDIR/MGL/include" \
     "$MGLDIR/build/libmgl.dylib" \
     -framework Metal -framework Foundation -framework QuartzCore -framework Cocoa -framework CoreGraphics -framework IOKit 2>&1 | tail -20
   if [[ ! -x $BIN ]]; then echo "a compilacao do probe FALHOU (ver acima)"; exit 1; fi
