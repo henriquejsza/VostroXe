@@ -20,6 +20,7 @@
  * repository):
  * - newRenderEncoder creates the Metal texture of an FBO colour attachment before using it.
  * - mtlReadDrawable implements glReadPixels from a framebuffer object.
+ * - newRenderEncoder: glClear also clears the colour attachments of a bound framebuffer object.
  *
  */
 
@@ -3132,6 +3133,17 @@ void mtlBlitFramebuffer(GLMContext glm_ctx, GLint srcX0, GLint srcY0, GLint srcX
                                         fboa->clear_color[1],
                                         fboa->clear_color[2],
                                         fboa->clear_color[3]);
+
+                    _renderPassDescriptor.colorAttachments[i].loadAction = MTLLoadActionClear;
+                } else if (ctx->state.clear_bitmask & GL_COLOR_BUFFER_BIT) {
+                    // VostroXe: glClear(GL_COLOR_BUFFER_BIT) only sets the context's clear bitmask and
+                    // colour; the per-attachment values above come from glClearBuffer*. Without this
+                    // branch a plain glClear left every attachment of a bound FBO loaded, not cleared.
+                    _renderPassDescriptor.colorAttachments[i].clearColor =
+                        MTLClearColorMake(STATE(color_clear_value[0]),
+                                          STATE(color_clear_value[1]),
+                                          STATE(color_clear_value[2]),
+                                          STATE(color_clear_value[3]));
 
                     _renderPassDescriptor.colorAttachments[i].loadAction = MTLLoadActionClear;
                 } else {
