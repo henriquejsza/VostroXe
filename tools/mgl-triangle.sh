@@ -1,13 +1,16 @@
 #!/bin/zsh
 # Passo 3 (prova visual): desenha o triângulo RGB clássico (vertex+fragment shader, VBO/VAO, glDrawArrays)
 # num FBO offscreen na Iris Xe (MGL->Metal), lê de volta e salva uma imagem BMP que você abre no Preview.
-# Precisa ter rodado o COMPILAR-MGL antes (usa ~/MGL/build/libmgl.dylib, já com os 5 patches).
+# Precisa ter rodado o COMPILAR-MGL antes (usa o libmgl.dylib do VostroXe; o probe só linka ele, como um app).
 # Roda no macOS:  zsh /Volumes/MACINSTALL/mgl-triangle.sh   (ou dois cliques no TRIANGULO-MGL.command)
 set -u
 SELF=${0:A}; HERE=${SELF:h}
 LOG="${1:-$HERE/mgl-triangle-log.txt}"
 BMP="${2:-$HERE/mgl-triangulo.bmp}"
-MGLDIR="$HOME/MGL"
+# MGL compilado pelo mgl-build.sh: src/MGL num checkout do VostroXe, ou ~/VostroXe-MGL (fonte vinda do pendrive)
+if [[ -n ${MGL_DIR:-} ]]; then MGLDIR=$MGL_DIR
+elif [[ -f $HERE/../src/MGL/Makefile ]]; then MGLDIR=${HERE:h}/src/MGL
+else MGLDIR=$HOME/VostroXe-MGL; fi
 {
   echo "== $(date '+%d/%m %H:%M')  triângulo MGL na GPU (offscreen -> BMP)"
   if [[ ! -f $MGLDIR/build/libmgl.dylib ]]; then
@@ -133,14 +136,8 @@ int main(int argc, char** argv){
     return 0;
 }
 C
-  echo "== compilando o probe + gl_core.c (clang, Command Line Tools):"
-  clang "$SRC" "$MGLDIR/MGL/src/gl_core.c" -o "$BIN" -DMGL_GL_CORE \
-    -I"$MGLDIR/MGL/include" -I"$MGLDIR/MGL/include/GL" \
-    -I"$MGLDIR/external/SPIRV-Cross" -I"$MGLDIR/external/SPIRV-Tools/include" \
-    -I"$MGLDIR/external/glslang/glslang/Include" -I"$MGLDIR/MGL/SPIRV/SPIRV-Cross" \
-    -DENABLE_OPT=0 -DSPIRV_CROSS_C_API_MSL=1 -DSPIRV_CROSS_C_API_GLSL=1 -DSPIRV_CROSS_C_API_CPP=1 -DSPIRV_CROSS_C_API_REFLECT=1 \
-    "$MGLDIR/build/libmgl.dylib" \
-    -framework Metal -framework Foundation -framework QuartzCore -framework Cocoa -framework CoreGraphics -framework IOKit 2>&1 | tail -25
+  echo "== compilando o probe contra $MGLDIR/build/libmgl.dylib (clang, Command Line Tools):"
+  clang "$SRC" -o "$BIN" -I"$MGLDIR/MGL/include" -I"$MGLDIR/MGL/include/GL" "$MGLDIR/build/libmgl.dylib" 2>&1 | tail -25
   if [[ ! -x $BIN ]]; then echo "a compilacao do probe FALHOU (ver acima)"; exit 1; fi
   echo "== rodando (as linhas 'MGL INFO: Metal device created: ...' mostram a GPU de verdade):"
   DYLD_LIBRARY_PATH="$MGLDIR/build" DYLD_FALLBACK_LIBRARY_PATH="$MGLDIR/build" "$BIN" "$BMP" 2>&1

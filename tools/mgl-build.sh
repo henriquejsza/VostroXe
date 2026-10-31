@@ -1,133 +1,130 @@
 #!/bin/zsh
-# GL geral via MGL (OpenGL 4.6 / ES 3.x -> Metal) no Vostro 3520 — BUILD COMPLETO (precisa de internet).
-# Compila as dependências (SPIRV-Tools, SPIRV-Cross, SPIRV-Headers, glslang, glfw) e depois o MGL.
+# GL geral: compila o MGL do VostroXe (src/MGL: OpenGL 4.6 -> Metal, com as correções do Vostro) no macOS.
+# A fonte é o src/MGL deste repositório. Quando o script roda do pendrive, ela vem do mgl-src.tar.gz ao
+# lado dele e é copiada para ~/VostroXe-MGL (só os arquivos que mudaram, para o make recompilar só eles).
+# As dependências (SPIRV-Cross, SPIRV-Tools, glslang, a GLFW do MGL) são reaproveitadas de ~/MGL/external
+# quando já foram compiladas lá; senão são baixadas e compiladas (precisa de internet, vários minutos).
 # Roda no macOS:  zsh /Volumes/MACINSTALL/mgl-build.sh   (ou dois cliques no COMPILAR-MGL.command)
-# Não precisa de Xcode (só as Command Line Tools). Logs ficam no pendrive.
+# Não precisa de Xcode (só as Command Line Tools). Logs ficam ao lado do script.
 set -u
 SELF=${0:A}; HERE=${SELF:h}
 LOG="${1:-$HERE/mgl-build-log.txt}"
-DEPLOG="$HERE/mgl-deps-log.txt"; MAKELOG="$HERE/mgl-make-log.txt"
-MGLDIR="$HOME/MGL"; TOOLS="$HOME/mgl-tools"; CMVER="3.31.6"
+DEPLOG="${LOG:h}/mgl-deps-log.txt"; MAKELOG="${LOG:h}/mgl-make-log.txt"
+TARBALL="$HERE/mgl-src.tar.gz"
+COPY="$HOME/VostroXe-MGL"   # cópia de trabalho quando a fonte vem do pendrive
+OLD="$HOME/MGL"             # checkout antigo do MGL: as dependências já compiladas nele são reaproveitadas
+TOOLS="$HOME/mgl-tools"; CMVER="3.31.6"
+DEPS=(OpenGL-Registry SPIRV-Cross SPIRV-Headers SPIRV-Tools ezxml glslang)   # o que clone_external.sh baixa
 err=0
-{
-  echo "== $(date '+%d/%m %H:%M')  MGL build completo"
-  echo "macOS $(sw_vers -productVersion 2>/dev/null) ($(sw_vers -buildVersion 2>/dev/null)), arch $(uname -m)"
-  for t in git make clang curl python3; do command -v $t >/dev/null && echo "  $t: ok" || echo "  $t: FALTA (rode: xcode-select --install)"; done
-  echo "internet: $(curl -sI -m 10 https://github.com >/dev/null 2>&1 && echo OK || echo 'SEM ACESSO — ligue o cabo de rede e tente de novo')"
 
-  # ---- cmake (do sistema, ou baixa um standalone) ----
-  if command -v cmake >/dev/null; then CMAKE=cmake; echo "cmake: $(cmake --version | head -1) (sistema)"
-  else
-    echo "== baixando cmake $CMVER (uma vez)"; mkdir -p "$TOOLS/cmake"
-    if [[ ! -x $TOOLS/cmake/CMake.app/Contents/bin/cmake ]]; then
-      curl -fL -o "$TOOLS/cmake.tgz" "https://github.com/Kitware/CMake/releases/download/v$CMVER/cmake-$CMVER-macos-universal.tar.gz" && \
-      tar xzf "$TOOLS/cmake.tgz" -C "$TOOLS/cmake" --strip-components=1
+online() { curl -sI -m 10 https://github.com >/dev/null 2>&1; }
+
+# As bibliotecas que o Makefile do MGL linka (o build_external.sh gera todas).
+deps_built() {
+  [[ -f SPIRV-Cross/build/libspirv-cross-core.a && -f SPIRV-Tools/build/source/libSPIRV-Tools.a &&
+     -f glslang/build/glslang/libglslang.a && -f glfw/build/src/libglfw3.a ]]
+}
+
+# Copia a árvore $1 para $2 trocando só os arquivos de conteúdo diferente (eles ganham mtime novo, então o make
+# recompila só esses) e apaga os que saíram da fonte (o Makefile compila MGL/src/* por curinga). Não mexe no
+# build/, nas dependências baixadas nem nos links que o Makefile cria. Deixa as contagens em NCHG e NDEL.
+sync_tree() {
+  local src=$1 dst=$2 f
+  NCHG=0; NDEL=0
+  mkdir -p "$dst" || return 1
+  while IFS= read -r f; do
+    if ! cmp -s "$src/$f" "$dst/$f"; then
+      mkdir -p "$dst/${f:h}" && cp "$src/$f" "$dst/$f" || return 1
+      NCHG=$((NCHG + 1))
     fi
-    CMAKE="$TOOLS/cmake/CMake.app/Contents/bin/cmake"
-    [[ -x $CMAKE ]] && echo "cmake: $($CMAKE --version | head -1) (baixado)" || { echo "FALHA ao obter o cmake"; exit 1; }
+  done < <(cd "$src" && find . -type f | sed 's|^\./||')
+  while IFS= read -r f; do
+    if [[ ! -e $src/$f ]]; then rm -f "$dst/$f" && NDEL=$((NDEL + 1)); fi
+  done < <(cd "$dst" && find . \( -path ./build -o -path './lib*.dylib' -o -path ./external/glfw/build \
+             -o -path ./external/OpenGL-Registry -o -path ./external/SPIRV-Cross -o -path ./external/SPIRV-Headers \
+             -o -path ./external/SPIRV-Tools -o -path ./external/ezxml -o -path ./external/glslang \) -prune \
+             -o -type f -print | sed 's|^\./||')
+}
+
+# cmake do sistema, ou um standalone baixado uma vez (só é preciso para compilar as dependências).
+ensure_cmake() {
+  if command -v cmake >/dev/null; then echo "cmake: $(cmake --version | head -1) (sistema)"; return 0; fi
+  local cm="$TOOLS/cmake/CMake.app/Contents/bin/cmake"
+  if [[ ! -x $cm ]]; then
+    echo "== baixando cmake $CMVER (uma vez)"; mkdir -p "$TOOLS/cmake"
+    curl -fL -o "$TOOLS/cmake.tgz" "https://github.com/Kitware/CMake/releases/download/v$CMVER/cmake-$CMVER-macos-universal.tar.gz" &&
+      tar xzf "$TOOLS/cmake.tgz" -C "$TOOLS/cmake" --strip-components=1
   fi
-  export PATH="${CMAKE:h}:$PATH"
+  [[ -x $cm ]] || { echo "FALHA ao obter o cmake"; return 1; }
+  export PATH="${cm:h}:$PATH"; echo "cmake: $($cm --version | head -1) (baixado)"
+}
 
-  # ---- fonte do MGL ----
-  if [[ -d $MGLDIR/.git ]]; then echo "== MGL já em $MGLDIR (git pull)"; ( cd "$MGLDIR" && git checkout -- MGL/src/glm_params.c MGL/src/MGLRenderer.m Makefile 2>/dev/null; git pull --ff-only 2>&1 | tail -2 )
-  else echo "== clonando MGL em $MGLDIR"; git clone https://github.com/openglonmetal/MGL.git "$MGLDIR" 2>&1 | tail -4 || { echo "clone MGL FALHOU"; exit 1; }; fi
-  cd "$MGLDIR" || { echo "sem $MGLDIR"; exit 1; }
+{
+  echo "== $(date '+%d/%m %H:%M')  MGL do VostroXe (src/MGL)"
+  [[ $(uname) == Darwin ]] || { echo "rode no macOS"; exit 1; }
+  echo "macOS $(sw_vers -productVersion 2>/dev/null) ($(sw_vers -buildVersion 2>/dev/null)), arch $(uname -m)"
+  for t in make clang git curl python3; do command -v $t >/dev/null && echo "  $t: ok" || echo "  $t: FALTA (rode: xcode-select --install)"; done
 
-  # ---- dependências: clonar + compilar ----
-  cd external || { echo "sem external/"; exit 1; }
-  if [[ ! -d SPIRV-Tools || ! -d glslang || ! -d SPIRV-Cross ]]; then
-    echo "== clonando dependências (clone_external.sh)"; bash clone_external.sh 2>&1 | tail -12
-  else echo "== dependências já clonadas"; fi
-  if [[ -f SPIRV-Cross/build/libspirv-cross-core.a && -f glslang/build/glslang/libglslang.a && -f SPIRV-Tools/build/source/lint/libSPIRV-Tools-lint.a ]]; then
-    echo "== dependências já compiladas (pulando build_external.sh)"
+  # ---- fonte: o checkout do VostroXe, ou o mgl-src.tar.gz do pendrive ----
+  if [[ -f $HERE/../src/MGL/Makefile ]]; then
+    MGLSRC=${HERE:h}/src/MGL
+    echo "== fonte: $MGLSRC (checkout do VostroXe, commit $(git -C "$MGLSRC" rev-parse --short HEAD 2>/dev/null || echo '?'))"
+  elif [[ -f $TARBALL ]]; then
+    echo "== fonte: $TARBALL -> $COPY"
+    STAGE=$(mktemp -d -t mglsrc) || exit 1
+    if ! tar -xzf "$TARBALL" -C "$STAGE"; then echo "não consegui extrair $TARBALL"; rm -rf "$STAGE"; exit 1; fi
+    if ! sync_tree "$STAGE" "$COPY"; then echo "falha ao copiar a fonte para $COPY"; rm -rf "$STAGE"; exit 1; fi
+    rm -rf "$STAGE"
+    MGLSRC=$COPY
+    echo "   commit $(head -c 12 "$COPY/.vostroxe-commit" 2>/dev/null || echo '?'): $NCHG arquivo(s) novo(s) ou mudado(s), $NDEL removido(s)"
+  elif [[ -f $COPY/Makefile ]]; then
+    MGLSRC=$COPY
+    echo "== fonte: $COPY (cópia anterior; não achei $TARBALL)"
   else
-    echo "== compilando dependências (build_external.sh) — vários minutos; log em mgl-deps-log.txt"
+    echo "não achei a fonte do MGL: nem src/MGL (checkout do VostroXe) nem $TARBALL"; exit 1
+  fi
+
+  # ---- dependências: reaproveitar as de ~/MGL, ou baixar e compilar ----
+  cd "$MGLSRC/external" || { echo "sem $MGLSRC/external"; exit 1; }
+  for d in $DEPS; do
+    if [[ ! -e $d && -d $OLD/external/$d ]]; then ln -s "$OLD/external/$d" "$d" && echo "== reaproveitando $OLD/external/$d"; fi
+  done
+  if [[ ! -e glfw/build && -f $OLD/external/glfw/build/src/libglfw3.a ]]; then
+    ln -s "$OLD/external/glfw/build" glfw/build && echo "== reaproveitando $OLD/external/glfw/build (libglfw3.a)"
+  fi
+  if deps_built; then
+    echo "== dependências já compiladas (pulando clone_external.sh e build_external.sh)"
+  else
+    online || { echo "as dependências não estão compiladas e não há internet: ligue o cabo de rede e rode de novo"; exit 1; }
+    missing=(); for d in $DEPS; do [[ -e $d ]] || missing+=($d); done
+    if (( ${#missing} )); then echo "== baixando dependências (clone_external.sh): ${missing[*]}"; bash clone_external.sh 2>&1 | tail -12; fi
+    ensure_cmake || exit 1
+    echo "== compilando dependências (build_external.sh) — vários minutos; log em ${DEPLOG:t}"
     bash build_external.sh > "$DEPLOG" 2>&1; echo "   build_external rc=$? ; últimas linhas:"; tail -20 "$DEPLOG"
-  fi
-  cd "$MGLDIR"
-
-  # ---- patch VostroXe: getMacOSDefaults pede um pixel format CGL ACELERADO (kCGLPFAAccelerated),
-  #      que falha nesta GPU (issue #21: 0 formats acelerados). Esse contexto CGL só serve pra ler
-  #      os defaults do estado GL; sem "accelerated" ele cai pro renderer por software (GL 4.1),
-  #      lê os MESMOS defaults da spec, e o MGL segue renderizando no Metal/GPU. Idempotente.
-  PF="MGL/src/glm_params.c"
-  if grep -q 'kCGLPFAAccelerated' "$PF"; then
-    echo "== patch VostroXe: removendo kCGLPFAAccelerated de getMacOSDefaults ($PF)"
-    perl -0pi -e 's/attributes\[4\] = \{\n\s*kCGLPFAAccelerated,[^\n]*\n/attributes[3] = {\n/' "$PF"
-    if grep -q 'kCGLPFAAccelerated' "$PF"; then echo "   AVISO: patch NAO aplicou (confira $PF)"; err=1; else echo "   patch aplicado (attributes[3], sem acelerado)"; fi
-  else
-    echo "== patch VostroXe getMacOSDefaults: já aplicado"
-  fi
-
-  # ---- patch VostroXe B: o Makefile do MGL tem um typo ($(mgl_gl_obj), vazio) no alvo da lib core,
-  #      então o libmgl.dylib sai SEM os pontos de entrada glXxx (gl_core.o). Isso quebra a GLFW do MGL
-  #      (getProcAddress via dlsym) e o uso por apps. O certo é $(mgl_core_obj) (como a lib ES já faz).
-  MF="Makefile"
-  if grep -q 'mgl_gl_obj' "$MF"; then
-    echo "== patch VostroXe: Makefile libmgl core (mgl_gl_obj -> mgl_core_obj, inclui gl_core.o)"
-    perl -pi -e 's/\$\(mgl_gl_obj\)/\$(mgl_core_obj)/g' "$MF"
-    grep -q 'mgl_gl_obj' "$MF" && { echo "   AVISO: nao aplicou"; err=1; } || echo "   patch Makefile aplicado"
-  else
-    echo "== patch VostroXe Makefile: já aplicado"
-  fi
-
-  # ---- patch VostroXe C: no render para um FBO com textura de cor, o MGL não "realiza" o Metal texture
-  #      do anexo (mtl_data fica nulo -> assert em newRenderEncoder). Marca como render target e realiza.
-  RF="MGL/src/MGLRenderer.m"
-  if ! grep -q 'VostroXe: realize FBO color attachment' "$RF"; then
-    echo "== patch VostroXe: realizar mtl_data do anexo de cor do FBO ($RF)"
-    perl -0pi -e 's/\Qassert(tex->mtl_data);\E/\/* VostroXe: realize FBO color attachment *\/ tex->is_render_target = true; if (tex->mtl_data == NULL) [self bindMTLTexture: tex]; assert(tex->mtl_data);/' "$RF"
-    grep -q 'VostroXe: realize FBO color attachment' "$RF" && echo "   patch MGLRenderer aplicado" || { echo "   AVISO: nao aplicou"; err=1; }
-  else
-    echo "== patch VostroXe MGLRenderer: já aplicado"
-  fi
-
-  # ---- patch VostroXe D: o glReadPixels de um FBO não foi implementado neste MGL (o ramo readbuffer do
-  #      mtlReadDrawable só faz NSLog+return). Implementa: pega a textura do anexo de cor, finaliza o
-  #      render pendente e faz blit textura -> MTLBuffer compartilhado -> memcpy pro buffer do glReadPixels.
-  if ! grep -q 'VostroXe: FBO readback' "$RF"; then
-    echo "== patch VostroXe: implementar glReadPixels de FBO no mtlReadDrawable ($RF)"
-    perl -0777 -i -pe 's!drawbuffer = ctx->state\.read_buffer - GL_COLOR_ATTACHMENT0;.*?//assert\(texture\);!drawbuffer = (((GLint)ctx->state.read_buffer - (GLint)GL_COLOR_ATTACHMENT0) < 0) ? 0u : (GLuint)((GLint)ctx->state.read_buffer - (GLint)GL_COLOR_ATTACHMENT0); if (drawbuffer > (GLuint)STATE(max_color_attachments)) drawbuffer = 0u; { Texture *_rtex = [self framebufferAttachmentTexture: \&fbo->color_attachments[drawbuffer]]; assert(_rtex); if (_rtex->mtl_data == NULL) [self bindMTLTexture: _rtex]; texture = (__bridge id<MTLTexture>)(_rtex->mtl_data); assert(texture); [self endRenderEncoding]; if (_currentCommandBuffer \&\& _currentCommandBuffer.status < MTLCommandBufferStatusCommitted) { [_currentCommandBuffer commit]; [_currentCommandBuffer waitUntilCompleted]; } [self newCommandBuffer]; NSUInteger _bpr = bytesPerRow; NSUInteger _len = _bpr * region.size.height; id<MTLBuffer> _rbuf = [_device newBufferWithLength:_len options:MTLResourceStorageModeShared]; id<MTLBlitCommandEncoder> _blit = [_currentCommandBuffer blitCommandEncoder]; [_blit copyFromTexture:texture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(region.origin.x, region.origin.y, 0) sourceSize:MTLSizeMake(region.size.width, region.size.height, 1) toBuffer:_rbuf destinationOffset:0 destinationBytesPerRow:_bpr destinationBytesPerImage:_len]; [_blit endEncoding]; [_currentCommandBuffer commit]; [_currentCommandBuffer waitUntilCompleted]; memcpy(pixelBytes, [_rbuf contents], _len); [self newCommandBuffer]; /* VostroXe: FBO readback */ return; }!s' "$RF"
-    grep -q 'VostroXe: FBO readback' "$RF" && echo "   patch readback aplicado" || { echo "   AVISO: nao aplicou"; err=1; }
-  else
-    echo "== patch VostroXe readback: já aplicado"
-  fi
-
-  # ---- patch VostroXe E: num FBO, o loop por-anexo usa fboa->clear_bitmask (mecanismo do glClearBufferfv)
-  #      e no else força loadAction=Load, IGNORANDO o glClear GLOBAL (clear_bitmask + color_clear_value).
-  #      Efeito: glClear(GL_COLOR_BUFFER_BIT) não limpa um FBO ligado. Aqui o else passa a honrar o glClear global.
-  if ! grep -q 'VostroXe: honor global glClear on FBO' "$RF"; then
-    echo "== patch VostroXe: honrar glClear global nos anexos do FBO ($RF)"
-    perl -0777 -i -pe 's!\} else \{\s*_renderPassDescriptor\.colorAttachments\[i\]\.loadAction = MTLLoadActionLoad;\s*\}!} else if (ctx->state.clear_bitmask \& GL_COLOR_BUFFER_BIT) { _renderPassDescriptor.colorAttachments[i].clearColor = MTLClearColorMake(STATE(color_clear_value[0]), STATE(color_clear_value[1]), STATE(color_clear_value[2]), STATE(color_clear_value[3])); _renderPassDescriptor.colorAttachments[i].loadAction = MTLLoadActionClear; /* VostroXe: honor global glClear on FBO */ } else { _renderPassDescriptor.colorAttachments[i].loadAction = MTLLoadActionLoad; }!s' "$RF"
-    grep -q 'VostroXe: honor global glClear on FBO' "$RF" && echo "   patch clear-FBO aplicado" || { echo "   AVISO: nao aplicou"; err=1; }
-  else
-    echo "== patch VostroXe clear-FBO: já aplicado"
-  fi
-
-  # ---- patch VostroXe F: vários checks "de seguranca" rejeitam ponteiros acima de tetos pensados pra QEMU:
-  #      0x100000000000 (~17 TB, 12x) e 0x100000000 (4 GB!, 1x, na checagem de ctx->state.framebuffer).
-  #      No macOS x86_64 os ponteiros ficam logo abaixo de 2^47 (~140 TB), acima desses tetos, então
-  #      glDrawArrays abortava ("Invalid GLM context" / "Invalid framebuffer pointer"). Sobe ambos para 2^47.
-  if grep -qE '0x100000000000ULL|fb_addr > 0x100000000\)' "$RF"; then
-    echo "== patch VostroXe: subir tetos de ponteiro bogus (17 TB e 4 GB) -> 0x800000000000 ($RF)"
-    perl -pi -e 's/0x100000000000ULL/0x800000000000ULL/g' "$RF"
-    perl -pi -e 's/fb_addr > 0x100000000\)/fb_addr > 0x800000000000ULL)/g' "$RF"
-    if grep -qE '0x100000000000ULL|fb_addr > 0x100000000\)' "$RF"; then echo "   AVISO: ainda sobra"; err=1; else echo "   patch ponteiro aplicado"; fi
-  else
-    echo "== patch VostroXe ponteiro: já aplicado"
+    # build_external.sh copia MGL/include/MGL{Context,Renderer}.h por cima das cópias versionadas em glfw/src
+    git -C "$MGLSRC" checkout -- external/glfw/src/MGLContext.h external/glfw/src/MGLRenderer.h 2>/dev/null
+    deps_built || { echo "as dependências não compilaram: me mande o ${DEPLOG:t}"; exit 1; }
   fi
 
   # ---- MGL ----
-  echo "== compilando o MGL (make) — log em mgl-make-log.txt"
-  make > "$MAKELOG" 2>&1; echo "   make rc=$? ; últimas linhas:"; tail -25 "$MAKELOG"
+  cd "$MGLSRC" || exit 1
+  echo "== compilando o MGL (make) — log em ${MAKELOG:t}"
+  make -j4 > "$MAKELOG" 2>&1; rc=$?
+  echo "   make rc=$rc ; últimas linhas:"; tail -25 "$MAKELOG" | cut -c1-300
+  (( rc )) && err=1
 
-  echo "== resultado (dylibs geradas):"; ls -la "$MGLDIR"/build/*.dylib "$MGLDIR"/*.dylib 2>/dev/null | awk '{print $5,$NF}'
+  echo "== resultado ($MGLSRC/build):"
   for f in build/libmgl.dylib build/libmgl_es.dylib build/libglfw.dylib; do
-    [[ -f $MGLDIR/$f ]] && echo "OK  $f" || { echo "FALTOU  $f"; err=1; }
+    [[ -f $f ]] && echo "OK  $f ($(( $(stat -f %z "$f") / 1048576 )) MB)" || { echo "FALTOU  $f"; err=1; }
   done
-  [[ -f $MGLDIR/build/libmgl.dylib ]] && { echo "== otool libmgl.dylib:"; otool -L "$MGLDIR/build/libmgl.dylib" 2>/dev/null | grep -iE 'Metal|OpenGL|Foundation|spirv|glslang' | head; }
+  if [[ -f build/libmgl.dylib ]]; then
+    ngl=$(nm -gU build/libmgl.dylib 2>/dev/null | grep -cE ' _gl[A-Z]')
+    echo "funções gl* exportadas pelo libmgl.dylib: $ngl"
+    (( ngl > 0 )) || { echo "   0 = o gl_core.o ficou fora da lib"; err=1; }
+    echo "== otool libmgl.dylib:"; otool -L build/libmgl.dylib 2>/dev/null | grep -iE 'Metal|OpenGL|Foundation' | head
+  fi
   echo
   (( err )) && echo ">>> algo não compilou. Me mande: mgl-build-log.txt, mgl-deps-log.txt e mgl-make-log.txt" \
-            || echo ">>> MGL COMPILOU! Me mande o mgl-build-log.txt pro passo 2 (testar na GPU)."
+            || echo ">>> MGL do VostroXe COMPILOU. Agora rode o TESTAR-MGL e o TRIANGULO-MGL."
 } 2>&1 | tee "$LOG"
-echo; echo "logs no pendrive: $LOG  (+ mgl-deps-log.txt, mgl-make-log.txt)"
+echo; echo "logs: $LOG  (+ ${DEPLOG:t}, ${MAKELOG:t})"
