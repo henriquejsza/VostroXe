@@ -128,8 +128,10 @@ Boot-args: `-cs8409off` (do not touch the hardware), `cs8409lingerms`, `cs8409ca
   on, but no PKRU in the guest XSAVE). Fix, not fully booted yet:
   `zsh tools/emulador-android.sh corrigir` (`clearcpuid=waitpkg,rdpid nopku`, forces cold boot). See [EMULATOR.md](EMULATOR.md).
 - **Minecraft Launcher** 2.6.12 crashes at start (4 crash reports, 29–30 Oct): `EXC_BAD_ACCESS` in `strlen()`
-  called from `mojang::platform::getOpenGLVersion()`, so the OpenGL version string it read was null. OpenGL here has
-  no hardware renderer, only the Apple Software Renderer ([EMULATOR.md](EMULATOR.md#fix), limits).
+  called from `mojang::platform::getOpenGLVersion()`, so the OpenGL version string it read was null. The system
+  OpenGL here has no hardware renderer, only the Apple Software Renderer ([EMULATOR.md](EMULATOR.md#fix), limits).
+  Hardware OpenGL on the GPU is available **per-app** through MGL (OpenGL 4.6 → Metal), confirmed offscreen; it does
+  not change what the stock Launcher sees. See [OPENGL.md](OPENGL.md).
 
 ## Keeping up with the base project
 
@@ -149,6 +151,7 @@ and merge `kern_gen11.cpp` by hand. Then rebuild with `zsh install.sh` and check
 
 | Date | Change |
 |---|---|
+| 2026-10-31 | Hardware OpenGL on the Iris Xe via [MGL](https://github.com/openglonmetal/MGL) (OpenGL 4.6 → Metal): an offscreen GL 4.6 render runs on the GPU and reads back correct (confirmed; `MTLIGAccelDevice Intel(R) TGL`, pixel `0 128 255 255`, `glGetError 0`). Five patches to MGL in `tools/mgl-build.sh`; probe in `tools/mgl-test.sh`. Per-app (link `libmgl`/`libglfw`), offscreen confirmed, no geometry shaders; native system GL still software. See [OPENGL.md](OPENGL.md) |
 | 2026-10-30 | `tools/emulador-android.sh`: guest-kernel params `clearcpuid=waitpkg,rdpid nopku` for the Android emulator (TPAUSE panic, then PKU/PKRU xstate hang), the renderer back to automatic, `fastboot.forceColdBoot=yes` and the quickboot snapshot removed whole (quickboot never loaded here), `testar` with the guest kernel log; boots Android init, not to the UI yet |
 | 2026-10-30 | NootedGreen XE-HDMI13 (`ngreenhdmilight=2`): external HDMI works, 1920×1080 at 60 Hz through Apple's `LightUpTMDS` (opt-in) |
 | 2026-10-30 | VostroXe: the Vostro work in its own repository, on top of the base project at 6f03560 |
