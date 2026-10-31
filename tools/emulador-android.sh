@@ -32,6 +32,7 @@
 #        zsh tools/emulador-android.sh desfazer [AVD ...]
 #        zsh tools/emulador-android.sh boot-frio [AVD ...]  (só tira o snapshot de boot rápido)
 #        zsh tools/emulador-android.sh testar [AVD] [log]   (boot a frio, com o log do kernel do Android em log)
+#        zsh tools/emulador-android.sh testar-gpu [AVD] [icd] (boot a frio tentando a GPU: Vulkan por MoltenVK/Metal)
 # Feche o emulador antes. Rode o corrigir de novo para cada AVD novo.
 # Backups: ~/Library/Application Support/xe-emulador/<data-hora>/<AVD>/ (config.ini, AVD.conf, snapshot, discos).
 set -euo pipefail
@@ -254,6 +255,40 @@ test_boot() {     # testar: boot a frio sem carregar nem salvar snapshot, com o 
   return 0
 }
 
+test_gpu() {      # testar-gpu: como testar, mas força o Vulkan por um ICD de hardware (MoltenVK = Metal) em vez do SwiftShader
+  need_closed    # o emulador moderno (gfxstream) renderiza por Vulkan; no automático escolhe o SwiftShader (CPU).
+  [[ -x $EMU ]] || { echo "emulador não encontrado: $EMU"; exit 1; }
+  local -a names; names=(${(f)"$(avd_names)"})
+  (( ${#names} )) || { echo "nenhum AVD em $AVDROOT"; exit 1; }
+  local n=${1:-${names[1]}} icd=${2:-moltenvk} gpumode=${3:-host} d kp log icdjson
+  d=$(avd_dir "$n") || { echo "$n: AVD não encontrado. AVDs: ${(j:, :)names}"; exit 1; }
+  kp=$(cfg_get "$d/config.ini" kernel.parameters)
+  if [[ $(with_fix "$kp") != "$kp" ]]; then
+    echo "$n: falta a correção da tela preta; rode antes:  zsh ${(q)SELF} corrigir"
+    exit 1
+  fi
+  case $icd in
+    moltenvk)    icdjson="$SDK/emulator/lib64/vulkan/MoltenVK_icd.json";;
+    swiftshader) icdjson="$SDK/emulator/lib64/vulkan/vk_swiftshader_icd.json";;
+    lavapipe)    icdjson="$SDK/emulator/lib64/vulkan/lvp_icd.json";;
+    *)           icdjson="";;
+  esac
+  [[ -z $icdjson || -f $icdjson ]] || echo "   aviso: não achei $icdjson (o ICD $icd pode não existir neste SDK)"
+  echo "$n:"
+  drop_quickboot "$d" "$BKROOT/$(date +%Y%m%d-%H%M%S)/$n" || true
+  mkdir -p "$LOGROOT"
+  log="$LOGROOT/$n-gpu-$icd-$(date +%Y%m%d-%H%M%S).txt"
+  echo "abrindo o emulador pela GPU: ANDROID_EMU_VK_ICD=$icd, -gpu $gpumode (Vulkan -> Metal)"
+  echo "   log em: $log"
+  echo "espere até 5 minutos pelo logo do Android; depois feche a janela do emulador"
+  ANDROID_EMU_VK_ICD=$icd "$EMU" -avd "$n" -gpu "$gpumode" -no-snapshot-load -no-snapshot-save -show-kernel > "$log" 2>&1 || true
+  echo "emulador fechado; log: $log ($(wc -l < "$log" | tr -d ' ') linhas)"
+  echo "== renderizador escolhido (queremos ver o device da Iris Xe/Metal, não 'SwiftShader'):"
+  grep -a -m14 -E "Graphics backend|vulkan_mode_selected|initIcdPaths|ICD set to|Selecting Vulkan device|GPU Renderer|GPU Version|MoltenVK|\[mvk|Metal device|Could not|failed" \
+    "$log" | cut -c1-200 || true
+  return 0
+}
+
 status() {
   local l7 adb n d cfg kp gl hq ok sn missing=0 half=0
   local -a q
@@ -320,5 +355,6 @@ case ${1:-status} in
   corrigir|desfazer) change "$@";;
   boot-frio) shift; cold "$@";;
   testar) shift; test_boot "$@";;
+  testar-gpu|gpu) shift; test_gpu "$@";;
   *) sed -n '/^# Uso:/,/^# Backups:/p' "$0" | sed 's/^# \{0,1\}//'; exit 1;;
 esac
