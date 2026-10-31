@@ -42,7 +42,7 @@ int main(void){
     GLenum e=glGetError(); int c=((h/2)*w+(w/2))*4;
     printf("pixel central RGBA = %u %u %u %u  (clear azul: espero ~0 128 255 255, ou 255 128 0 255 se BGRA)\n", px[c],px[c+1],px[c+2],px[c+3]);
     printf("glGetError = 0x%x\n", e);
-    int ok = (px[c+1]>=90 && px[c+1]<=170) && ((px[c]<80 && px[c+2]>190) || (px[c]>190 && px[c+2]<80));
+    int ok = (px[c+1]>=105 && px[c+1]<=150) && ((px[c]<60 && px[c+2]>200) || (px[c]>200 && px[c+2]<60));
     printf(ok ? ">>> RENDER OK NA GPU: o clear foi desenhado num FBO e lido de volta pelo Metal (Iris Xe).\n"
              : ">>> o pixel nao bateu; me mande o log (pode ser detalhe de cobertura do MGL).\n");
     return 0;

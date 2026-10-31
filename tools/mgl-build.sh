@@ -93,6 +93,17 @@ err=0
     echo "== patch VostroXe readback: já aplicado"
   fi
 
+  # ---- patch VostroXe E: num FBO, o loop por-anexo usa fboa->clear_bitmask (mecanismo do glClearBufferfv)
+  #      e no else força loadAction=Load, IGNORANDO o glClear GLOBAL (clear_bitmask + color_clear_value).
+  #      Efeito: glClear(GL_COLOR_BUFFER_BIT) não limpa um FBO ligado. Aqui o else passa a honrar o glClear global.
+  if ! grep -q 'VostroXe: honor global glClear on FBO' "$RF"; then
+    echo "== patch VostroXe: honrar glClear global nos anexos do FBO ($RF)"
+    perl -0777 -i -pe 's!\} else \{\s*_renderPassDescriptor\.colorAttachments\[i\]\.loadAction = MTLLoadActionLoad;\s*\}!} else if (ctx->state.clear_bitmask \& GL_COLOR_BUFFER_BIT) { _renderPassDescriptor.colorAttachments[i].clearColor = MTLClearColorMake(STATE(color_clear_value[0]), STATE(color_clear_value[1]), STATE(color_clear_value[2]), STATE(color_clear_value[3])); _renderPassDescriptor.colorAttachments[i].loadAction = MTLLoadActionClear; /* VostroXe: honor global glClear on FBO */ } else { _renderPassDescriptor.colorAttachments[i].loadAction = MTLLoadActionLoad; }!s' "$RF"
+    grep -q 'VostroXe: honor global glClear on FBO' "$RF" && echo "   patch clear-FBO aplicado" || { echo "   AVISO: nao aplicou"; err=1; }
+  else
+    echo "== patch VostroXe clear-FBO: já aplicado"
+  fi
+
   # ---- MGL ----
   echo "== compilando o MGL (make) — log em mgl-make-log.txt"
   make > "$MAKELOG" 2>&1; echo "   make rc=$? ; últimas linhas:"; tail -25 "$MAKELOG"
