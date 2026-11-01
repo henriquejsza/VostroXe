@@ -67,6 +67,14 @@ class DYLDPatches {
     mach_vm_address_t orgCsValidatePage {0};
     static void wrapCsValidatePage(vnode *vp, memory_object_t pager, memory_object_offset_t page_offset,
         const void *data, int *validated_p, int *tainted_p, int *nx_p);
+
+    // XE-LV (opt-in, ngreenlv=1): library-validation-only exemption so amfi_get_out_of_my_way=1 can be
+    // dropped. AMFI's LV hook consults cs_require_lv()/cs_system_require_lv(); routing both to 0 means LV
+    // is never required, while AMFI keeps labeling processes (so tccd resumes prompting third-party apps).
+    mach_vm_address_t orgCsRequireLv {0};
+    static int wrapCsRequireLv(void *proc);
+    mach_vm_address_t orgCsSystemRequireLv {0};
+    static int wrapCsSystemRequireLv();
 };
 
 //! VideoToolbox DRM model check

@@ -10,6 +10,13 @@
 DYLDPatches *DYLDPatches::callback = nullptr;
 void DYLDPatches::init() { callback = this; }
 
+// XE-LV: make library validation never required. cs_require_lv(proc) and cs_system_require_lv() are the
+// two kernel predicates AMFI's library-validation hook consults. Returning 0 from both disables LV
+// system-wide while leaving the rest of AMFI (platform-binary labeling, entitlement checks, per-page
+// cdhash validation via cs_validate_page) intact — so tccd keeps prompting third-party apps normally.
+int DYLDPatches::wrapCsRequireLv(void *proc) { (void)proc; return 0; }
+int DYLDPatches::wrapCsSystemRequireLv() { return 0; }
+
 static bool shouldForceFullMetalPath() {
 	int enabled = 0;
 	if (PE_parse_boot_argn("ngreenfullmtldyld", &enabled, sizeof(enabled))) {
@@ -25,6 +32,16 @@ static bool shouldForceFullMetalPath() {
 	return checkKernelArgument("-ngreenfullmtl");
 }
 
+// XE-LV opt-in: ngreenlv=1 (or -ngreenlv) disables library validation in NootedGreen so the config can
+// drop amfi_get_out_of_my_way=1 and get native TCC prompts back. Off by default.
+static bool shouldDisableLibraryValidation() {
+	int enabled = 0;
+	if (PE_parse_boot_argn("ngreenlv", &enabled, sizeof(enabled))) {
+		return enabled != 0;
+	}
+	return checkKernelArgument("-ngreenlv");
+}
+
 void DYLDPatches::processPatcher(KernelPatcher &patcher) {
 
     auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
@@ -38,6 +55,26 @@ void DYLDPatches::processPatcher(KernelPatcher &patcher) {
 
     SYSLOG_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, &request, 1), "DYLD",
         "Failed to route kernel symbols");
+
+    // ── XE-LV (opt-in, ngreenlv=1) ──────────────────────────────────────────────────────────────────
+    // Drop amfi_get_out_of_my_way=1 and disable ONLY library validation here, so the ad-hoc-signed GPU
+    // bundle still maps into WindowServer / MTLCompilerService / third-party Metal apps, while AMFI keeps
+    // labeling processes — which is what makes tccd prompt again for microphone/camera/screen. AMFI's LV
+    // hook (AppleSystemPolicy::fileCheckLibraryValidation) consults cs_require_lv()/cs_system_require_lv();
+    // routing both to 0 makes LV never required, system-wide. Per-page cdhash validation (cs_validate_page)
+    // is untouched, so the bundle's own ad-hoc signature is still checked.
+    if (shouldDisableLibraryValidation()) {
+        KernelPatcher::RouteRequest lvReqs[] = {
+            {"_cs_require_lv", wrapCsRequireLv, this->orgCsRequireLv},
+            {"_cs_system_require_lv", wrapCsSystemRequireLv, this->orgCsSystemRequireLv},
+        };
+        if (patcher.routeMultipleLong(KernelPatcher::KernelID, lvReqs, arrsize(lvReqs))) {
+            SYSLOG("DYLD", "XE-LV: library validation disabled (cs_require_lv/cs_system_require_lv -> 0); AMFI labeling intact");
+        } else {
+            SYSLOG("DYLD", "XE-LV: failed to route LV symbols (err %d)", patcher.getError());
+            patcher.clearError();
+        }
+    }
 }
 
 void DYLDPatches::wrapCsValidatePage(vnode *vp, memory_object_t pager, memory_object_offset_t page_offset,
