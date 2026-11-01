@@ -104,7 +104,7 @@ tools/hdmi-flags.sh      switches the HDMI experiment boot-args
 tools/diagnostics/       hdmi-diag.sh, i915-regdump.py (Linux) and the base project's GPU test programs
 tools/tcc-permitir.sh    privacy permissions that amfi_get_out_of_my_way=1 blocks
 tools/emulador-android.sh  Android emulator fix for x86_64 AVDs (guest kernel parameter)
-tools/mgl-build.sh       builds src/MGL; mgl-test.sh and mgl-triangle.sh check OpenGL on the GPU
+tools/mgl-build.sh       builds src/MGL; mgl-test.sh, mgl-triangle.sh and mgl-window.sh check OpenGL on the GPU
 docs/VOSTRO.md           this laptop: hardware, EFI, patches, known issues, changes
 docs/HDMI.md             the HDMI work
 docs/EMULATOR.md         the Android emulator

@@ -5,8 +5,9 @@ Renderer** (GL 4.1, CPU). This page is the work to get **hardware-accelerated Op
 [MGL](https://github.com/openglonmetal/MGL), which implements OpenGL 4.6 directly on Metal. MGL is kept in this
 repository, with the fixes it needs here, as `src/MGL`.
 
-> **Confirmed on the Vostro 3520, 2026-10-31.** Offscreen OpenGL 4.6 runs on the GPU: a clear and an RGB-triangle
-> shader draw both render on the Iris Xe and read back correct. It is **not** system-wide GL: an app has to be built
+> **Confirmed on the Vostro 3520.** OpenGL 4.6 runs on the GPU offscreen (31 Oct, Tahoe 26.7.1: a clear and an
+> RGB-triangle shader draw render on the Iris Xe and read back correct) and in a window on the screen (1 Nov,
+> Sequoia 15.8.2: a GLFW window draws the triangle at 59 fps). It is **not** system-wide GL: an app has to be built
 > against MGL. See the scope notes at the end.
 
 ## Why not native GL, Vulkan or Zink
@@ -51,6 +52,25 @@ toolchain), vertex buffers, a draw call, rasterisation and colour interpolation.
 (`mgl-triangulo.bmp`) is a red/green/blue gradient triangle. MGL reads an FBO top-origin (Metal's convention), so
 the probe flips the image vertically to GL's bottom-origin orientation.
 
+A third test (`tools/mgl-window.sh`) works the way an app does: it uses only GLFW and standard OpenGL, links MGL's
+`libglfw.dylib` and `libmgl.dylib`, asks for a 4.6 core context (MGL's GLFW refuses anything lower), opens a
+480×360 window and draws the same triangle over a pulsing background for 6 s with `glfwSwapBuffers`. On Sequoia
+15.8.2 (1 Nov):
+
+```
+GLFW plataforma = 0x00060002 (Cocoa, janela de verdade)
+glfwCreateWindow: OK
+GL_RENDERER : MGL  |  GL_VERSION : 4.6.0
+glGetString pela GLFW (glfwGetProcAddress) vem de: ~/VostroXe-MGL/build/libmgl.dylib
+quadros: 354 em 6.0 s = 59 por segundo (quadro mais lento: 148 ms); primeiro glGetError != 0: 0x0
+```
+
+The user saw the triangle drawn in the window. In MGL's own log the window's renderer runs on `Intel(R) TGL`, 355
+drawables are presented at 480×360 (the window's size; the extra one is the clear GLFW presents when it creates the
+context) and there is no error or warning line. Only the start is slow: 0.86 s from creating the context to the
+first frame, most of it compiling the two shaders for Metal, then one frame of 121 ms. After that a frame was
+presented every 16–17 ms (slowest 27 ms).
+
 ## The MGL source: `src/MGL`
 
 MGL is kept in this repository as `src/MGL`: upstream commit `de0ded04` (Apache-2.0), without its Xcode project,
@@ -68,6 +88,7 @@ launchers, or from a Terminal:
 zsh tools/mgl-build.sh     # COMPILAR-MGL.command   — builds src/MGL: libmgl.dylib, libmgl_es.dylib, libglfw.dylib
 zsh tools/mgl-test.sh      # TESTAR-MGL.command     — the offscreen clear+readback GPU probe above
 zsh tools/mgl-triangle.sh  # TRIANGULO-MGL.command  — the RGB-triangle shader demo, writes mgl-triangulo.bmp
+zsh tools/mgl-window.sh    # JANELA-MGL.command     — the window test: the triangle in a GLFW window for ~6 s
 ```
 
 In a VostroXe checkout, `mgl-build.sh` builds `src/MGL` in place (products in `src/MGL/build/`). On the USB stick it
@@ -75,7 +96,9 @@ uses `mgl-src.tar.gz`, an archive of `src/MGL` made with
 `git archive --format=tar.gz --add-virtual-file=.vostroxe-commit:$(git rev-parse HEAD) -o mgl-src.tar.gz HEAD:src/MGL`,
 and copies it to `~/VostroXe-MGL`, replacing only the files that changed so `make` rebuilds only those. The
 dependencies are built once, which needs internet; later builds reuse them, including the ones an earlier version of
-the script built under `~/MGL/external`. The probes link `libmgl.dylib` alone, as an app would.
+the script built under `~/MGL/external`. The first build with nothing cached (Sequoia 15.8.2, 1 Nov: the dependencies
+downloaded and built, and a standalone cmake downloaded) took 21 minutes. The offscreen probes link `libmgl.dylib`
+alone and the window test links `libglfw.dylib` and `libmgl.dylib`, as an app would.
 
 ## The six fixes to MGL
 
@@ -90,9 +113,10 @@ MGL as published does not run on this machine. These are the changes in `src/MGL
 | E | `e391506` | `MGL/src/MGLRenderer.m` | Honour a global `glClear` on FBO attachments. The per-attachment loop only cleared when the `glClearBufferfv` bitmask was set and forced `loadAction = Load` otherwise, so a plain `glClear(GL_COLOR_BUFFER_BIT)` never cleared a bound FBO. |
 | F | `fd69261` | `MGL/src/MGLRenderer.m` | Raise MGL's pointer "safety" ceilings. It rejected context, device and framebuffer pointers above `0x100000000000` (~17 TB, 12 checks) and, in one check, above `0x100000000` (4 GB). macOS x86_64 pointers sit just below 2^47 (~140 TB), above both, so `glDrawArrays` aborted ("Invalid GLM context", then "Invalid framebuffer pointer"). Every check now uses `0x800000000000` (2^47). |
 
-Fix A gets MGL past startup; C, D and E make an offscreen FBO clear, draw and read back; F lets draw calls run at all
-on macOS pointers. Until 31 Oct the build script applied these with `perl` to a clone of MGL; the commits are, token
-for token (comments and whitespace aside), the patched sources that passed the GPU tests above.
+Fix A gets MGL past startup; B exports the GL entry points that apps and MGL's GLFW look up; C, D and E make an
+offscreen FBO clear, draw and read back; F lets draw calls run at all on macOS pointers. Until 31 Oct the build
+script applied these with `perl` to a clone of MGL; the commits are, token for token (comments and whitespace
+aside), the patched sources that passed the GPU tests above.
 
 ## Scope and honest limits
 
@@ -103,10 +127,15 @@ for token (comments and whitespace aside), the patched sources that passed the G
   read-back pixel, not the renderer string.
 - **Coverage is partial** (MGL is not a conformant GL): vertex/fragment/compute shaders, buffers, textures, FBOs,
   most draw calls, instancing. **No geometry shaders and no `double` in shaders** (Metal limits).
-- **Confirmed path is offscreen (FBO): clear, shader draw and readback.** A GL 4.6 clear and an RGB-triangle shader
-  draw both render on the GPU and read back correct. MGL's windowed path (its modified GLFW, `glfwCreateWindow`) did
-  not create a window from a plain command-line binary here (it fell back to a headless renderer and returned NULL);
-  that is the open item for driving an on-screen GL app.
+- **Confirmed offscreen (FBO) and in a window on the screen**, each with a vertex+fragment shader draw. The first
+  window try (31 Oct) got NULL from `glfwCreateWindow`, most likely because `libmgl.dylib` did not export its `gl*`
+  functions yet (fix B): MGL's GLFW looks them up in that library, and the lookup then reached Apple's `glGetString`
+  through libmgl's link to OpenGL.framework, which gives no version string without a CGL context. The log line
+  `MGL: Initialized headless Metal renderer` is not a fallback: a constructor in `libmgl` (`MGL/src/glm_context.c`,
+  which its comment ties to QEMU) creates that renderer when the library loads, in every program, before `main()`.
+  A window's context then creates its own renderer.
+- **Each test ran on one macOS:** offscreen on Tahoe 26.7.1, the window on Sequoia 15.8.2. The window has not run
+  on Tahoe with the current build.
 - **FBO readback is top-origin** (Metal's texture convention), the opposite of GL's bottom-origin; a consumer that
   reads an FBO (screenshots, `glReadPixels`) must flip, as the triangle demo does.
 - The Android emulator's slow GL is a **separate** problem (its own ANGLE/gfxstream, not this stack);
@@ -114,6 +143,7 @@ for token (comments and whitespace aside), the patched sources that passed the G
 
 ## Next
 
-- Drive a real on-screen GL app through MGL's `libglfw.dylib` (link or `DYLD_INSERT_LIBRARIES`), which means solving
-  the windowed `glfwCreateWindow` path (app-bundle / window-server context).
+- Drive a real GL app through MGL's `libglfw.dylib` (link or `DYLD_INSERT_LIBRARIES`); the window path now works
+  from a plain command-line binary.
+- Run the window test on Tahoe 26.7.1.
 - Measure performance against the Apple Software Renderer on a non-trivial scene.

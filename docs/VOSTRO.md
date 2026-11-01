@@ -133,8 +133,8 @@ Boot-args: `-cs8409off` (do not touch the hardware), `cs8409lingerms`, `cs8409ca
 - **Minecraft Launcher** 2.6.12 crashes at start (4 crash reports, 29–30 Oct): `EXC_BAD_ACCESS` in `strlen()`
   called from `mojang::platform::getOpenGLVersion()`, so the OpenGL version string it read was null. The system
   OpenGL here has no hardware renderer, only the Apple Software Renderer ([EMULATOR.md](EMULATOR.md#fix), limits).
-  Hardware OpenGL on the GPU is available **per-app** through MGL (OpenGL 4.6 → Metal), confirmed offscreen; it does
-  not change what the stock Launcher sees. See [OPENGL.md](OPENGL.md).
+  Hardware OpenGL on the GPU is available **per-app** through MGL (OpenGL 4.6 → Metal), confirmed offscreen and in a
+  window on the screen; it does not change what the stock Launcher sees. See [OPENGL.md](OPENGL.md).
 
 ## Keeping up with the base project
 
@@ -154,6 +154,7 @@ and merge `kern_gen11.cpp` by hand. Then rebuild with `zsh install.sh` and check
 
 | Date | Change |
 |---|---|
+| 2026-11-01 | Hardware OpenGL in a window on the screen: `tools/mgl-window.sh` (`JANELA-MGL.command`) opens a window through MGL's GLFW (`libglfw.dylib` + `libmgl.dylib`) and draws the RGB triangle with a GL 4.6 core context on the Iris Xe, 354 frames in 6 s with no GL error; the user saw the triangle. Built and run on Sequoia 15.8.2; the NULL window of 31 Oct was most likely `libmgl` without its `gl*` exports (fix B). See [OPENGL.md](OPENGL.md) |
 | 2026-11-01 | Sequoia: native privacy prompts with the acceleration on. NootedGreen `ngreenlv=1` routes `cs_require_lv` and `cs_system_require_lv` to 0, so `amfi_get_out_of_my_way=1` is no longer needed (`config-seq-lv`); third-party apps get the system's microphone and camera prompts again |
 | 2026-11-01 | macOS Sequoia 15.8.2 (24H232): accelerated desktop on the Iris Xe. libxedrv v21 knows Sequoia's pipeline-descriptor layout (the first boot's black screen was the driver reading it in Tahoe's); WindowServer's pipelines run on the GPU, with no crash report. Notes in [SEQUOIA.md](SEQUOIA.md) |
 | 2026-10-31 | Hardware OpenGL on the Iris Xe via [MGL](https://github.com/openglonmetal/MGL) (OpenGL 4.6 → Metal): offscreen GL 4.6 runs on the GPU — a clear (`pixel 0 128 255 255`, `glGetError 0`) and an RGB-triangle shader draw (GLSL→Metal + VBO/VAO + `glDrawArrays`) both render on `MTLIGAccelDevice Intel(R) TGL` and read back correct. MGL is kept in `src/MGL` (upstream `de0ded04`) with six fixes as commits, built by `tools/mgl-build.sh`; probes in `tools/mgl-test.sh` and `tools/mgl-triangle.sh`. Per-app (link `libmgl`/`libglfw`), offscreen confirmed, no geometry shaders; native system GL still software. See [OPENGL.md](OPENGL.md) |

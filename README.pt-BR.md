@@ -105,7 +105,7 @@ tools/hdmi-flags.sh      troca os boot-args dos experimentos de HDMI
 tools/diagnostics/       hdmi-diag.sh, i915-regdump.py (Linux) e os programas de teste de GPU do projeto base
 tools/tcc-permitir.sh    permissões de privacidade que o amfi_get_out_of_my_way=1 bloqueia
 tools/emulador-android.sh  correção do emulador do Android para AVDs x86_64 (parâmetro do kernel do guest)
-tools/mgl-build.sh       compila o src/MGL; mgl-test.sh e mgl-triangle.sh testam o OpenGL na GPU
+tools/mgl-build.sh       compila o src/MGL; mgl-test.sh, mgl-triangle.sh e mgl-window.sh testam o OpenGL na GPU
 docs/VOSTRO.md           este notebook: hardware, EFI, patches, problemas conhecidos, mudanças
 docs/HDMI.md             o trabalho no HDMI
 docs/EMULATOR.md         o emulador do Android
