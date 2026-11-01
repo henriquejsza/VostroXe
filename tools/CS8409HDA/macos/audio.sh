@@ -1,6 +1,6 @@
 #!/bin/zsh
-# Internal audio of the Dell Vostro 3520 on macOS Tahoe (speakers + internal microphone): the CS8409HDA kext (Intel HDA
-# controller 8086:51C8 + Cirrus CS8409) and the XeSpeakers HAL plug-in. Run it on macOS, from a clone of this
+# Internal audio of the Dell Vostro 3520 on macOS Tahoe and Sequoia (speakers + internal microphone): the CS8409HDA kext
+# (Intel HDA controller 8086:51C8 + Cirrus CS8409) and the XeSpeakers HAL plug-in. Run it on macOS, from a clone of this
 # repository on an APFS disk:
 #
 #   zsh tools/CS8409HDA/macos/audio.sh           build CS8409HDA.kext, cs8409ctl and XeSpeakers.driver (no install)

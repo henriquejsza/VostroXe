@@ -1,5 +1,10 @@
 // CS8409HDA: internal speakers and microphone of the Dell Vostro 3520 on macOS (no AppleHDA in Tahoe).
 //
+// Sequoia still ships AppleHDA, and AppleHDAController matches every HDA controller by PCI class (0x0401&0xFFFD,
+// which takes 0x0403). The personality is therefore in the default match category with IOProbeScore 1000: this kext
+// is injected by OpenCore and matches first, and IOKit then gives the controller no second driver. In its own
+// category (the first version) both drivers attached and both would program the controller.
+//
 // Hardware: Intel Alder Lake-P HD Audio controller 8086:51C8 in legacy HDA mode, Cirrus Logic CS8409 bridge at
 // codec address 0 (subsystem 1028:0B94, "Warlock MLK" in Linux): speakers on its ASP2 behind a TI amplifier
 // (enable = CS8409 GPIO1), digital microphones on DMIC1, headset through a CS42L42 (not used yet).

@@ -26,10 +26,10 @@
 			<string>local.xe.CS8409HDA</string>
 			<key>IOClass</key>
 			<string>CS8409HDA</string>
-			<key>IOMatchCategory</key>
-			<string>CS8409HDA</string>
 			<key>IOPCIMatch</key>
 			<string>0x51c88086</string>
+			<key>IOProbeScore</key>
+			<integer>1000</integer>
 			<key>IOProviderClass</key>
 			<string>IOPCIDevice</string>
 		</dict>
