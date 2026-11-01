@@ -111,6 +111,34 @@ Logs of the boots after `ATUALIZAR-SEQUOIA` (decoded from Linux):
   revoke per app with `tools/tcc-permitir.sh` (or the `tools/PERMISSOES.command` launcher); after a grant the app is
   listed in Settings › Privacy & Security to toggle. This is the known trade-off (EXPERIMENTS.md #9).
 
+## Native TCC prompts without losing acceleration — library-validation exemption (in test)
+
+The privacy trade-off above is not fundamental. `amfi_get_out_of_my_way=1` disables *all* of AMFI; the only
+thing the ad-hoc GPU bundle actually needs is for **library validation** not to reject it (EXPERIMENTS.md #9:
+the failure was `Library Validation failed … mapping process is a platform binary`). Disabling only library
+validation — leaving the rest of AMFI (platform-binary labelling, entitlement checks) in place — lets the
+bundle load *and* lets tccd keep prompting third-party apps. OpenCore Legacy Patcher dropped the same
+boot-arg this way (dortania/OpenCore-Legacy-Patcher #380 is the identical symptom, #497 the fix).
+
+Evidence from the 24H232 x86_64 kernel (read-only, from Linux): AMFI's LV hook
+(`AppleSystemPolicy::fileCheckLibraryValidation` → `library_validation(...)`) imports and calls
+`cs_require_lv` and `cs_system_require_lv`. `cs_require_lv` returns 1 when `cs_library_val_enable != 0` **or**
+the process has `CS_REQUIRE_LV` (0x2000) — which hardened third-party apps (Chrome/Discord) carry — so
+patching the global alone is not enough; the function must be routed.
+
+Patch (NootedGreen, commit 7b5c45e): opt-in boot-arg `ngreenlv=1`. `DYLDPatches::processPatcher` routes
+`_cs_require_lv` and `_cs_system_require_lv` (KernelID, `routeMultipleLong`) to return 0, so library
+validation is never required. Per-page cdhash validation (`cs_validate_page`) is untouched, so the bundle's
+own ad-hoc signature is still checked. Off by default; the daily `config-seq-hdmi` is unchanged. The source
+change compiles clean against MacKernelSDK + Lilu 1.7.2 (`clang -fsyntax-only`, Darwin target, from Linux).
+
+Test (USB, reversible): `TESTAR-LV.command` builds the patched NootedGreen, installs it on the SSD EFI
+(backup `NootedGreen.kext.lvbak`) and switches to `config-seq-lv.plist` — identical to `config-seq-hdmi` but
+with `amfi_get_out_of_my_way=1` replaced by `ngreenlv=1` (ocvalidate clean). `REVERTER-LV.command` restores
+`config-seq-hdmi` and the old kext; Linux stays in the OpenCore picker as the safe path. To confirm:
+acceleration still loads in WindowServer **and** in a third-party Metal app, and a native microphone prompt
+appears for a third-party app (no `tools/tcc-permitir.sh`). **Not yet confirmed on hardware.**
+
 ## Stability (1 Nov): stutters and one freeze
 
 A ~57-minute session (Discord, Spotify, Chrome, Geekbench) stuttered. The unified log of that boot, decoded from
