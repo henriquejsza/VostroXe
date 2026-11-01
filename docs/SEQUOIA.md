@@ -89,6 +89,28 @@ sound device) and can grant the microphone to Google Chrome with `tcc-permitir.s
 Every boot of 1 Nov left a `shutdown_stall` report, in spindump's binary format (`spindump -i` decodes it on macOS);
 not looked into yet.
 
+## Stability fix verified + audio and privacy (1 Nov, later)
+
+Logs of the boots after `ATUALIZAR-SEQUOIA` (decoded from Linux):
+
+- **Shader fix works.** The installed `xe.bundle` carries the `XE_LOG` gate (`libLLVMbridge.dylib`,
+  `libMTLIGCCompilerPlugin.dylib`); 976 compiles in the session with **zero contained failures** and no 250 ms
+  sleeps (the ~70 `xe-dump` lines left are the once-per-process `hwinfo` dump, harmless). The user confirmed the
+  hitches are gone. The ~260 ms per compile remains — it is the 2020 IGC itself — and the per-app shader cache warms
+  it down on repeat launches.
+- **Audio works; the controller race is resolved.** Apple still ships AppleHDA on Sequoia, and on the 1 Nov 01:20
+  boot (before the match-category fix) AppleHDAController did attach to the 51C8 controller. Since the fix
+  (`IOProbeScore` 1000, default category) only CS8409HDA attaches: both post-fix boots logged
+  `XeSpeakers: hardware READY (bring-up 7 ms)`, "Alto-falantes internos"/"Microfone interno" activated as the
+  defaults, and OBS opened the internal mic. Any sound loss during the update was transient; a reboot or re-picking
+  the output in Settings restores it.
+- **Privacy prompts: native auto-prompt can't appear while acceleration is on.** `amfi_get_out_of_my_way=1` is
+  required to load the ad-hoc-signed driver, and it makes tccd treat third-party apps as platform binaries:
+  the log shows `Policy disallows prompt … is Platform Binary` (OBS, Discord, Chrome microphone requests).
+  The mic/camera are real system devices and work; only the first-time permission prompt is suppressed. Grant or
+  revoke per app with `tools/tcc-permitir.sh` (or the `tools/PERMISSOES.command` launcher); after a grant the app is
+  listed in Settings › Privacy & Security to toggle. This is the known trade-off (EXPERIMENTS.md #9).
+
 ## Stability (1 Nov): stutters and one freeze
 
 A ~57-minute session (Discord, Spotify, Chrome, Geekbench) stuttered. The unified log of that boot, decoded from
