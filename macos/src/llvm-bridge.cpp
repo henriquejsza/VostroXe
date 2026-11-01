@@ -17,6 +17,8 @@ static void* L() {
   return h;
 }
 template <class F> static F sym(const char* n) { void* p = dlsym(L(), n+1); if (!p) syslog(LOG_ERR, "xe-bridge: FALTA %s", n); return (F)p; }
+static int xe_log_on() { static int v = -1; if (v < 0) v = getenv("XE_LOG") ? 1 : 0; return v; }  // v2: log por compilação só com XE_LOG=1
+#define XLOG(...) do { if (xe_log_on()) syslog(LOG_ERR, __VA_ARGS__); } while (0)
 
 // 1) WriteBitcodeToFile(const Module*, ...) -> (const Module&, ...), com log
 extern "C" void* xe_wbf;
@@ -71,7 +73,7 @@ extern "C" void xe_wbf_impl(void* m, void* os, bool a, const void* idx, bool b, 
     void* obj = nullptr; ((GSM)gsm)(&obj, m, 3902);
     if (obj) {
       char* bg = *(char**)((char*)obj + 8); char* en = *(char**)((char*)obj + 0x10);
-      syslog(LOG_ERR, "xe-bridge: WriteBitcodeToFile module=%p -> %zu bytes (formato 3902 via MTLCompiler)", m, (size_t)(en - bg));
+      XLOG( "xe-bridge: WriteBitcodeToFile module=%p -> %zu bytes (formato 3902 via MTLCompiler)", m, (size_t)(en - bg));
       if (dst) dst->append(bg, en - bg);
       void** vt = *(void***)obj; ((void (*)(void*))vt[1])(obj);
       return;
@@ -79,7 +81,7 @@ extern "C" void xe_wbf_impl(void* m, void* os, bool a, const void* idx, bool b, 
   }
   void* buf = LLVMWriteBitcodeToMemoryBuffer(m);
   size_t n = buf ? LLVMGetBufferSize(buf) : 0;
-  syslog(LOG_ERR, "xe-bridge: WriteBitcodeToFile module=%p -> %zu bytes (dst=%p, API C)", m, n, (void*)dst);
+  XLOG( "xe-bridge: WriteBitcodeToFile module=%p -> %zu bytes (dst=%p, API C)", m, n, (void*)dst);
   if (buf && dst) dst->append(LLVMGetBufferStart(buf), n);
   if (buf) LLVMDisposeMemoryBuffer(buf);
 }
@@ -100,7 +102,7 @@ extern "C" void* xe_parseIRFile(StringRef f, void* diag, void* ctx, bool) {
   typedef void* (*Fn)(StringRef, void*, void*, FuncRef);
   static Fn fn = sym<Fn>("__ZN4llvm11parseIRFileENS_9StringRefERNS_12SMDiagnosticERNS_11LLVMContextENS_12function_refIFNS_8OptionalINSt3__112basic_stringIcNS7_11char_traitsIcEENS7_9allocatorIcEEEEEES0_EEE");
   void* r = fn ? fn(f, diag, ctx, FuncRef{xe_dl_cb, 0}) : nullptr;
-  syslog(LOG_ERR, "xe-bridge: parseIRFile(%.*s) -> %p", (int)f.n, f.p, r);
+  XLOG( "xe-bridge: parseIRFile(%.*s) -> %p", (int)f.n, f.p, r);
   return r;
 }
 __asm__(".globl __ZN4llvm11parseIRFileENS_9StringRefERNS_12SMDiagnosticERNS_11LLVMContextEb\n__ZN4llvm11parseIRFileENS_9StringRefERNS_12SMDiagnosticERNS_11LLVMContextEb:\n  jmp _xe_parseIRFile\n");

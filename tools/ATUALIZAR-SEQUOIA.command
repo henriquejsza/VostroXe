@@ -44,6 +44,12 @@ echo "== 4/4 instalando o driver Metal corrigido em /Library/GPUBundles"
 G=/Library/GPUBundles/AppleIntelTGLGraphicsMTLDriver.bundle
 sudo rm -rf "$G" && sudo ditto "$B" "$G" && sudo chown -R root:wheel "$G" || { echo "falha ao instalar"; exit 1; }
 echo "   libxedrv md5 $(md5 -q "$G/Contents/MacOS/libxedrv.dylib")"
+# compilador de shaders (xe.bundle): sem reinstalar, a correção do adaptador (sem o usleep de 250 ms e sem os dumps) não chega
+XE=$DEST/macos/out/xe.bundle
+if [[ -d $XE ]]; then
+  sudo rm -rf /System/Library/Caches/xe.bundle && sudo ditto "$XE" /System/Library/Caches/xe.bundle && sudo chown -R root:wheel /System/Library/Caches/xe.bundle &&
+    echo "   xe.bundle reinstalado em /System/Library/Caches" || echo "   AVISO: não reinstalei o xe.bundle (o som/vídeo seguem; só o compilador fica o antigo)"
+fi
 echo "== ligando a config acelerada no EFI do SSD"
 M=/tmp/xe-esp; mkdir -p $M; ok=0
 for p in $(diskutil list | awk '/ EFI / {print $NF}'); do

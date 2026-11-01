@@ -22,6 +22,11 @@ int   LLVMParseBitcodeInContext2(void*, void*, void**);
 }
 
 static int g_dumps = 0;
+// v2 (01/11): logging de depuração (dumps base64 + o usleep de 250 ms que os acompanha) só com XE_LOG=1.
+// Sem isso, cada uma das primeiras 40 compilações de CADA processo gastava 250 ms só esperando o logd + o I/O
+// dos ~15 MB de base64 por sessão -> engasgos ao abrir apps (Discord/Spotify/Chrome compilam centenas de pipelines).
+static int xe_log_on() { static int v = -1; if (v < 0) v = getenv("XE_LOG") ? 1 : 0; return v; }
+#define XLOG(...) do { if (xe_log_on()) syslog(LOG_ERR, __VA_ARGS__); } while (0)
 static const char* B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 static void xe_dump(const char* tag, int seq, const void* p, size_t n) {
   // base64 em linhas de ~720 chars: "xe-dump <seq> <tag> <idx>/<tot> <chars>"
@@ -60,16 +65,16 @@ long MTLCompilerBuildRequestWithSerializedBitcode(void* comp, void* input, void*
     const char* bc, size_t bcSize,
     void* s10, void* s18, void* s20, void* s28, void* s30, void* s38, void* s40) {
   OldFn old = (OldFn)&MTLCompilerBuildRequestWithOptions;
-  syslog(LOG_ERR, "xe-adapter: BuildRequestWithSerializedBitcode input=%p type=%d inputsize=%zu flags=0x%x bc=%p size=%zu old=%p",
-         input, input ? *(int*)input : -1, (size_t)rdx, flags, bc, bcSize, (void*)old);
+  XLOG("xe-adapter: BuildRequestWithSerializedBitcode input=%p type=%d inputsize=%zu flags=0x%x bc=%p size=%zu old=%p",
+       input, input ? *(int*)input : -1, (size_t)rdx, flags, bc, bcSize, (void*)old);
   if (!old) return 0;
   void* ctx = LLVMContextCreate();
   void* buf = LLVMCreateMemoryBufferWithMemoryRange(bc, bcSize, "xe", 0);
   void* mod = nullptr;
   int bad = LLVMParseBitcodeInContext2(ctx, buf, &mod);
-  syslog(LOG_ERR, "xe-adapter: parse bitcode -> bad=%d module=%p", bad, mod);
+  XLOG("xe-adapter: parse bitcode -> bad=%d module=%p", bad, mod);
   if (bad || !mod) return 0;
-  int seq = g_dumps < 40 ? ++g_dumps : 0;
+  int seq = (xe_log_on() && g_dumps < 40) ? ++g_dumps : 0;
   if (seq) { xe_dump("bc", seq, bc, bcSize); xe_dump("input", seq, input, (size_t)rdx > 0 && (size_t)rdx <= 0x10000 ? (size_t)rdx : 0x400); }
   xe_install_handlers();
   long r;
@@ -90,9 +95,9 @@ long MTLCompilerBuildRequestWithSerializedBitcode(void* comp, void* input, void*
     r = 1;
   }
   { void* rp = s10 ? *(void**)s10 : nullptr; size_t rn = s18 ? *(size_t*)s18 : 0; const char* em = s40 ? *(const char**)s40 : nullptr;
-    syslog(LOG_ERR, "xe-adapter: resultado r=%ld reply=%p size=%zu err=%s", r, rp, rn, em ? em : "(nenhum)");
+    XLOG("xe-adapter: resultado r=%ld reply=%p size=%zu err=%s", r, rp, rn, em ? em : "(nenhum)");
     if (seq) xe_dump("reply", seq, rp, rn); }
-  syslog(LOG_ERR, "xe-adapter: old BuildRequestWithOptions -> %ld", r);
+  XLOG("xe-adapter: old BuildRequestWithOptions -> %ld", r);
   return r;
 }
 
@@ -113,14 +118,14 @@ extern "C" __attribute__((visibility("default"))) void* MTLCompilerCreate(void* 
   if (!fn) { void* h = dlopen("/System/Library/Caches/xe.bundle/Contents/MacOS/libMTLIGCCompilerPluginOld.dylib", RTLD_NOW | RTLD_NOLOAD);
     if (!h) h = dlopen("/System/Library/Caches/xe.bundle/Contents/MacOS/libMTLIGCCompilerPluginOld.dylib", RTLD_NOW);
     fn = h ? (Fn)dlsym(h, "MTLCompilerCreate") : nullptr; }
-  syslog(LOG_ERR, "xe-adapter: MTLCompilerCreate hw=%p family=%u", hw, hw ? *(unsigned*)hw : 0);
+  XLOG("xe-adapter: MTLCompilerCreate hw=%p family=%u", hw, hw ? *(unsigned*)hw : 0);
   static int once; if (!once && hw) { once = 1; xe_dump("hwinfo", 0, hw, 0x200); }
   void* comp = fn ? fn(hw) : nullptr;
   if (comp) {
     typedef void (*SetFn)(void*, void*);
     void* h2 = dlopen("/System/Library/Caches/xe.bundle/Contents/MacOS/libMTLIGCCompilerPluginOld.dylib", RTLD_NOW | RTLD_NOLOAD);
     SetFn sh = h2 ? (SetFn)dlsym(h2, "MTLCompilerSetHelper") : nullptr;
-    if (sh) { sh(comp, (void*)g_helper_obj); syslog(LOG_ERR, "xe-adapter: helper ICB instalado em compiler=%p", comp); }
+    if (sh) { sh(comp, (void*)g_helper_obj); XLOG("xe-adapter: helper ICB instalado em compiler=%p", comp); }
     else syslog(LOG_ERR, "xe-adapter: MTLCompilerSetHelper nao encontrado");
   }
   return comp;
