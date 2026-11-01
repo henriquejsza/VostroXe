@@ -107,6 +107,7 @@ docs/VOSTRO.md           this laptop: hardware, EFI, patches, known issues, chan
 docs/HDMI.md             the HDMI work
 docs/EMULATOR.md         the Android emulator
 docs/OPENGL.md           hardware OpenGL through MGL
+docs/SEQUOIA.md          the port to macOS Sequoia 15.8.2 (in progress)
 ```
 
 The other tools (AudShim, touchscreen, fingerprint, haptics and more) and the other documents in `docs/` come from

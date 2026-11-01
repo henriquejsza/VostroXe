@@ -109,6 +109,7 @@ docs/VOSTRO.md           este notebook: hardware, EFI, patches, problemas conhec
 docs/HDMI.md             o trabalho no HDMI
 docs/EMULATOR.md         o emulador do Android
 docs/OPENGL.md           OpenGL na GPU pelo MGL
+docs/SEQUOIA.md          o porte para o macOS Sequoia 15.8.2 (em andamento)
 ```
 
 As outras ferramentas (AudShim, tela de toque, digital, vibração do touchpad e outras) e os outros documentos em
