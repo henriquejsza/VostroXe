@@ -58,7 +58,11 @@ int main(void){
     printf("GLFW: %s\n", glfwGetVersionString());
     if(!glfwInit()){ printf("glfwInit FALHOU\n"); return 2; }
 
-    /* A GLFW do MGL só cria contexto se o app pedir OpenGL 4.6. */
+    /* Decisivo: qual plataforma a GLFW escolheu. Cocoa = janela nativa; Null = headless (sem janela). */
+    printf("GLFW plataforma = 0x%08x  (0x00060001=Cocoa/janela real, 0x00060005=Null/headless)\n", glfwGetPlatform());
+
+    /* A GLFW do MGL só cria contexto se o app pedir OpenGL 4.6, e forçamos o caminho nativo (MGL). */
+    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
