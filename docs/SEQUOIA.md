@@ -3,9 +3,9 @@
 VostroXe was built for Tahoe 26.7.1 (25G241). This page tracks the port to Sequoia 15.8.2 (24H232, Darwin 24.6) on
 the same Vostro 3520.
 
-Status (1 Nov): the accelerated desktop, the external HDMI picture, internal sound and microphone, and the native
-privacy prompts (`config-seq-lv`) work (below). The webcam is detected by Apple's own UVC driver and is being
-tested. Sleep and the other areas have not been checked on Sequoia.
+Status (1 Nov): the accelerated desktop, the external HDMI picture, internal sound and microphone, the native
+privacy prompts (`config-seq-lv`) and the webcam work (below). Screen recording needs the Screen Recording switch
+in System Settings, and OBS renders on the CPU. Sleep and the other areas have not been checked on Sequoia.
 
 ## What carries over
 
@@ -147,16 +147,36 @@ appears 0 times (394 in the last amfi session); WhatsApp got `AUTHREQ_PROMPTING 
 system prompt. The only remaining `Policy disallows prompt` is Apple's own UserEventAgent for Bluetooth, which is
 normal. `config-seq-lv` is now the daily config; `config-seq-hdmi` (amfi) stays as a fallback.
 
-## Webcam (1 Nov, in test)
+## Webcam (1 Nov): works
 
 The Realtek `0BDA:5522` "Integrated_Webcam_HD" is a USB UVC 1.10 camera on the internal port HS06 (port 6 of
 the XHCI at 00:14.0), so Apple's own UVC driver runs it; nothing is ported. HS06 is in `UTBMap.kext` as an internal
 port (connector type 255). Logs of the 4 boots above: the kernel enumerates it at 480 Mbps in every boot, and
 UVCAssistant (`/System/Library/Frameworks/CoreMediaIO.framework/…/UVCAssistant.systemextension`) attaches as
 "Integrated Webcam" with 12 YUV422 formats from 160×120 to 1280×720 and 640×480 at 30 fps as the default.
-No app had streamed yet: WhatsApp connected once and disconnected without starting a stream, and tccd logged no
-camera request. `cameracaptured: Camera driver not started in time` is the Apple-silicon/ISP camera path and does
-not concern UVC. Next: open it in Photo Booth, then in a third-party app for the camera prompt.
+`cameracaptured: Camera driver not started in time` is the Apple-silicon/ISP camera path and does not concern UVC.
+The user confirmed the picture (1 Nov, 06:35).
+
+## Screen recording (1 Nov): permission, and OBS on the CPU
+
+Google Meet showed an error when sharing the screen, and OBS listed no screen source. Log of that boot
+(`05351F3B`, 06:25–06:32) and OBS's own log:
+
+- **Both are the Screen Recording permission.** tccd never prompts for this service on any Mac:
+  `Service kTCCServiceScreenCapture does not allow prompting; returning denied` (06:30:48, Chrome). The app has
+  to be switched on in System Settings › Privacy & Security › Screen & System Audio Recording, then quit and
+  reopened. Chrome was switched on at 06:31:01 (`TCCAccessSetInternal` from the Settings extension); replayd then
+  logged `TCC Allow`, WindowServer created a `SharingDisplay` context and Control Center showed the screen indicator
+  for Chrome, so capture runs through this GPU. The switch was turned off again at 06:31:34, before a share was
+  started. OBS has no entry in TCC.db and logged `Permission for screen capture denied`.
+- **Why OBS was so slow.** OBS draws its scene with OpenGL, and this GPU has no hardware OpenGL on macOS
+  ([OPENGL.md](OPENGL.md)): `Loading up OpenGL on adapter Apple Inc. Apple Software Renderer`. With an empty scene
+  the graphics thread took a median 33 ms per frame (budget 33.3 ms at 30 fps), peaks of 439 ms, and only 51 % of
+  frames were on time. OBS 33.0.1 ships an x86_64 `libobs-metal.dylib`, but `OBSApp::GetRenderModule()` returns
+  the OpenGL module on Intel Macs whatever the config says (the Metal renderer is enabled only for `__aarch64__`).
+- Not tested yet: a real recording (smoothness, artifacts). QuickTime / ⌘⇧5 record through ScreenCaptureKit
+  without OpenGL, so they test the capture path apart from OBS's renderer. The green/black recording fixes from
+  Tahoe (XE-BLITALIGN, XE-PAGESYNC, XE-BLITFIX) are on by default in NootedGreen.
 
 ## Stability (1 Nov): stutters and one freeze
 

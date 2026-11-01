@@ -20,7 +20,7 @@ or method; [README.md](../README.md#what-works) says which parts are confirmed.
 | Wi-Fi, Bluetooth | Realtek RTL8821CE / `0BDA:C829` | no macOS driver |
 | USB | XHCI `8086:51ED`: 2× USB 3 Type-A, 1× USB 2 Type-A | UTBMap (USBToolBox) |
 | Keyboard, touchpad | PS/2 keyboard, I2C touchpad | VoodooPS2, VoodooI2C in polling mode |
-| Webcam, fingerprint | `0BDA:5522` (USB UVC, port HS06), Goodix `27C6:639C` | webcam: detected by Apple's UVC driver on Sequoia, picture not tested yet ([SEQUOIA.md](SEQUOIA.md#webcam-1-nov-in-test)); fingerprint: not checked |
+| Webcam, fingerprint | `0BDA:5522` (USB UVC, port HS06), Goodix `27C6:639C` | webcam: works on Sequoia with Apple's UVC driver ([SEQUOIA.md](SEQUOIA.md#webcam-1-nov-works)); fingerprint: not checked |
 
 Other Vostro 3520 configurations may need changes: an i7-1255U has 96 EU, so it must not use
 `ngreen-eu=80 ngreen-l3=6`, and models with a USB-C port have more USB ports than the map lists.
