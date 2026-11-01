@@ -1,7 +1,10 @@
 # macOS Sequoia (port in progress)
 
 VostroXe was built for Tahoe 26.7.1 (25G241). This page tracks the port to Sequoia 15.8.2 (24H232, Darwin 24.6) on
-the same Vostro 3520. Nothing here is confirmed working yet.
+the same Vostro 3520.
+
+Status (1 Nov): the accelerated desktop works (second accelerated boot, below). HDMI is being tested. Sound, sleep
+and the other areas have not been checked on Sequoia.
 
 ## What carries over
 
@@ -49,6 +52,20 @@ The byte offsets are Tahoe's; the bitfields are the old driver's. Tahoe widened 
 - `macos/src/xe-preflight.m` loads a libxedrv in a normal process, so the preflight runs without the GPU driver and
   without a reboot; the verdict is in `/tmp/xedrv-xe-preflight.log`.
 
+## Second accelerated boot (1 Nov): accelerated desktop
+
+- `ATUALIZAR-SEQUOIA.command` rebuilt the Metal driver from d586e33 and the preflight passed in the safe boot:
+  `sampleCount@0xb8=4 vertexDescriptor@0x110 ok label@0xf8 ok misc@0xe0=0x7f801b ampl@0x1dc=2
+  attachment=0x50051401089 (esperado 0x50051401089) … auto-teste da conversão ok`, then
+  `layout: Sequoia -> conversão ligada`.
+- In the accelerated boot, WindowServer loaded libxedrv with `layout=Sequoia` and converted the descriptors. Its
+  pipeline log reached 128 pipelines created and 0 failures, CoreDisplay's shaders and `UberCompositeVertex` /
+  `UberCompositeFragment` included. 31 processes loaded libxedrv (Finder, Dock, Safari, Chrome, Terminal, System
+  Settings and others), and none logged a crash or a failure. The desktop worked.
+- No crash or panic report. Both boots of that session, the safe one and the accelerated one, left a
+  `shutdown_stall` report; not looked into yet.
+- The full accelerated boot-args (253 characters) are in use; the first test had run with a trimmed set.
+
 ## DYLD patches on 24H232
 
 The CoreDisplay patterns in `DYLDPatches.cpp` come from Sonoma 14.7.1. None of the active ones (isRemovable guard,
@@ -62,7 +79,8 @@ disabled: the patcher rewrites every matching shared-cache page.
   accelerated boot, rebuilds the Metal driver from the source tarball, runs `xe-preflight`, and only if it passes
   installs the bundle in `/Library/GPUBundles` and copies `config-seq.plist` over `config.plist` on the SSD's EFI.
 - EFI configs on the SSD: `config-install.plist` (safe: no 9A49 spoof, NootedGreen off), `config-seq.plist`
-  (accelerated test: NootedGreen from Darwin 24, the full accelerated boot-args plus `-v keepsyms=1`), backups
-  `config-tahoe-accel.bak.plist` and `config-antes-acel.bak.plist`.
+  (accelerated: NootedGreen from Darwin 24, the full accelerated boot-args plus `-v keepsyms=1`),
+  `config-seq-hdmi.plist` (`config-seq.plist` plus the boot-args of `hdmi-flags.sh light`, the set of the 30 Oct
+  HDMI test on Tahoe; 391 characters), backups `config-tahoe-accel.bak.plist` and `config-antes-acel.bak.plist`.
 - To get back to the safe boot, copy `config-install.plist` over `config.plist` (the OpenCore picker always offers
   Linux). `install.sh --uninstall` removes the stack.
