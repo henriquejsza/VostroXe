@@ -50,19 +50,23 @@ if [[ -d $XE ]]; then
   sudo rm -rf /System/Library/Caches/xe.bundle && sudo ditto "$XE" /System/Library/Caches/xe.bundle && sudo chown -R root:wheel /System/Library/Caches/xe.bundle &&
     echo "   xe.bundle reinstalado em /System/Library/Caches" || echo "   AVISO: não reinstalei o xe.bundle (o som/vídeo seguem; só o compilador fica o antigo)"
 fi
-echo "== ligando a config acelerada no EFI do SSD"
+echo "== config acelerada no EFI do SSD"
 M=/tmp/xe-esp; mkdir -p $M; ok=0
 for p in $(diskutil list | awk '/ EFI / {print $NF}'); do
   sudo diskutil mount -mountPoint $M $p >/dev/null 2>&1 || continue
   if [[ -f $M/EFI/OC/config-seq.plist && -f $M/EFI/OC/config-install.plist && -d $M/EFI/Manjaro ]]; then
-    sudo cp -X $M/EFI/OC/config.plist $M/EFI/OC/config-antes-acel.bak.plist &&
-    sudo cp -X $M/EFI/OC/config-seq.plist $M/EFI/OC/config.plist && ok=1
-    (( ok )) && echo "   $p: config.plist <- config-seq.plist (cópia da anterior: config-antes-acel.bak.plist)"
+    if grep -q 'PciRoot(0x0)/Pci(0x2,0x0)' $M/EFI/OC/config.plist 2>/dev/null; then
+      ok=1; echo "   $p: config.plist já está acelerada — mantida (preserva o HDMI se estiver ligado)"
+    else
+      sudo cp -X $M/EFI/OC/config.plist $M/EFI/OC/config-antes-acel.bak.plist &&
+      sudo cp -X $M/EFI/OC/config-seq.plist $M/EFI/OC/config.plist && ok=1 &&
+      echo "   $p: config.plist <- config-seq.plist (cópia da anterior: config-antes-acel.bak.plist)"
+    fi
   fi
   sync; sudo diskutil unmount $M >/dev/null 2>&1
   (( ok )) && break
 done
-(( ok )) || { echo ">>> não achei o EFI do SSD: o driver foi instalado, mas o boot continua SEGURO. Me avise."; exit 1; }
+(( ok )) || { echo ">>> não achei o EFI do SSD: os drivers foram instalados, mas o boot continua SEGURO. Me avise."; exit 1; }
 echo
 echo ">>> PRONTO. Reinicie e escolha o macOS no menu do OpenCore (modo verboso)."
 echo ">>> Se ficar preto ou travar: reinicie, escolha Linux no menu e me avise."
