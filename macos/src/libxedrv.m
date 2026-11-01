@@ -8,7 +8,17 @@
 //  4. preflight de layout com log (tamanho da classe, offset do ivar _private, nomes no encoding); se falhar, NÃO converte e avisa.
 //  5. modo laboratório: se existir /Library/GPUBundles/xe-lab, o WindowServer não recebe MTLDevice (fica no renderizador por software)
 //     e só os nossos programas de teste usam a GPU -> iterar sem reboot.
-// Logs: syslog "xedrv8: ..." (log show --predicate 'eventMessage CONTAINS "xedrv8"').
+// v21 (31/10): SEQUOIA (24H232, Metal 368). O _descriptorPrivate do Sequoia tem os MESMOS bytes do Tahoe nas regiões
+//     que a conversão copia (shaderValidationState/textureWriteRoundingMode em 0xa8/0xb0, label 0xf8, vertexDescriptor
+//     0x110, vertexBuffers 0x198, pad0 0x1c0), mas os campos de bits são os do driver antigo: misc com alphaToCoverage e
+//     alphaToOne de 1 bit (+3 campos novos nos bits 34..36) e attachment blend@0 … writeMask@27 logicOp@31..35
+//     pixelFormat@36. Lido da codificação de tipo com nomes no dyld shared cache do 24H232. Antes, o preflight (feito
+//     para o Tahoe) desligava a conversão e o driver lia a estrutura crua: vertexFunction no lugar do vertexDescriptor ->
+//     -[_MTLFunctionInternal layouts] -> WindowServer abortava em CoreDisplay::CreateMetalDevice (tela preta).
+//     Agora: variante Sequoia (só move bytes; misc mascarado nos 34 bits antigos; attachment sem conversão), auto-teste
+//     da conversão com um descriptor de valores conhecidos e, se o layout não for reconhecido, NENHUM processo recebe o
+//     MTLDevice da Iris Xe (renderização por software) em vez de o driver ler lixo. XE_FORCE_DEVICE=1 ignora a recusa.
+// Logs: syslog "xedrv17: ..." e /tmp/xedrv-<processo>.log.
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 #import <objc/runtime.h>
@@ -43,6 +53,14 @@ static void xe_log(const char* fmt, ...) {
 
 static const void* g_drv_base;   // base do AppleIntelTGLGraphicsMTLDriver (para reconhecer chamadas vindas dele)
 static int g_layout_ok;
+// v21: variante do layout do Metal reconhecida pelo preflight e bytes da estrutura real copiados para a sombra
+enum { XE_LAYOUT_NENHUM = 0, XE_LAYOUT_TAHOE = 1, XE_LAYOUT_SEQUOIA = 2 };
+static int g_layout_kind;
+static size_t g_priv_sz = PRIV_SZ;
+#define OLD_MISC_BITS 0x3ffffffffULL   // os 21 campos do misc do driver antigo ocupam os bits 0..33
+static const char* layout_nome(void) {
+  return g_layout_kind == XE_LAYOUT_TAHOE ? "Tahoe" : g_layout_kind == XE_LAYOUT_SEQUOIA ? "Sequoia" : "desconhecido";
+}
 
 // ---- campo de bits "misc" (union em 0xe0 no Tahoe, 0xd0 no antigo): {pos_antiga, larg_antiga, pos_nova, larg_nova} ----
 static const struct { int op, ow, np, nw; } MISC[21] = {
@@ -68,57 +86,149 @@ static __thread uint8_t* t_ring[RING]; static __thread int t_pos;
 static __thread uint64_t t_att[RING]; static __thread int t_apos;
 static IMP g_orig_pd, g_orig_att;
 
-static void* pd_wrapper(id self, SEL _cmd) {
-  void* real = ((void*(*)(id, SEL))g_orig_pd)(self, _cmd);
-  if (!real || !g_layout_ok || !from_driver(__builtin_return_address(0))) return real;
-  int i = t_pos++ % RING;
-  if (!t_ring[i]) t_ring[i] = (uint8_t*)calloc(1, 0x400);
-  uint8_t* p = t_ring[i];
-  const uint8_t* n = (const uint8_t*)real;
-  memcpy(p, n, PRIV_SZ);                          // 0x00..0xa8 iguais (até shaderValidation inclusive)
+// Sombra no layout antigo (os 0x160 bytes que o driver lê). Tahoe e Sequoia têm os mesmos bytes nessas regiões; muda o
+// misc: no Tahoe ele é remapeado campo a campo, no Sequoia já é o antigo (só some com os 3 bits novos acima do 33).
+static void convert_pd(const uint8_t* n, uint8_t* p) {
+  memcpy(p, n, g_priv_sz);                        // 0x00..0xa8 iguais (até shaderValidation inclusive)
   memcpy(p + 0xa8, n + 0xb8, 0x60);               // 0xa8..0x108 antigo <- 0xb8..0x118 novo (pula shaderValidationState/textureWriteRoundingMode)
-  *(uint64_t*)(p + 0xd0) = misc_to_old(*(const uint64_t*)(n + 0xe0));
+  uint64_t misc = *(const uint64_t*)(n + 0xe0);
+  *(uint64_t*)(p + 0xd0) = g_layout_kind == XE_LAYOUT_TAHOE ? misc_to_old(misc) : (misc & OLD_MISC_BITS);
   memcpy(p + 0x108, n + 0x198, 0x20);             // vertexBuffers, fragmentBuffers, driverCompilerOptions, gpuCompilerSPIOptions
   memcpy(p + 0x128, n + 0x1c0, 0x20);             // pad0, pad1, pluginData, needsCustomBorderColorSamplers/maxVertexAmplificationCount
-  memcpy(p + 0x148, n + 0x1e0, 0x18);
-  static int logged; if (!logged) { logged = 1; LOG("_descriptorPrivate(pipeline) convertido p/ layout antigo"); }
-  return p;
+  if (g_layout_kind == XE_LAYOUT_TAHOE) memcpy(p + 0x148, n + 0x1e0, 0x18);
+  else memset(p + 0x148, 0, 0x18);                // Sequoia: 0x1e0 = binaryArchives/compilerTimeoutInSeconds/vertexLinkedFunctions
+                                                  // (@Q@ contra Q@Q no antigo); nenhum método de pipeline do driver lê 0x148..0x160
 }
-static void* att_wrapper(id self, SEL _cmd) {
-  void* real = ((void*(*)(id, SEL))g_orig_att)(self, _cmd);
-  if (!real || !g_layout_ok || !from_driver(__builtin_return_address(0))) return real;
-  uint64_t n = *(uint64_t*)real;
-  MTLRenderPipelineColorAttachmentDescriptor* a = (MTLRenderPipelineColorAttachmentDescriptor*)self;
-  uint64_t old = (a.blendingEnabled ? 1ULL : 0ULL) | ((uint64_t)a.rgbBlendOperation << 1) | ((uint64_t)a.alphaBlendOperation << 4) |
+// Bits do attachment no layout do driver antigo. Tahoe: reconstruídos das propriedades públicas (o Tahoe alargou campos);
+// Sequoia: a estrutura real já tem esses bits (blend@0 … writeMask@27 logicOp@31..35 pixelFormat@36).
+static uint64_t att_old_bits(MTLRenderPipelineColorAttachmentDescriptor* a, uint64_t n) {
+  if (g_layout_kind != XE_LAYOUT_TAHOE) return n;
+  return (a.blendingEnabled ? 1ULL : 0ULL) | ((uint64_t)a.rgbBlendOperation << 1) | ((uint64_t)a.alphaBlendOperation << 4) |
     ((uint64_t)a.sourceRGBBlendFactor << 7) | ((uint64_t)a.sourceAlphaBlendFactor << 12) |
     ((uint64_t)a.destinationRGBBlendFactor << 17) | ((uint64_t)a.destinationAlphaBlendFactor << 22) |
     (((uint64_t)a.writeMask & 15) << 27) | (((n >> 33) & 31) << 31) | ((uint64_t)a.pixelFormat << 36);
-  int i = t_apos++ % RING;
-  t_att[i] = old;
+}
+static void* pd_wrapper(id self, SEL _cmd) {
+  void* real = ((void*(*)(id, SEL))g_orig_pd)(self, _cmd);
+  if (!real || !g_layout_ok || !from_driver(__builtin_return_address(0))) return real;
+  unsigned i = (unsigned)t_pos++ % RING;
+  if (!t_ring[i]) t_ring[i] = (uint8_t*)calloc(1, 0x400);
+  if (!t_ring[i]) return real;
+  convert_pd((const uint8_t*)real, t_ring[i]);
+  static int logged; if (!logged) { logged = 1; LOG("_descriptorPrivate(pipeline) convertido p/ layout antigo (%s)", layout_nome()); }
+  return t_ring[i];
+}
+static void* att_wrapper(id self, SEL _cmd) {
+  void* real = ((void*(*)(id, SEL))g_orig_att)(self, _cmd);
+  if (!real || !g_layout_ok || g_layout_kind != XE_LAYOUT_TAHOE || !from_driver(__builtin_return_address(0))) return real;
+  unsigned i = (unsigned)t_apos++ % RING;
+  t_att[i] = att_old_bits((MTLRenderPipelineColorAttachmentDescriptor*)self, *(uint64_t*)real);
   static int logged; if (!logged) { logged = 1; LOG("_descriptorPrivate(attachment) convertido p/ bits antigos"); }
   return &t_att[i];
 }
 
-// preflight: confere que o Metal deste sistema tem o layout que a conversão assume (mesmos testes do IntelIGPU-Tahoe + sonda dinâmica)
+// v21: trechos da codificação de tipo (com nomes) do _private no Sequoia 24H232, copiados do dyld shared cache: os bytes
+// das regiões convertidas são os do Tahoe, os campos de bits são os do driver antigo. Cada trecho aparece uma vez.
+static const char kSeqHead[] =
+  "\"supportIndirectCommandBuffers\"c\"shaderValidation\"q\"shaderValidationState\"q\"textureWriteRoundingMode\""
+  "q\"\"(?=\"sampleCount\"Q\"rasterSampleCount\"Q)\"sampleMask\"Q\"\"(?=\"sampleCoverageHash\"I\"sampleCoverag"
+  "e\"f)\"paddingToRemove\"Q\"colorSampleCount\"Q\"\"(?=\"miscHash\"[2I]\"\"{?=";
+static const char kSeqMisc[] =
+  "{?=\"alphaToCoverageEnabled\"b1\"alphaToOneEnabled\"b1\"rasterizationEnabled\"b1\"inputPrimitiveTopology\"b2"
+  "\"private0\"b1\"depthStencilWriteDisabled\"b1\"openGLMode\"b1\"sampleCoverageInvert\"b1\"private4\"b1\"verte"
+  "xAmplificationMode\"b1\"twoSideEnabled\"b1\"pointSizeOutputVS\"b1\"pointCoordLowerLeft\"b1\"pointSmoothEnabl"
+  "ed\"b1\"clipDistanceEnableMask\"b8\"alphaTestFunc\"b3\"alphaTestEnabled\"b1\"logicOp\"b4\"logicOpEnabled\"b1"
+  "\"forceResourceIndex\"b1\"forceSoftwareVertexFetch\"b1";
+static const char kSeqMid[] =
+  "})\"vertexDepthCompareClampMask\"I\"fragmentDepthCompareClampMask\"I\"resourceIndex\"Q\"label\"@\"NSString\""
+  "\"vertexFunction\"@\"<MTLFunction>\"\"fragmentFunction\"@\"<MTLFunction>\"\"vertexDescriptor\"@\"MTLVertexDe"
+  "scriptorInternal\"";
+static const char kSeqTail[] =
+  "\"vertexBuffers\"@\"MTLPipelineBufferDescriptorArrayInternal\"\"fragmentBuffers\"@\"MTLPipelineBufferDescrip"
+  "torArrayInternal\"\"driverCompilerOptions\"@\"NSDictionary\"\"gpuCompilerSPIOptions\"@\"NSDictionary\"\"pipe"
+  "lineLibrary\"@\"<MTLPipelineLibrary>\"\"pad0\"^v\"pad1\"^v\"pluginData\"@\"NSDictionary\"\"needsCustomBorder"
+  "ColorSamplers\"c\"maxVertexAmplificationCount\"I";
+static const char kSeqAtt[] =
+  "{?=\"blendingEnabled\"b1\"rgbBlendOperation\"b3\"alphaBlendOperation\"b3\"sourceRGBBlendFactor\"b5\"sourceAl"
+  "phaBlendFactor\"b5\"destinationRGBBlendFactor\"b5\"destinationAlphaBlendFactor\"b5\"writeMask\"b4\"logicOpEn"
+  "abled\"b1\"logicOp\"b4\"pixelFormat\"b28}";
+
+// preflight: reconhece o layout do Metal deste sistema pela codificação de tipo (Tahoe 25G241 ou Sequoia 24H232), confere
+// a estrutura real com sondas num descriptor de valores conhecidos e roda a própria conversão nele (auto-teste). Tahoe:
+// mesmos testes de antes (o auto-teste só registra). Sequoia: tudo precisa passar. Sem variante válida -> 0.
 static int check_layout(void) {
   Class c = objc_getClass("MTLRenderPipelineDescriptorInternal"), ac = objc_getClass("MTLRenderPipelineColorAttachmentDescriptorInternal");
   Ivar p = c ? class_getInstanceVariable(c, "_private") : NULL, ap = ac ? class_getInstanceVariable(ac, "_private") : NULL;
   const char* e = p ? ivar_getTypeEncoding(p) : NULL; const char* ae = ap ? ivar_getTypeEncoding(ap) : NULL;
+  size_t csz = c ? class_getInstanceSize(c) : 0; ptrdiff_t poff = p ? ivar_getOffset(p) : -1;
   LOG("layout: RPDInternal size=0x%zx _private@0x%tx; attInternal size=0x%zx _private@0x%tx",
-      c ? class_getInstanceSize(c) : 0, p ? ivar_getOffset(p) : -1, ac ? class_getInstanceSize(ac) : 0, ap ? ivar_getOffset(ap) : -1);
-  int ok = e && strstr(e, "\"shaderValidation\"q\"shaderValidationState\"q\"textureWriteRoundingMode\"q") &&
-           strstr(e, "\"alphaToCoverageEnabled\"b2\"alphaToOneEnabled\"b2") &&
-           ae && strstr(ae, "\"blendingEnabled\"b2") && strstr(ae, "\"writeMask\"b5\"logicOpEnabled\"b1\"logicOp\"b4\"pixelFormat\"b22");
-  if (!ok) { LOG("layout: encoding inesperado -> conversão DESLIGADA"); return 0; }
-  // sonda dinâmica: rasterSampleCount em +0xb8 e vertexDescriptor em +0x110
-  SEL s = sel_registerName("_descriptorPrivate");
-  MTLRenderPipelineDescriptor* d = [MTLRenderPipelineDescriptor new];
-  d.vertexDescriptor = [MTLVertexDescriptor vertexDescriptor]; d.rasterSampleCount = 4;
-  const uint8_t* raw = ((const void*(*)(id, SEL))objc_msgSend)(d, s);
-  uint64_t cnt = 0; void* vd = NULL; memcpy(&cnt, raw + 0xb8, 8); memcpy(&vd, raw + 0x110, 8);
-  ok = cnt == 4 && vd == (__bridge void*)d.vertexDescriptor;
-  [d release];
-  LOG("layout: sonda sampleCount@0xb8=%llu vertexDescriptor@0x110 %s -> %s", cnt, ok ? "ok" : "ERRADO", ok ? "conversão ligada" : "conversão DESLIGADA");
+      csz, poff, ac ? class_getInstanceSize(ac) : 0, ap ? ivar_getOffset(ap) : -1);
+  int tahoe = e && strstr(e, "\"shaderValidation\"q\"shaderValidationState\"q\"textureWriteRoundingMode\"q") &&
+              strstr(e, "\"alphaToCoverageEnabled\"b2\"alphaToOneEnabled\"b2") &&
+              ae && strstr(ae, "\"blendingEnabled\"b2") && strstr(ae, "\"writeMask\"b5\"logicOpEnabled\"b1\"logicOp\"b4\"pixelFormat\"b22");
+  int seq = !tahoe && e && ae && strstr(e, kSeqHead) && strstr(e, kSeqMisc) && strstr(e, kSeqMid) && strstr(e, kSeqTail) &&
+            strstr(ae, kSeqAtt) && poff > 0 && csz >= (size_t)poff + 0x1e0;
+  if (!tahoe && !seq) { g_layout_kind = XE_LAYOUT_NENHUM; LOG("layout: encoding inesperado -> conversão DESLIGADA, Iris Xe recusada"); return 0; }
+  g_layout_kind = tahoe ? XE_LAYOUT_TAHOE : XE_LAYOUT_SEQUOIA;
+  if (seq) { size_t sz = csz - (size_t)poff; g_priv_sz = sz < 0x400 ? sz : 0x400; }   // 0x278 no 24H232
+  int ok = 0;
+  @autoreleasepool {
+    @try {
+      SEL s = sel_registerName("_descriptorPrivate");
+      MTLRenderPipelineDescriptor* d = [[MTLRenderPipelineDescriptor new] autorelease];
+      d.vertexDescriptor = [MTLVertexDescriptor vertexDescriptor]; d.rasterSampleCount = 4;
+      d.label = @"xe-preflight"; d.maxVertexAmplificationCount = 2;
+      d.alphaToCoverageEnabled = YES; d.alphaToOneEnabled = YES; d.rasterizationEnabled = NO;   // misc: bits 0 e 1 (2 só no log)
+      d.inputPrimitiveTopology = MTLPrimitiveTopologyClassTriangle;                              // misc: bits 3..4 = 3
+      MTLRenderPipelineColorAttachmentDescriptor* a = d.colorAttachments[0];
+      a.pixelFormat = MTLPixelFormatBGRA8Unorm; a.blendingEnabled = YES; a.rgbBlendOperation = MTLBlendOperationMax;
+      a.destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha; a.writeMask = MTLColorWriteMaskRed | MTLColorWriteMaskBlue;
+      void* vd = (__bridge void*)d.vertexDescriptor; void* lab = (__bridge void*)d.label; void* vb = (__bridge void*)d.vertexBuffers;
+      const uint8_t* raw = ((const void*(*)(id, SEL))objc_msgSend)(d, s);
+      const uint64_t* araw = ((const void*(*)(id, SEL))objc_msgSend)(a, s);
+      if (!raw || !araw) { LOG("layout: _descriptorPrivate nulo -> conversão DESLIGADA"); g_layout_kind = XE_LAYOUT_NENHUM; return 0; }
+      // sondas na estrutura real
+      uint64_t cnt = 0, rmisc = 0; void* rvd = NULL; void* rlab = NULL; void* rvb = NULL; uint32_t ramp = 0;
+      memcpy(&cnt, raw + 0xb8, 8); memcpy(&rvd, raw + 0x110, 8); memcpy(&rlab, raw + 0xf8, 8);
+      memcpy(&rmisc, raw + 0xe0, 8); memcpy(&ramp, raw + 0x1dc, 4); memcpy(&rvb, raw + 0x198, 8);
+      int sonda = cnt == 4 && rvd == vd;
+      // auto-teste: a sombra no layout antigo tem os valores nos offsets do driver 16.0.32
+      int conv = 0; uint64_t omisc = 0;
+      uint8_t* sh = (uint8_t*)calloc(1, 0x400);
+      if (sh) {
+        convert_pd(raw, sh);
+        uint64_t ocnt = 0; void* ovd = NULL; void* olab = NULL; uint32_t oamp = 0;
+        memcpy(&ocnt, sh + 0xa8, 8); memcpy(&ovd, sh + 0x100, 8); memcpy(&olab, sh + 0xe8, 8);
+        memcpy(&omisc, sh + 0xd0, 8); memcpy(&oamp, sh + 0x144, 4);
+        conv = ocnt == 4 && ovd == vd && olab == lab && (omisc & 0x1b) == 0x1b && oamp == 2;
+        free(sh);
+      }
+      uint64_t want = 1ULL | ((uint64_t)MTLBlendOperationMax << 1) | ((uint64_t)MTLBlendOperationAdd << 4) |
+        ((uint64_t)MTLBlendFactorOne << 7) | ((uint64_t)MTLBlendFactorOne << 12) | ((uint64_t)MTLBlendFactorZero << 17) |
+        ((uint64_t)MTLBlendFactorOneMinusSourceAlpha << 22) | ((uint64_t)(MTLColorWriteMaskRed | MTLColorWriteMaskBlue) << 27) |
+        ((uint64_t)MTLPixelFormatBGRA8Unorm << 36);
+      uint64_t aold = att_old_bits(a, *araw);
+      int attok = aold == want;
+      if (seq) {
+        int extra = rlab == lab && (rmisc & 0x1b) == 0x1b && ramp == 2;
+        ok = sonda && extra && attok && conv;
+        LOG("layout Sequoia: sampleCount@0xb8=%llu vertexDescriptor@0x110 %s label@0xf8 %s misc@0xe0=0x%llx ampl@0x1dc=%u "
+            "attachment=0x%llx (esperado 0x%llx) vertexBuffers@0x198 %s; auto-teste da conversão %s (misc antigo 0x%llx); estrutura 0x%zx bytes",
+            cnt, rvd == vd ? "ok" : "ERRADO", rlab == lab ? "ok" : "ERRADO", rmisc, ramp, *araw, want,
+            rvb == vb ? "ok" : "diferente (só registro)", conv ? "ok" : "FALHOU", omisc, g_priv_sz);
+      } else {
+        ok = sonda;
+        LOG("layout Tahoe: sonda sampleCount@0xb8=%llu vertexDescriptor@0x110 %s; auto-teste da conversão %s, attachment %s (só registro)",
+            cnt, sonda ? "ok" : "ERRADO", conv ? "ok" : "falhou", attok ? "ok" : "falhou");
+      }
+    } @catch (NSException* x) {
+      LOG("layout: exceção no preflight (%s)", x.reason.UTF8String ?: "?");
+      ok = 0;
+    }
+  }
+  const char* nome = layout_nome();
+  if (!ok) g_layout_kind = XE_LAYOUT_NENHUM;
+  LOG("layout: %s -> %s", nome, ok ? "conversão ligada" : "conversão DESLIGADA, Iris Xe recusada");
   return ok;
 }
 
@@ -170,8 +280,14 @@ static id buf_desc(id self, SEL c, id d) {
 }
 
 // modo laboratório: o WindowServer não recebe device da GPU (fica em software); programas de teste continuam recebendo
+// v21: layout do Metal não reconhecido (preflight falhou) -> NENHUM processo recebe o device: o driver leria a estrutura
+// do descriptor no layout errado e abortaria (no WindowServer isso é tela preta). XE_FORCE_DEVICE=1 ignora.
 static IMP g_orig_initport;
 static id initport_wrapper(id self, SEL c, unsigned int port) {
+  if (!g_layout_ok && !getenv("XE_FORCE_DEVICE")) {
+    static int logged; if (!logged) { logged = 1; LOG("layout do Metal não reconhecido: %s sem MTLDevice da Iris Xe (software)", getprogname()); }
+    [self release]; return nil;
+  }
   if (!strcmp(getprogname(), "WindowServer") && access(LAB_FLAG, F_OK) == 0) {
     static int logged; if (!logged) { logged = 1; LOG("modo laboratório: WindowServer sem MTLDevice da Iris Xe"); }
     [self release]; return nil;
@@ -689,6 +805,7 @@ __attribute__((constructor)) static void xedrv17_init(void) {
   install_nocopyfix();
   install_fillfix();
   int e = install_entries(), p = install_pd(), r = install_rhm();
-  LOG("carregada em %s[%d]: entries=%d pd=%d rhm=%d layout=%d lab=%d", getprogname(), getpid(), e, p, r, g_layout_ok, access(LAB_FLAG, F_OK) == 0);
+  LOG("carregada em %s[%d]: entries=%d pd=%d rhm=%d layout=%s lab=%d", getprogname(), getpid(), e, p, r,
+      g_layout_ok ? layout_nome() : "recusado", access(LAB_FLAG, F_OK) == 0);
   if (!(e && p && r && g_tex_dev && g_fill)) { pthread_t th; pthread_create(&th, NULL, late, NULL); pthread_detach(th); }
 }
