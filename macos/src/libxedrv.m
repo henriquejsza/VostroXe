@@ -203,12 +203,13 @@ static int check_layout(void) {
         conv = ocnt == 4 && ovd == vd && olab == lab && (omisc & 0x1b) == 0x1b && oamp == 2;
         free(sh);
       }
-      uint64_t want = 1ULL | ((uint64_t)MTLBlendOperationMax << 1) | ((uint64_t)MTLBlendOperationAdd << 4) |
-        ((uint64_t)MTLBlendFactorOne << 7) | ((uint64_t)MTLBlendFactorOne << 12) | ((uint64_t)MTLBlendFactorZero << 17) |
-        ((uint64_t)MTLBlendFactorOneMinusSourceAlpha << 22) | ((uint64_t)(MTLColorWriteMaskRed | MTLColorWriteMaskBlue) << 27) |
-        ((uint64_t)MTLPixelFormatBGRA8Unorm << 36);
+      // esperado: as propriedades públicas nas posições do driver antigo (logicOp 31..35 fica fora: não é propriedade pública)
+      uint64_t want = (a.blendingEnabled ? 1ULL : 0ULL) | ((uint64_t)a.rgbBlendOperation << 1) | ((uint64_t)a.alphaBlendOperation << 4) |
+        ((uint64_t)a.sourceRGBBlendFactor << 7) | ((uint64_t)a.sourceAlphaBlendFactor << 12) |
+        ((uint64_t)a.destinationRGBBlendFactor << 17) | ((uint64_t)a.destinationAlphaBlendFactor << 22) |
+        (((uint64_t)a.writeMask & 15) << 27) | ((uint64_t)a.pixelFormat << 36);
       uint64_t aold = att_old_bits(a, *araw);
-      int attok = aold == want;
+      int attok = (aold & ~(0x1fULL << 31)) == want;
       if (seq) {
         int extra = rlab == lab && (rmisc & 0x1b) == 0x1b && ramp == 2;
         ok = sonda && extra && attok && conv;
