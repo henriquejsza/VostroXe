@@ -89,6 +89,30 @@ sound device) and can grant the microphone to Google Chrome with `tcc-permitir.s
 Every boot of 1 Nov left a `shutdown_stall` report, in spindump's binary format (`spindump -i` decodes it on macOS);
 not looked into yet.
 
+## Stability (1 Nov): stutters and one freeze
+
+A ~57-minute session (Discord, Spotify, Chrome, Geekbench) stuttered. The unified log of that boot, decoded from
+Linux with the mandiant parser (`macos-UnifiedLogs`, log-archive mode over the copied `Persist/Special/uuidtext`),
+shows two separate causes.
+
+**Everyday hitches — the shader compiler.** `MTLCompilerService` ran ~2000 compiles, each a median 260 ms in the
+2020 IGC (the Apple front-end is ~5 ms; the time is the old compiler building the ISA). Apps that build pipelines at
+runtime paid tens of seconds total: Chrome 87 s, Discord 65 s, Spotify 54 s, Code 36 s, Spotlight 40 s. Worse,
+`compiler-adapter` was dumping every bitcode and reply as base64 (~15 MB of syslog) and **sleeping 250 ms per compile
+for the first 40 of every process** — about 10 s of pure stall at each Electron app's launch. That debug logging and
+sleep are now off unless `XE_LOG=1` (commit 9ef6b10). The per-compile 260 ms remains (it is the compiler); the Metal
+shader cache is working (Discord 5.4 MB, Chrome 8.7 MB written), so repeat launches compile less.
+
+**The freeze — a GPU hang that does not recover.** At 02:58, under Geekbench, a WindowServer GPU submission timed out
+(RCS render ring busy and "Appears hung", BCS blitter stuck); `Kernel_…-025816.gpuRestart` has the hang dump.
+`IOAccelEventMachine2` then looped every ~5.2 s until the user rebooted 8 minutes later: `checkGPUProgress →
+Signaling hardware error on channel 26 → GPURestartSkipped: "no channel associated with stamp_idx 26"`. The restart
+for the guilty channel is skipped, the ring stays hung, and WindowServer's CoreAnimation `synchronize timed out`
+fired 143 times (the frozen UI). This is the class of bug NootedGreen's XE-GPUREC addresses on Tahoe, but on Sequoia
+the restart cannot map the stamp back to a channel and never clears the hang. It only happened once, under a GPU
+benchmark; it is the next thing to fix (kernel side, in `IOAccelEventMachine2`/XE-GPUREC) and needs test boots.
+Avoid GPU stress benchmarks until then.
+
 ## DYLD patches on 24H232
 
 The CoreDisplay patterns in `DYLDPatches.cpp` come from Sonoma 14.7.1. None of the active ones (isRemovable guard,
