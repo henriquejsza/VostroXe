@@ -58,11 +58,14 @@ int main(void){
     printf("GLFW: %s\n", glfwGetVersionString());
     if(!glfwInit()){ printf("glfwInit FALHOU\n"); return 2; }
 
-    /* Decisivo: qual plataforma a GLFW escolheu. Cocoa = janela nativa; Null = headless (sem janela). */
-    printf("GLFW plataforma = 0x%08x  (0x00060001=Cocoa/janela real, 0x00060005=Null/headless)\n", glfwGetPlatform());
+    /* Plataforma que a GLFW escolheu. Depois de um glfwInit que deu certo é sempre Cocoa: a GLFW 3.4 só usa a
+       plataforma Null (sem janela) quando o app pede. */
+    int plat = glfwGetPlatform();
+    printf("GLFW plataforma = 0x%08x (%s)\n", plat,
+           plat == GLFW_PLATFORM_COCOA ? "Cocoa, janela de verdade" :
+           plat == GLFW_PLATFORM_NULL  ? "Null, sem janela" : "outra");
 
-    /* A GLFW do MGL só cria contexto se o app pedir OpenGL 4.6, e forçamos o caminho nativo (MGL). */
-    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
+    /* A GLFW do MGL só cria contexto se o app pedir OpenGL 4.6. */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
@@ -135,7 +138,11 @@ C
   DYLD_LIBRARY_PATH="$MGLDIR/build" DYLD_FALLBACK_LIBRARY_PATH="$MGLDIR/build" "$BIN" 2> "$ERRLOG"; rc=$?
   echo "== o programa terminou com código $rc (0 = normal; 134 = abortou num assert)"
   echo "== resumo do log do MGL (${ERRLOG:t}, $(wc -l < "$ERRLOG" | tr -d ' ') linhas):"
-  grep -m1 -A1 'Metal device created' "$ERRLOG"
+  # A libmgl cria um renderer headless ao carregar (construtor em glm_context.c), em todo programa, antes do main();
+  # a linha "Initialized headless Metal renderer" vem dele. O contexto da janela cria um segundo renderer.
+  nd=$(grep -cE '^[0-9]{4}-[0-9]{2}-[0-9]{2} .*MGL INFO: Metal device created' "$ERRLOG")
+  echo "renderers do MGL criados (linhas 'Metal device created'): $nd  (1 = só o headless da carga da libmgl; 2 = também o da janela)"
+  grep -m1 -A1 -E '^[0-9]{4}-[0-9]{2}-[0-9]{2} .*MGL INFO: Metal device created' "$ERRLOG" | sed -E 's/^.*MGL INFO: //'   # a linha seguinte tem o nome da GPU
   np=$(grep -c 'Presenting drawable with texture' "$ERRLOG")
   echo "quadros apresentados na tela (Presenting drawable): $np"
   grep -m1 'Presenting drawable with texture' "$ERRLOG" | sed -E 's/^.*MGL INFO: //'
