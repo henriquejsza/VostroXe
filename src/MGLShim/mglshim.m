@@ -28,6 +28,7 @@
 #include "MGLContext.h"
 #include "MGLRenderer.h"
 #include <stdio.h>
+#include <stdarg.h>
 
 static const void *kMGLCtxKey  = &kMGLCtxKey;   // GLMContext guardado em cada NSOpenGLContext
 static const void *kMGLRendKey = &kMGLRendKey;  // MGLRenderer (mantém o layer vivo)
@@ -88,7 +89,7 @@ static void mglshim_log(const char *fmt, ...) {
         [r createMGLRendererAndBindToContext:ctx view:view];             // amarra o CAMetalLayer do MGL na view
         objc_setAssociatedObject(self, kMGLRendKey, r, OBJC_ASSOCIATION_RETAIN);
         mglshim_log("setView -> MGL ligado na NSView %p (%.0fx%.0f)",
-                    (void *)view, view.bounds.size.width, view.bounds.size.height);
+                    (__bridge void *)view, view.bounds.size.width, view.bounds.size.height);
     }
 }
 
