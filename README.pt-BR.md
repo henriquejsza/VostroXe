@@ -32,8 +32,9 @@ Testado em um Vostro 3520 (i5-1235U, BIOS 1.43.0) com o macOS Tahoe 26.7.1 (25G2
 | Ainda não conferido | teclas de brilho, repouso, webcam, leitor de digital |
 
 Problemas conhecidos: o `powermetrics` derruba o kernel, um travamento do WindowServer já terminou num panic do
-watchdog, e apps de terceiros nunca recebem o pedido de permissão de microfone, câmera ou gravação de tela (solução:
-`tools/tcc-permitir.sh`). O emulador do Android mostra a janela preta (correção ainda não testada:
+watchdog, e com `amfi_get_out_of_my_way=1` apps de terceiros nunca recebem o pedido de permissão de microfone,
+câmera ou gravação de tela (solução: `tools/tcc-permitir.sh`; no Sequoia, o config com `ngreenlv=1` traz os
+pedidos nativos de volta, [docs/SEQUOIA.md](docs/SEQUOIA.md)). O emulador do Android mostra a janela preta (correção ainda não testada:
 `tools/emulador-android.sh`, [docs/EMULATOR.md](docs/EMULATOR.md)). Detalhes
 em [docs/VOSTRO.md](docs/VOSTRO.md#known-issues).
 

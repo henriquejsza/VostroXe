@@ -3,8 +3,9 @@
 VostroXe was built for Tahoe 26.7.1 (25G241). This page tracks the port to Sequoia 15.8.2 (24H232, Darwin 24.6) on
 the same Vostro 3520.
 
-Status (1 Nov): the accelerated desktop and the external HDMI picture work (below). Internal sound and microphone are
-being tested. Sleep and the other areas have not been checked on Sequoia.
+Status (1 Nov): the accelerated desktop, the external HDMI picture, internal sound and microphone, and the native
+privacy prompts (`config-seq-lv`) work (below). The webcam is detected by Apple's own UVC driver and is being
+tested. Sleep and the other areas have not been checked on Sequoia.
 
 ## What carries over
 
@@ -110,8 +111,9 @@ Logs of the boots after `ATUALIZAR-SEQUOIA` (decoded from Linux):
   The mic/camera are real system devices and work; only the first-time permission prompt is suppressed. Grant or
   revoke per app with `tools/tcc-permitir.sh` (or the `tools/PERMISSOES.command` launcher); after a grant the app is
   listed in Settings › Privacy & Security to toggle. This is the known trade-off (EXPERIMENTS.md #9).
+  Superseded the same day by the library-validation exemption below, which brings the native prompt back.
 
-## Native TCC prompts without losing acceleration — library-validation exemption (in test)
+## Native TCC prompts without losing acceleration — library-validation exemption
 
 The privacy trade-off above is not fundamental. `amfi_get_out_of_my_way=1` disables *all* of AMFI; the only
 thing the ad-hoc GPU bundle actually needs is for **library validation** not to reject it (EXPERIMENTS.md #9:
@@ -137,7 +139,24 @@ Test (USB, reversible): `TESTAR-LV.command` builds the patched NootedGreen, inst
 with `amfi_get_out_of_my_way=1` replaced by `ngreenlv=1` (ocvalidate clean). `REVERTER-LV.command` restores
 `config-seq-hdmi` and the old kext; Linux stays in the OpenCore picker as the safe path. To confirm:
 acceleration still loads in WindowServer **and** in a third-party Metal app, and a native microphone prompt
-appears for a third-party app (no `tools/tcc-permitir.sh`). **Not yet confirmed on hardware.**
+appears for a third-party app (no `tools/tcc-permitir.sh`).
+
+Result (1 Nov, 4 boots with `config-seq-lv`): **works.** The user confirmed acceleration and the native prompts.
+In the log, libxedrv recognized the Sequoia layout in every boot; `CS_PLATFORM_BINARY set but not AppleSigned`
+appears 0 times (394 in the last amfi session); WhatsApp got `AUTHREQ_PROMPTING … kTCCServiceMicrophone`, the
+system prompt. The only remaining `Policy disallows prompt` is Apple's own UserEventAgent for Bluetooth, which is
+normal. `config-seq-lv` is now the daily config; `config-seq-hdmi` (amfi) stays as a fallback.
+
+## Webcam (1 Nov, in test)
+
+The Realtek `0BDA:5522` "Integrated_Webcam_HD" is a USB UVC 1.10 camera on the internal port HS06 (port 6 of
+the XHCI at 00:14.0), so Apple's own UVC driver runs it; nothing is ported. HS06 is in `UTBMap.kext` as an internal
+port (connector type 255). Logs of the 4 boots above: the kernel enumerates it at 480 Mbps in every boot, and
+UVCAssistant (`/System/Library/Frameworks/CoreMediaIO.framework/…/UVCAssistant.systemextension`) attaches as
+"Integrated Webcam" with 12 YUV422 formats from 160×120 to 1280×720 and 640×480 at 30 fps as the default.
+No app had streamed yet: WhatsApp connected once and disconnected without starting a stream, and tccd logged no
+camera request. `cameracaptured: Camera driver not started in time` is the Apple-silicon/ISP camera path and does
+not concern UVC. Next: open it in Photo Booth, then in a third-party app for the camera prompt.
 
 ## Stability (1 Nov): stutters and one freeze
 

@@ -31,8 +31,10 @@ Tested on one Vostro 3520 (i5-1235U, BIOS 1.43.0) with macOS Tahoe 26.7.1 (25G24
 | In the EFI, not confirmed yet | Ethernet (RealtekRTL8111), Android RNDIS tethering (HoRNDIS), touchpad (VoodooI2C in polling mode), battery status, all 12 CPU threads (`Cpuid1Data` fix), XE-PM turbo and idle profile (`ngreenpm=20`) |
 | Not checked yet | brightness keys, sleep, webcam, fingerprint reader |
 
-Known issues: `powermetrics` panics the kernel, a WindowServer hang once ended in a watchdog panic, and third-party
-apps never get the microphone, camera or screen-recording prompt (fix: `tools/tcc-permitir.sh`). The Android
+Known issues: `powermetrics` panics the kernel, a WindowServer hang once ended in a watchdog panic, and with
+`amfi_get_out_of_my_way=1` third-party apps never get the microphone, camera or screen-recording prompt (fix:
+`tools/tcc-permitir.sh`; on Sequoia the `ngreenlv=1` config brings the native prompts back,
+[docs/SEQUOIA.md](docs/SEQUOIA.md)). The Android
 emulator shows a black window (fix not tested yet: `tools/emulador-android.sh`, [docs/EMULATOR.md](docs/EMULATOR.md)).
 Details in [docs/VOSTRO.md](docs/VOSTRO.md#known-issues).
 

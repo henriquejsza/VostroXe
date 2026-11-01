@@ -20,7 +20,7 @@ or method; [README.md](../README.md#what-works) says which parts are confirmed.
 | Wi-Fi, Bluetooth | Realtek RTL8821CE / `0BDA:C829` | no macOS driver |
 | USB | XHCI `8086:51ED`: 2× USB 3 Type-A, 1× USB 2 Type-A | UTBMap (USBToolBox) |
 | Keyboard, touchpad | PS/2 keyboard, I2C touchpad | VoodooPS2, VoodooI2C in polling mode |
-| Webcam, fingerprint | `0BDA:5522` (USB), Goodix `27C6:639C` | not checked |
+| Webcam, fingerprint | `0BDA:5522` (USB UVC, port HS06), Goodix `27C6:639C` | webcam: detected by Apple's UVC driver on Sequoia, picture not tested yet ([SEQUOIA.md](SEQUOIA.md#webcam-1-nov-in-test)); fingerprint: not checked |
 
 Other Vostro 3520 configurations may need changes: an i7-1255U has 96 EU, so it must not use
 `ngreen-eu=80 ngreen-l3=6`, and models with a USB-C port have more USB ports than the map lists.
@@ -117,9 +117,11 @@ Boot-args: `-cs8409off` (do not touch the hardware), `cs8409lingerms`, `cs8409ca
 - **A WindowServer hang** ended in a watchdog panic on 27 Oct (`no successful checkins from WindowServer in
   120 seconds`). The GPU had been reporting channel errors for 5 minutes before it, and the forced HDMI mode set of
   that boot never ran ([HDMI.md](HDMI.md), finding 5).
-- **Privacy prompts never appear** for third-party apps, because of `amfi_get_out_of_my_way=1`: microphone, camera
-  and screen recording are denied silently. Grant them with
-  `sudo zsh tools/tcc-permitir.sh microfone|camera|tela|... <app>`.
+- **Privacy prompts never appear** for third-party apps in configs that boot with `amfi_get_out_of_my_way=1`:
+  microphone, camera and screen recording are denied silently. Fixed on Sequoia (1 Nov): `config-seq-lv` drops
+  that boot-arg and boots NootedGreen with `ngreenlv=1`, which turns off only library validation, and the native
+  prompts come back with the acceleration kept ([SEQUOIA.md](SEQUOIA.md)). Not tested on Tahoe yet. In the amfi
+  configs, grant them with `sudo zsh tools/tcc-permitir.sh microfone|camera|tela|... <app>`.
 - **With an HDMI monitor connected** the framebuffer logs a `runAUXCommand ddi = 1 Time out` about every 4 ms in
   bursts: 8,439 in 73 s, starting 15 s after boot. `ngreenhdmiaux=1` (in `hdmi-flags.sh light`) answers these at
   once: the 30 Oct test boot logged none.
@@ -152,6 +154,7 @@ and merge `kern_gen11.cpp` by hand. Then rebuild with `zsh install.sh` and check
 
 | Date | Change |
 |---|---|
+| 2026-11-01 | Sequoia: native privacy prompts with the acceleration on. NootedGreen `ngreenlv=1` routes `cs_require_lv` and `cs_system_require_lv` to 0, so `amfi_get_out_of_my_way=1` is no longer needed (`config-seq-lv`); third-party apps get the system's microphone and camera prompts again |
 | 2026-11-01 | macOS Sequoia 15.8.2 (24H232): accelerated desktop on the Iris Xe. libxedrv v21 knows Sequoia's pipeline-descriptor layout (the first boot's black screen was the driver reading it in Tahoe's); WindowServer's pipelines run on the GPU, with no crash report. Notes in [SEQUOIA.md](SEQUOIA.md) |
 | 2026-10-31 | Hardware OpenGL on the Iris Xe via [MGL](https://github.com/openglonmetal/MGL) (OpenGL 4.6 → Metal): offscreen GL 4.6 runs on the GPU — a clear (`pixel 0 128 255 255`, `glGetError 0`) and an RGB-triangle shader draw (GLSL→Metal + VBO/VAO + `glDrawArrays`) both render on `MTLIGAccelDevice Intel(R) TGL` and read back correct. MGL is kept in `src/MGL` (upstream `de0ded04`) with six fixes as commits, built by `tools/mgl-build.sh`; probes in `tools/mgl-test.sh` and `tools/mgl-triangle.sh`. Per-app (link `libmgl`/`libglfw`), offscreen confirmed, no geometry shaders; native system GL still software. See [OPENGL.md](OPENGL.md) |
 | 2026-10-30 | `tools/emulador-android.sh`: guest-kernel params `clearcpuid=waitpkg,rdpid nopku` for the Android emulator (TPAUSE panic, then PKU/PKRU xstate hang), the renderer back to automatic, `fastboot.forceColdBoot=yes` and the quickboot snapshot removed whole (quickboot never loaded here), `testar` with the guest kernel log; boots Android init, not to the UI yet |
