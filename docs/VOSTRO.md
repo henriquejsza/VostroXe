@@ -92,7 +92,8 @@ the external monitor shows a picture at 1920×1080, 60 Hz (tested 30 Oct). See [
 
 ## Audio
 
-`tools/CS8409HDA` is a driver written for this laptop: Tahoe has no AppleHDA, so AppleALC cannot help. A small
+`tools/CS8409HDA` is a driver written for this laptop: Tahoe has no AppleHDA, so AppleALC cannot help. Sequoia has
+AppleHDA, but the same driver is used there ([SEQUOIA.md](SEQUOIA.md#audio)). A small
 OS-independent core (`core/`) runs the Intel HDA controller and programs the CS8409 the way the Linux `cs8409`
 driver does on this machine (traces in `ref/`). The same core runs in a Linux test module (`linux/`), where it was
 checked on the hardware before macOS. The kext exposes AudShim's driver interface, so the `XeSpeakers` HAL plug-in

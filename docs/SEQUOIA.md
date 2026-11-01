@@ -3,8 +3,8 @@
 VostroXe was built for Tahoe 26.7.1 (25G241). This page tracks the port to Sequoia 15.8.2 (24H232, Darwin 24.6) on
 the same Vostro 3520.
 
-Status (1 Nov): the accelerated desktop works (second accelerated boot, below). HDMI is being tested. Sound, sleep
-and the other areas have not been checked on Sequoia.
+Status (1 Nov): the accelerated desktop and the external HDMI picture work (below). Internal sound and microphone are
+being tested. Sleep and the other areas have not been checked on Sequoia.
 
 ## What carries over
 
@@ -62,9 +62,32 @@ The byte offsets are Tahoe's; the bitfields are the old driver's. Tahoe widened 
   pipeline log reached 128 pipelines created and 0 failures, CoreDisplay's shaders and `UberCompositeVertex` /
   `UberCompositeFragment` included. 31 processes loaded libxedrv (Finder, Dock, Safari, Chrome, Terminal, System
   Settings and others), and none logged a crash or a failure. The desktop worked.
-- No crash or panic report. Both boots of that session, the safe one and the accelerated one, left a
-  `shutdown_stall` report; not looked into yet.
+- No crash or panic report.
 - The full accelerated boot-args (253 characters) are in use; the first test had run with a trimmed set.
+
+## External HDMI (1 Nov)
+
+With `config-seq-hdmi.plist` (the boot-args of `hdmi-flags.sh light`, unchanged from the Tahoe test) the external
+monitor shows a picture next to the internal panel; reported by the user. `VER-HDMI.command` was not run, so the mode,
+the refresh rate and the XE-HDMI13 log lines of this boot are not recorded. The HDMI code patches the 16.0.32 Tiger
+Lake framebuffer, the same binary as on Tahoe.
+
+## Audio
+
+`CS8409HDA.kext` is in the EFI and OpenCore injects it on Sequoia (`OC: Prelinked injection CS8409HDA.kext v0.1.0 -
+Success`). Unlike Tahoe, Sequoia still ships AppleHDA, and AppleHDAController's `BuiltInHDA` personality matches every
+HDA controller by PCI class (`0x04010000&0xFFFD0000`, which takes the controller's `0x0403`). CS8409HDA used its own
+`IOMatchCategory`, so both drivers could attach to `8086:51C8`. In the HDMI boot AppleHDAController and IOHDAFamily
+logged: their log-format files appeared in `/private/var/db/uuidtext` at 01:20. CS8409HDA's personality is now in the
+default match category with `IOProbeScore` 1000. The kext loads from the boot kext collection, before AppleHDA's system
+collection, so IOKit should give the controller no second driver. Only the Info.plist changed (commit 45cba64).
+
+`tools/SOM-SEQUOIA.command` checks the IORegistry first and stops if AppleHDAController is attached. Then it builds
+`cs8409ctl` and XeSpeakers on the Mac, runs `audio.sh test` (beeps recorded by the internal microphone, then the
+sound device) and can grant the microphone to Google Chrome with `tcc-permitir.sh`. Test pending.
+
+Every boot of 1 Nov left a `shutdown_stall` report, in spindump's binary format (`spindump -i` decodes it on macOS);
+not looked into yet.
 
 ## DYLD patches on 24H232
 
