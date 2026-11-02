@@ -16,17 +16,21 @@ else MGLDIR=$HOME/VostroXe-MGL; fi
 if   [[ -f $HERE/../src/MGLShim/mglshim.m ]]; then SHIMSRC=${HERE:h}/src/MGLShim/mglshim.m
 elif [[ -f $HERE/mglshim.m ]];              then SHIMSRC=$HERE/mglshim.m
 else SHIMSRC=""; fi
+if   [[ -f $HERE/../src/MGLShim/mgl_gl_interpose.c ]]; then GENSRC=${HERE:h}/src/MGLShim/mgl_gl_interpose.c
+elif [[ -f $HERE/mgl_gl_interpose.c ]];              then GENSRC=$HERE/mgl_gl_interpose.c
+else GENSRC=""; fi
 {
   echo "== $(date '+%d/%m %H:%M')  shim do MGL: desviar o OpenGL nativo (NSOpenGLContext) para o MGL"
   [[ $(uname) == Darwin ]] || { echo "rode no macOS"; exit 1; }
   echo "macOS $(sw_vers -productVersion 2>/dev/null) ($(sw_vers -buildVersion 2>/dev/null)), arch $(uname -m)"
   [[ -f $MGLDIR/build/libmgl.dylib ]] || { echo "não achei $MGLDIR/build/libmgl.dylib — rode o COMPILAR-MGL primeiro."; exit 1; }
   [[ -n $SHIMSRC ]] || { echo "não achei o mglshim.m (nem em src/MGLShim nem ao lado deste script)."; exit 1; }
-  echo "== fonte do shim: $SHIMSRC"
+  [[ -n $GENSRC ]] || { echo "não achei o mgl_gl_interpose.c (gerado por gen-interpose.py)."; exit 1; }
+  echo "== fonte do shim: $SHIMSRC + ${GENSRC:t}"
 
   SHIM="$(mktemp -t libmglshim).dylib"
-  echo "== compilando o shim (clang -dynamiclib -ObjC, interpose das gl* + swizzle de NSOpenGLContext):"
-  clang -dynamiclib -ObjC "$SHIMSRC" -o "$SHIM" \
+  echo "== compilando o shim (clang -dynamiclib, mglshim.m + interpose gerado de $(grep -c 'INTERPOSE(' "$GENSRC") gl*):"
+  clang -dynamiclib -ObjC "$SHIMSRC" "$GENSRC" -o "$SHIM" \
     -I"$MGLDIR/MGL/include" -I"$MGLDIR/MGL/include/GL" \
     -framework Cocoa -framework QuartzCore -framework Metal -framework OpenGL \
     -install_name @rpath/libmglshim.dylib 2>&1 | tail -25
