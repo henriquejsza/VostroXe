@@ -6,9 +6,11 @@ Renderer** (GL 4.1, CPU). This page is the work to get **hardware-accelerated Op
 repository, with the fixes it needs here, as `src/MGL`.
 
 > **Confirmed on the Vostro 3520.** OpenGL 4.6 runs on the GPU offscreen (31 Oct, Tahoe 26.7.1: a clear and an
-> RGB-triangle shader draw render on the Iris Xe and read back correct) and in a window on the screen (1 Nov,
-> Sequoia 15.8.2: a GLFW window draws the triangle at 59 fps). It is **not** system-wide GL: an app has to be built
-> against MGL. See the scope notes at the end.
+> RGB-triangle shader draw render on the Iris Xe and read back correct) and on the screen (1 Nov, Sequoia 15.8.2): a
+> GLFW window, a plain Cocoa window, and an **unmodified** native `NSOpenGLContext` app redirected by a
+> `DYLD_INSERT_LIBRARIES` shim all draw the triangle on the Iris Xe. It is **not** system-wide GL — each app is routed
+> individually, by linking MGL or through the shim — but it needs no change to the app's source. See the scope notes
+> at the end.
 
 ## Why not native GL, Vulkan or Zink
 
@@ -71,6 +73,29 @@ context) and there is no error or warning line. Only the start is slow: 0.86 s f
 first frame, most of it compiling the two shaders for Metal, then one frame of 121 ms. After that a frame was
 presented every 16–17 ms (slowest 27 ms).
 
+### Native apps, without GLFW
+
+`tools/mgl-cocoa.sh` drops GLFW: a plain Cocoa program (its own `NSApplication`/`NSWindow`) binds MGL to the window
+with `CppCreateMGLRendererFromContextAndBindToWindow` and draws the triangle — 357 frames, no GL error. MGL renders
+into a real Cocoa window driven by the app's own run loop.
+
+`tools/mgl-shim.sh` reaches the real goal: routing an **unmodified** native app to MGL. The shim
+(`src/MGLShim/mglshim.m`, a `DYLD_INSERT_LIBRARIES` dylib) does two things. It swizzles `NSOpenGLContext`
+(`initWithFormat:` → an MGL `GLMContext`, `setView:` → MGL's `CAMetalLayer` onto the app's own view,
+`makeCurrentContext` → `MGLsetCurrentContext`, `flushBuffer` → `MGLswapBuffers`) and strips `NSOpenGLPFAAccelerated`
+from the pixel format (Apple's accelerated format fails here, issue #21). And it redirects the `gl*` calls with dyld
+interposing (`__DATA,__interpose`) — which works with two-level namespace, where a flat-namespace reexport did not.
+The test runs one ordinary `NSOpenGLView` probe binary twice:
+
+```
+GL_RENDERER sem shim : Apple Software Renderer   (GL 4.1, CPU)
+GL_RENDERER com shim : MGL                       (GL 4.6.0, Iris Xe: 239 frames, no GL error, triangle seen)
+```
+
+Same binary, no recompile: software when run normally, on the GPU under the shim. The shim so far interposes the 22
+`gl*` the probe uses; a real app needs the full set, and MGL leaves `glBindAttribLocation` / `glBindFragDataLocation`
+unimplemented, so legacy shaders without `layout(location=)` need those filled in first.
+
 ## The MGL source: `src/MGL`
 
 MGL is kept in this repository as `src/MGL`: upstream commit `de0ded04` (Apache-2.0), without its Xcode project,
@@ -89,6 +114,8 @@ zsh tools/mgl-build.sh     # COMPILAR-MGL.command   — builds src/MGL: libmgl.d
 zsh tools/mgl-test.sh      # TESTAR-MGL.command     — the offscreen clear+readback GPU probe above
 zsh tools/mgl-triangle.sh  # TRIANGULO-MGL.command  — the RGB-triangle shader demo, writes mgl-triangulo.bmp
 zsh tools/mgl-window.sh    # JANELA-MGL.command     — the window test: the triangle in a GLFW window for ~6 s
+zsh tools/mgl-cocoa.sh     # COCOA-MGL.command      — native Cocoa window (no GLFW), triangle via MGL
+zsh tools/mgl-shim.sh      # SHIM-GL.command        — redirect an unmodified NSOpenGL app to MGL (DYLD shim)
 ```
 
 In a VostroXe checkout, `mgl-build.sh` builds `src/MGL` in place (products in `src/MGL/build/`). On the USB stick it
@@ -120,9 +147,10 @@ aside), the patched sources that passed the GPU tests above.
 
 ## Scope and honest limits
 
-- **Per-app, not system-wide.** This routes GL to the GPU only for a program built or linked against MGL
-  (`libmgl.dylib`, and `libglfw.dylib` for windowed apps). The system's native OpenGL is still the Apple Software
-  Renderer; this does not change what the Minecraft Launcher or any stock GL app sees.
+- **Per-app, not system-wide.** GL reaches the GPU for a program linked against MGL (`libmgl.dylib`, plus
+  `libglfw.dylib` for GLFW apps), or for an **unmodified** native app launched under the shim
+  (`DYLD_INSERT_LIBRARIES=mglshim.dylib`). The system's native OpenGL is still the Apple Software Renderer; nothing
+  changes for an app you don't route. The shim needs library validation off (the `amfi` / `ngreenlv` configs here).
 - **`GL_RENDERER` is `"MGL"`**, a fixed string. The hardware proof is the Metal device (`Intel(R) TGL`) and the
   read-back pixel, not the renderer string.
 - **Coverage is partial** (MGL is not a conformant GL): vertex/fragment/compute shaders, buffers, textures, FBOs,
@@ -134,8 +162,8 @@ aside), the patched sources that passed the GPU tests above.
   `MGL: Initialized headless Metal renderer` is not a fallback: a constructor in `libmgl` (`MGL/src/glm_context.c`,
   which its comment ties to QEMU) creates that renderer when the library loads, in every program, before `main()`.
   A window's context then creates its own renderer.
-- **Each test ran on one macOS:** offscreen on Tahoe 26.7.1, the window on Sequoia 15.8.2. The window has not run
-  on Tahoe with the current build.
+- **Split across two macOS versions:** the offscreen probes ran on Tahoe 26.7.1; the GLFW window, the native Cocoa
+  window and the shim ran on Sequoia 15.8.2. None of the on-screen paths have run on Tahoe with the current build.
 - **FBO readback is top-origin** (Metal's texture convention), the opposite of GL's bottom-origin; a consumer that
   reads an FBO (screenshots, `glReadPixels`) must flip, as the triangle demo does.
 - The Android emulator's slow GL is a **separate** problem (its own ANGLE/gfxstream, not this stack);
@@ -143,7 +171,8 @@ aside), the patched sources that passed the GPU tests above.
 
 ## Next
 
-- Drive a real GL app through MGL's `libglfw.dylib` (link or `DYLD_INSERT_LIBRARIES`); the window path now works
-  from a plain command-line binary.
-- Run the window test on Tahoe 26.7.1.
+- Expand the shim's `gl*` interpose from the 22-function proof to the full MGL export set (generated), and implement
+  MGL's `glBindAttribLocation` / `glBindFragDataLocation` so legacy shaders map their attributes correctly.
+- Point the shim at a real native GL app and fix what it hits.
+- Run the on-screen tests on Tahoe 26.7.1 (only the offscreen probes have run there).
 - Measure performance against the Apple Software Renderer on a non-trivial scene.
