@@ -42,6 +42,7 @@ fi
   clang -dynamiclib -ObjC "$SHIMSRC" "$GENSRC" -o "$SHIM" \
     -I"$MGLDIR/MGL/include" -I"$MGLDIR/MGL/include/GL" \
     -framework Cocoa -framework QuartzCore -framework Metal -framework OpenGL \
+    -Wl,-undefined,dynamic_lookup \
     -install_name @rpath/libmglshim.dylib 2>&1 | tail -20
   [[ -f $SHIM ]] || { echo "o shim NÃO compilou (ver acima)"; exit 1; }
 
