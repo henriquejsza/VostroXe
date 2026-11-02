@@ -72,11 +72,17 @@ int main(void){
         NSOpenGLPixelFormatAttribute attrs[] = {
             NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
             NSOpenGLPFAColorSize, 24, NSOpenGLPFADoubleBuffer, 0 };
+        printf("etapa 1: criar pixel format\n");
         NSOpenGLPixelFormat* pf = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
         if(!pf){ printf("NSOpenGLPixelFormat: NULO\n"); return 2; }
+        printf("etapa 2: criar contexto\n");
         NSOpenGLContext* glc = [[NSOpenGLContext alloc] initWithFormat:pf shareContext:nil];
         if(!glc){ printf("NSOpenGLContext: NULO\n"); return 3; }
-        [glc setView:view]; [glc makeCurrentContext];
+        printf("etapa 3: setView\n");
+        [glc setView:view];
+        printf("etapa 4: makeCurrentContext\n");
+        [glc makeCurrentContext];
+        printf("etapa 5: contexto corrente; consultar GL\n");
         printf("GL_RENDERER : %s\n", (const char*)glGetString(GL_RENDERER));
         printf("GL_VERSION  : %s\n", (const char*)glGetString(GL_VERSION));
         float v[]={ 0.0f,0.7f,0.0f, 1,0,0,  0.7f,-0.7f,0.0f, 0,1,0,  -0.7f,-0.7f,0.0f, 0,0,1 };
@@ -121,8 +127,18 @@ OBJC
   SHIMOUT=$(DYLD_INSERT_LIBRARIES="$SHIM" MGLSHIM_LIB="$MGLDIR/build/libmgl.dylib" \
     DYLD_LIBRARY_PATH="$MGLDIR/build" DYLD_FALLBACK_LIBRARY_PATH="$MGLDIR/build" "$BIN" 2> "$ERRLOG")
   rc=$?
-  echo "$SHIMOUT" | grep -E 'GL_RENDERER|GL_VERSION|shader|programa|quadros|glGetError'
+  echo "$SHIMOUT" | grep -E 'etapa|GL_RENDERER|GL_VERSION|shader|programa|quadros|glGetError'
   echo "   (a sonda com o shim terminou com código $rc; 0 = normal, 139 = segfault, 134 = assert)"
+  if (( rc != 0 )); then
+    echo "   última etapa alcançada: $(echo "$SHIMOUT" | grep '^etapa' | tail -1 || echo '(nenhuma)')"
+    cr=$(ls -t ~/Library/Logs/DiagnosticReports/glprobe*.ips(N) ~/Library/Logs/DiagnosticReports/glprobe*.crash(N) 2>/dev/null | head -1)
+    if [[ -n $cr ]]; then
+      cp "$cr" "${LOG:h}/crash-sonda.${cr:e}"
+      echo "   relatório de crash copiado para o pendrive: crash-sonda.${cr:e} (me mande junto)"
+    else
+      echo "   (não achei relatório de crash em ~/Library/Logs/DiagnosticReports)"
+    fi
+  fi
   echo
   echo "== veredito:"
   base=$(echo "$BASEOUT" | awk -F': ' '/GL_RENDERER/{print $2; exit}')

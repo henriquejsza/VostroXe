@@ -16,11 +16,6 @@
 
 int mglshim_active = 0;   /* 1 enquanto o contexto MGL do app está corrente (definido em mglshim.m) */
 
-void glAccum(GLenum op, GLfloat value) WEAKGL;
-static void (*p_glAccum)(GLenum op, GLfloat value);
-static void (*a_glAccum)(GLenum op, GLfloat value);
-static void w_glAccum(GLenum op, GLfloat value) { if (mglshim_active && p_glAccum) { p_glAccum(op, value); return; } if (a_glAccum) a_glAccum(op, value); }
-INTERPOSE(glAccum)
 void glActiveShaderProgram(GLuint pipeline, GLuint program) WEAKGL;
 static void (*p_glActiveShaderProgram)(GLuint pipeline, GLuint program);
 static void (*a_glActiveShaderProgram)(GLuint pipeline, GLuint program);
@@ -31,31 +26,11 @@ static void (*p_glActiveTexture)(GLenum texture);
 static void (*a_glActiveTexture)(GLenum texture);
 static void w_glActiveTexture(GLenum texture) { if (mglshim_active && p_glActiveTexture) { p_glActiveTexture(texture); return; } if (a_glActiveTexture) a_glActiveTexture(texture); }
 INTERPOSE(glActiveTexture)
-void glAlphaFunc(GLenum func, GLfloat ref) WEAKGL;
-static void (*p_glAlphaFunc)(GLenum func, GLfloat ref);
-static void (*a_glAlphaFunc)(GLenum func, GLfloat ref);
-static void w_glAlphaFunc(GLenum func, GLfloat ref) { if (mglshim_active && p_glAlphaFunc) { p_glAlphaFunc(func, ref); return; } if (a_glAlphaFunc) a_glAlphaFunc(func, ref); }
-INTERPOSE(glAlphaFunc)
-GLboolean glAreTexturesResident(GLsizei n, const GLuint *textures, GLboolean *residences) WEAKGL;
-static GLboolean (*p_glAreTexturesResident)(GLsizei n, const GLuint *textures, GLboolean *residences);
-static GLboolean (*a_glAreTexturesResident)(GLsizei n, const GLuint *textures, GLboolean *residences);
-static GLboolean w_glAreTexturesResident(GLsizei n, const GLuint *textures, GLboolean *residences) { if (mglshim_active && p_glAreTexturesResident) return p_glAreTexturesResident(n, textures, residences); if (a_glAreTexturesResident) return a_glAreTexturesResident(n, textures, residences); return (GLboolean)0; }
-INTERPOSE(glAreTexturesResident)
-void glArrayElement(GLint i) WEAKGL;
-static void (*p_glArrayElement)(GLint i);
-static void (*a_glArrayElement)(GLint i);
-static void w_glArrayElement(GLint i) { if (mglshim_active && p_glArrayElement) { p_glArrayElement(i); return; } if (a_glArrayElement) a_glArrayElement(i); }
-INTERPOSE(glArrayElement)
 void glAttachShader(GLuint program, GLuint shader) WEAKGL;
 static void (*p_glAttachShader)(GLuint program, GLuint shader);
 static void (*a_glAttachShader)(GLuint program, GLuint shader);
 static void w_glAttachShader(GLuint program, GLuint shader) { if (mglshim_active && p_glAttachShader) { p_glAttachShader(program, shader); return; } if (a_glAttachShader) a_glAttachShader(program, shader); }
 INTERPOSE(glAttachShader)
-void glBegin(GLenum mode) WEAKGL;
-static void (*p_glBegin)(GLenum mode);
-static void (*a_glBegin)(GLenum mode);
-static void w_glBegin(GLenum mode) { if (mglshim_active && p_glBegin) { p_glBegin(mode); return; } if (a_glBegin) a_glBegin(mode); }
-INTERPOSE(glBegin)
 void glBeginConditionalRender(GLuint id, GLenum mode) WEAKGL;
 static void (*p_glBeginConditionalRender)(GLuint id, GLenum mode);
 static void (*a_glBeginConditionalRender)(GLuint id, GLenum mode);
@@ -186,11 +161,6 @@ static void (*p_glBindVertexBuffers)(GLuint first, GLsizei count, const GLuint *
 static void (*a_glBindVertexBuffers)(GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizei *strides);
 static void w_glBindVertexBuffers(GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizei *strides) { if (mglshim_active && p_glBindVertexBuffers) { p_glBindVertexBuffers(first, count, buffers, offsets, strides); return; } if (a_glBindVertexBuffers) a_glBindVertexBuffers(first, count, buffers, offsets, strides); }
 INTERPOSE(glBindVertexBuffers)
-void glBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap) WEAKGL;
-static void (*p_glBitmap)(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap);
-static void (*a_glBitmap)(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap);
-static void w_glBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap) { if (mglshim_active && p_glBitmap) { p_glBitmap(width, height, xorig, yorig, xmove, ymove, bitmap); return; } if (a_glBitmap) a_glBitmap(width, height, xorig, yorig, xmove, ymove, bitmap); }
-INTERPOSE(glBitmap)
 void glBlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) WEAKGL;
 static void (*p_glBlendColor)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 static void (*a_glBlendColor)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
@@ -261,16 +231,6 @@ static void (*p_glBufferSubData)(GLenum target, GLintptr offset, GLsizeiptr size
 static void (*a_glBufferSubData)(GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
 static void w_glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data) { if (mglshim_active && p_glBufferSubData) { p_glBufferSubData(target, offset, size, data); return; } if (a_glBufferSubData) a_glBufferSubData(target, offset, size, data); }
 INTERPOSE(glBufferSubData)
-void glCallList(GLuint list) WEAKGL;
-static void (*p_glCallList)(GLuint list);
-static void (*a_glCallList)(GLuint list);
-static void w_glCallList(GLuint list) { if (mglshim_active && p_glCallList) { p_glCallList(list); return; } if (a_glCallList) a_glCallList(list); }
-INTERPOSE(glCallList)
-void glCallLists(GLsizei n, GLenum type, const void *lists) WEAKGL;
-static void (*p_glCallLists)(GLsizei n, GLenum type, const void *lists);
-static void (*a_glCallLists)(GLsizei n, GLenum type, const void *lists);
-static void w_glCallLists(GLsizei n, GLenum type, const void *lists) { if (mglshim_active && p_glCallLists) { p_glCallLists(n, type, lists); return; } if (a_glCallLists) a_glCallLists(n, type, lists); }
-INTERPOSE(glCallLists)
 GLenum glCheckFramebufferStatus(GLenum target) WEAKGL;
 static GLenum (*p_glCheckFramebufferStatus)(GLenum target);
 static GLenum (*a_glCheckFramebufferStatus)(GLenum target);
@@ -291,11 +251,6 @@ static void (*p_glClear)(GLbitfield mask);
 static void (*a_glClear)(GLbitfield mask);
 static void w_glClear(GLbitfield mask) { if (mglshim_active && p_glClear) { p_glClear(mask); return; } if (a_glClear) a_glClear(mask); }
 INTERPOSE(glClear)
-void glClearAccum(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) WEAKGL;
-static void (*p_glClearAccum)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-static void (*a_glClearAccum)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-static void w_glClearAccum(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) { if (mglshim_active && p_glClearAccum) { p_glClearAccum(red, green, blue, alpha); return; } if (a_glClearAccum) a_glClearAccum(red, green, blue, alpha); }
-INTERPOSE(glClearAccum)
 void glClearBufferData(GLenum target, GLenum internalformat, GLenum format, GLenum type, const void *data) WEAKGL;
 static void (*p_glClearBufferData)(GLenum target, GLenum internalformat, GLenum format, GLenum type, const void *data);
 static void (*a_glClearBufferData)(GLenum target, GLenum internalformat, GLenum format, GLenum type, const void *data);
@@ -341,11 +296,6 @@ static void (*p_glClearDepthf)(GLfloat d);
 static void (*a_glClearDepthf)(GLfloat d);
 static void w_glClearDepthf(GLfloat d) { if (mglshim_active && p_glClearDepthf) { p_glClearDepthf(d); return; } if (a_glClearDepthf) a_glClearDepthf(d); }
 INTERPOSE(glClearDepthf)
-void glClearIndex(GLfloat c) WEAKGL;
-static void (*p_glClearIndex)(GLfloat c);
-static void (*a_glClearIndex)(GLfloat c);
-static void w_glClearIndex(GLfloat c) { if (mglshim_active && p_glClearIndex) { p_glClearIndex(c); return; } if (a_glClearIndex) a_glClearIndex(c); }
-INTERPOSE(glClearIndex)
 void glClearNamedBufferData(GLuint buffer, GLenum internalformat, GLenum format, GLenum type, const void *data) WEAKGL;
 static void (*p_glClearNamedBufferData)(GLuint buffer, GLenum internalformat, GLenum format, GLenum type, const void *data);
 static void (*a_glClearNamedBufferData)(GLuint buffer, GLenum internalformat, GLenum format, GLenum type, const void *data);
@@ -391,11 +341,6 @@ static void (*p_glClearTexSubImage)(GLuint texture, GLint level, GLint xoffset, 
 static void (*a_glClearTexSubImage)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *data);
 static void w_glClearTexSubImage(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *data) { if (mglshim_active && p_glClearTexSubImage) { p_glClearTexSubImage(texture, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data); return; } if (a_glClearTexSubImage) a_glClearTexSubImage(texture, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data); }
 INTERPOSE(glClearTexSubImage)
-void glClientActiveTexture(GLenum texture) WEAKGL;
-static void (*p_glClientActiveTexture)(GLenum texture);
-static void (*a_glClientActiveTexture)(GLenum texture);
-static void w_glClientActiveTexture(GLenum texture) { if (mglshim_active && p_glClientActiveTexture) { p_glClientActiveTexture(texture); return; } if (a_glClientActiveTexture) a_glClientActiveTexture(texture); }
-INTERPOSE(glClientActiveTexture)
 GLenum glClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) WEAKGL;
 static GLenum (*p_glClientWaitSync)(GLsync sync, GLbitfield flags, GLuint64 timeout);
 static GLenum (*a_glClientWaitSync)(GLsync sync, GLbitfield flags, GLuint64 timeout);
@@ -406,171 +351,6 @@ static void (*p_glClipControl)(GLenum origin, GLenum depth);
 static void (*a_glClipControl)(GLenum origin, GLenum depth);
 static void w_glClipControl(GLenum origin, GLenum depth) { if (mglshim_active && p_glClipControl) { p_glClipControl(origin, depth); return; } if (a_glClipControl) a_glClipControl(origin, depth); }
 INTERPOSE(glClipControl)
-void glClipPlane(GLenum plane, const GLdouble *equation) WEAKGL;
-static void (*p_glClipPlane)(GLenum plane, const GLdouble *equation);
-static void (*a_glClipPlane)(GLenum plane, const GLdouble *equation);
-static void w_glClipPlane(GLenum plane, const GLdouble *equation) { if (mglshim_active && p_glClipPlane) { p_glClipPlane(plane, equation); return; } if (a_glClipPlane) a_glClipPlane(plane, equation); }
-INTERPOSE(glClipPlane)
-void glColor3b(GLbyte red, GLbyte green, GLbyte blue) WEAKGL;
-static void (*p_glColor3b)(GLbyte red, GLbyte green, GLbyte blue);
-static void (*a_glColor3b)(GLbyte red, GLbyte green, GLbyte blue);
-static void w_glColor3b(GLbyte red, GLbyte green, GLbyte blue) { if (mglshim_active && p_glColor3b) { p_glColor3b(red, green, blue); return; } if (a_glColor3b) a_glColor3b(red, green, blue); }
-INTERPOSE(glColor3b)
-void glColor3bv(const GLbyte *v) WEAKGL;
-static void (*p_glColor3bv)(const GLbyte *v);
-static void (*a_glColor3bv)(const GLbyte *v);
-static void w_glColor3bv(const GLbyte *v) { if (mglshim_active && p_glColor3bv) { p_glColor3bv(v); return; } if (a_glColor3bv) a_glColor3bv(v); }
-INTERPOSE(glColor3bv)
-void glColor3d(GLdouble red, GLdouble green, GLdouble blue) WEAKGL;
-static void (*p_glColor3d)(GLdouble red, GLdouble green, GLdouble blue);
-static void (*a_glColor3d)(GLdouble red, GLdouble green, GLdouble blue);
-static void w_glColor3d(GLdouble red, GLdouble green, GLdouble blue) { if (mglshim_active && p_glColor3d) { p_glColor3d(red, green, blue); return; } if (a_glColor3d) a_glColor3d(red, green, blue); }
-INTERPOSE(glColor3d)
-void glColor3dv(const GLdouble *v) WEAKGL;
-static void (*p_glColor3dv)(const GLdouble *v);
-static void (*a_glColor3dv)(const GLdouble *v);
-static void w_glColor3dv(const GLdouble *v) { if (mglshim_active && p_glColor3dv) { p_glColor3dv(v); return; } if (a_glColor3dv) a_glColor3dv(v); }
-INTERPOSE(glColor3dv)
-void glColor3f(GLfloat red, GLfloat green, GLfloat blue) WEAKGL;
-static void (*p_glColor3f)(GLfloat red, GLfloat green, GLfloat blue);
-static void (*a_glColor3f)(GLfloat red, GLfloat green, GLfloat blue);
-static void w_glColor3f(GLfloat red, GLfloat green, GLfloat blue) { if (mglshim_active && p_glColor3f) { p_glColor3f(red, green, blue); return; } if (a_glColor3f) a_glColor3f(red, green, blue); }
-INTERPOSE(glColor3f)
-void glColor3fv(const GLfloat *v) WEAKGL;
-static void (*p_glColor3fv)(const GLfloat *v);
-static void (*a_glColor3fv)(const GLfloat *v);
-static void w_glColor3fv(const GLfloat *v) { if (mglshim_active && p_glColor3fv) { p_glColor3fv(v); return; } if (a_glColor3fv) a_glColor3fv(v); }
-INTERPOSE(glColor3fv)
-void glColor3i(GLint red, GLint green, GLint blue) WEAKGL;
-static void (*p_glColor3i)(GLint red, GLint green, GLint blue);
-static void (*a_glColor3i)(GLint red, GLint green, GLint blue);
-static void w_glColor3i(GLint red, GLint green, GLint blue) { if (mglshim_active && p_glColor3i) { p_glColor3i(red, green, blue); return; } if (a_glColor3i) a_glColor3i(red, green, blue); }
-INTERPOSE(glColor3i)
-void glColor3iv(const GLint *v) WEAKGL;
-static void (*p_glColor3iv)(const GLint *v);
-static void (*a_glColor3iv)(const GLint *v);
-static void w_glColor3iv(const GLint *v) { if (mglshim_active && p_glColor3iv) { p_glColor3iv(v); return; } if (a_glColor3iv) a_glColor3iv(v); }
-INTERPOSE(glColor3iv)
-void glColor3s(GLshort red, GLshort green, GLshort blue) WEAKGL;
-static void (*p_glColor3s)(GLshort red, GLshort green, GLshort blue);
-static void (*a_glColor3s)(GLshort red, GLshort green, GLshort blue);
-static void w_glColor3s(GLshort red, GLshort green, GLshort blue) { if (mglshim_active && p_glColor3s) { p_glColor3s(red, green, blue); return; } if (a_glColor3s) a_glColor3s(red, green, blue); }
-INTERPOSE(glColor3s)
-void glColor3sv(const GLshort *v) WEAKGL;
-static void (*p_glColor3sv)(const GLshort *v);
-static void (*a_glColor3sv)(const GLshort *v);
-static void w_glColor3sv(const GLshort *v) { if (mglshim_active && p_glColor3sv) { p_glColor3sv(v); return; } if (a_glColor3sv) a_glColor3sv(v); }
-INTERPOSE(glColor3sv)
-void glColor3ub(GLubyte red, GLubyte green, GLubyte blue) WEAKGL;
-static void (*p_glColor3ub)(GLubyte red, GLubyte green, GLubyte blue);
-static void (*a_glColor3ub)(GLubyte red, GLubyte green, GLubyte blue);
-static void w_glColor3ub(GLubyte red, GLubyte green, GLubyte blue) { if (mglshim_active && p_glColor3ub) { p_glColor3ub(red, green, blue); return; } if (a_glColor3ub) a_glColor3ub(red, green, blue); }
-INTERPOSE(glColor3ub)
-void glColor3ubv(const GLubyte *v) WEAKGL;
-static void (*p_glColor3ubv)(const GLubyte *v);
-static void (*a_glColor3ubv)(const GLubyte *v);
-static void w_glColor3ubv(const GLubyte *v) { if (mglshim_active && p_glColor3ubv) { p_glColor3ubv(v); return; } if (a_glColor3ubv) a_glColor3ubv(v); }
-INTERPOSE(glColor3ubv)
-void glColor3ui(GLuint red, GLuint green, GLuint blue) WEAKGL;
-static void (*p_glColor3ui)(GLuint red, GLuint green, GLuint blue);
-static void (*a_glColor3ui)(GLuint red, GLuint green, GLuint blue);
-static void w_glColor3ui(GLuint red, GLuint green, GLuint blue) { if (mglshim_active && p_glColor3ui) { p_glColor3ui(red, green, blue); return; } if (a_glColor3ui) a_glColor3ui(red, green, blue); }
-INTERPOSE(glColor3ui)
-void glColor3uiv(const GLuint *v) WEAKGL;
-static void (*p_glColor3uiv)(const GLuint *v);
-static void (*a_glColor3uiv)(const GLuint *v);
-static void w_glColor3uiv(const GLuint *v) { if (mglshim_active && p_glColor3uiv) { p_glColor3uiv(v); return; } if (a_glColor3uiv) a_glColor3uiv(v); }
-INTERPOSE(glColor3uiv)
-void glColor3us(GLushort red, GLushort green, GLushort blue) WEAKGL;
-static void (*p_glColor3us)(GLushort red, GLushort green, GLushort blue);
-static void (*a_glColor3us)(GLushort red, GLushort green, GLushort blue);
-static void w_glColor3us(GLushort red, GLushort green, GLushort blue) { if (mglshim_active && p_glColor3us) { p_glColor3us(red, green, blue); return; } if (a_glColor3us) a_glColor3us(red, green, blue); }
-INTERPOSE(glColor3us)
-void glColor3usv(const GLushort *v) WEAKGL;
-static void (*p_glColor3usv)(const GLushort *v);
-static void (*a_glColor3usv)(const GLushort *v);
-static void w_glColor3usv(const GLushort *v) { if (mglshim_active && p_glColor3usv) { p_glColor3usv(v); return; } if (a_glColor3usv) a_glColor3usv(v); }
-INTERPOSE(glColor3usv)
-void glColor4b(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha) WEAKGL;
-static void (*p_glColor4b)(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha);
-static void (*a_glColor4b)(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha);
-static void w_glColor4b(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha) { if (mglshim_active && p_glColor4b) { p_glColor4b(red, green, blue, alpha); return; } if (a_glColor4b) a_glColor4b(red, green, blue, alpha); }
-INTERPOSE(glColor4b)
-void glColor4bv(const GLbyte *v) WEAKGL;
-static void (*p_glColor4bv)(const GLbyte *v);
-static void (*a_glColor4bv)(const GLbyte *v);
-static void w_glColor4bv(const GLbyte *v) { if (mglshim_active && p_glColor4bv) { p_glColor4bv(v); return; } if (a_glColor4bv) a_glColor4bv(v); }
-INTERPOSE(glColor4bv)
-void glColor4d(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha) WEAKGL;
-static void (*p_glColor4d)(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha);
-static void (*a_glColor4d)(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha);
-static void w_glColor4d(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha) { if (mglshim_active && p_glColor4d) { p_glColor4d(red, green, blue, alpha); return; } if (a_glColor4d) a_glColor4d(red, green, blue, alpha); }
-INTERPOSE(glColor4d)
-void glColor4dv(const GLdouble *v) WEAKGL;
-static void (*p_glColor4dv)(const GLdouble *v);
-static void (*a_glColor4dv)(const GLdouble *v);
-static void w_glColor4dv(const GLdouble *v) { if (mglshim_active && p_glColor4dv) { p_glColor4dv(v); return; } if (a_glColor4dv) a_glColor4dv(v); }
-INTERPOSE(glColor4dv)
-void glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) WEAKGL;
-static void (*p_glColor4f)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-static void (*a_glColor4f)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-static void w_glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) { if (mglshim_active && p_glColor4f) { p_glColor4f(red, green, blue, alpha); return; } if (a_glColor4f) a_glColor4f(red, green, blue, alpha); }
-INTERPOSE(glColor4f)
-void glColor4fv(const GLfloat *v) WEAKGL;
-static void (*p_glColor4fv)(const GLfloat *v);
-static void (*a_glColor4fv)(const GLfloat *v);
-static void w_glColor4fv(const GLfloat *v) { if (mglshim_active && p_glColor4fv) { p_glColor4fv(v); return; } if (a_glColor4fv) a_glColor4fv(v); }
-INTERPOSE(glColor4fv)
-void glColor4i(GLint red, GLint green, GLint blue, GLint alpha) WEAKGL;
-static void (*p_glColor4i)(GLint red, GLint green, GLint blue, GLint alpha);
-static void (*a_glColor4i)(GLint red, GLint green, GLint blue, GLint alpha);
-static void w_glColor4i(GLint red, GLint green, GLint blue, GLint alpha) { if (mglshim_active && p_glColor4i) { p_glColor4i(red, green, blue, alpha); return; } if (a_glColor4i) a_glColor4i(red, green, blue, alpha); }
-INTERPOSE(glColor4i)
-void glColor4iv(const GLint *v) WEAKGL;
-static void (*p_glColor4iv)(const GLint *v);
-static void (*a_glColor4iv)(const GLint *v);
-static void w_glColor4iv(const GLint *v) { if (mglshim_active && p_glColor4iv) { p_glColor4iv(v); return; } if (a_glColor4iv) a_glColor4iv(v); }
-INTERPOSE(glColor4iv)
-void glColor4s(GLshort red, GLshort green, GLshort blue, GLshort alpha) WEAKGL;
-static void (*p_glColor4s)(GLshort red, GLshort green, GLshort blue, GLshort alpha);
-static void (*a_glColor4s)(GLshort red, GLshort green, GLshort blue, GLshort alpha);
-static void w_glColor4s(GLshort red, GLshort green, GLshort blue, GLshort alpha) { if (mglshim_active && p_glColor4s) { p_glColor4s(red, green, blue, alpha); return; } if (a_glColor4s) a_glColor4s(red, green, blue, alpha); }
-INTERPOSE(glColor4s)
-void glColor4sv(const GLshort *v) WEAKGL;
-static void (*p_glColor4sv)(const GLshort *v);
-static void (*a_glColor4sv)(const GLshort *v);
-static void w_glColor4sv(const GLshort *v) { if (mglshim_active && p_glColor4sv) { p_glColor4sv(v); return; } if (a_glColor4sv) a_glColor4sv(v); }
-INTERPOSE(glColor4sv)
-void glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha) WEAKGL;
-static void (*p_glColor4ub)(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
-static void (*a_glColor4ub)(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
-static void w_glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha) { if (mglshim_active && p_glColor4ub) { p_glColor4ub(red, green, blue, alpha); return; } if (a_glColor4ub) a_glColor4ub(red, green, blue, alpha); }
-INTERPOSE(glColor4ub)
-void glColor4ubv(const GLubyte *v) WEAKGL;
-static void (*p_glColor4ubv)(const GLubyte *v);
-static void (*a_glColor4ubv)(const GLubyte *v);
-static void w_glColor4ubv(const GLubyte *v) { if (mglshim_active && p_glColor4ubv) { p_glColor4ubv(v); return; } if (a_glColor4ubv) a_glColor4ubv(v); }
-INTERPOSE(glColor4ubv)
-void glColor4ui(GLuint red, GLuint green, GLuint blue, GLuint alpha) WEAKGL;
-static void (*p_glColor4ui)(GLuint red, GLuint green, GLuint blue, GLuint alpha);
-static void (*a_glColor4ui)(GLuint red, GLuint green, GLuint blue, GLuint alpha);
-static void w_glColor4ui(GLuint red, GLuint green, GLuint blue, GLuint alpha) { if (mglshim_active && p_glColor4ui) { p_glColor4ui(red, green, blue, alpha); return; } if (a_glColor4ui) a_glColor4ui(red, green, blue, alpha); }
-INTERPOSE(glColor4ui)
-void glColor4uiv(const GLuint *v) WEAKGL;
-static void (*p_glColor4uiv)(const GLuint *v);
-static void (*a_glColor4uiv)(const GLuint *v);
-static void w_glColor4uiv(const GLuint *v) { if (mglshim_active && p_glColor4uiv) { p_glColor4uiv(v); return; } if (a_glColor4uiv) a_glColor4uiv(v); }
-INTERPOSE(glColor4uiv)
-void glColor4us(GLushort red, GLushort green, GLushort blue, GLushort alpha) WEAKGL;
-static void (*p_glColor4us)(GLushort red, GLushort green, GLushort blue, GLushort alpha);
-static void (*a_glColor4us)(GLushort red, GLushort green, GLushort blue, GLushort alpha);
-static void w_glColor4us(GLushort red, GLushort green, GLushort blue, GLushort alpha) { if (mglshim_active && p_glColor4us) { p_glColor4us(red, green, blue, alpha); return; } if (a_glColor4us) a_glColor4us(red, green, blue, alpha); }
-INTERPOSE(glColor4us)
-void glColor4usv(const GLushort *v) WEAKGL;
-static void (*p_glColor4usv)(const GLushort *v);
-static void (*a_glColor4usv)(const GLushort *v);
-static void w_glColor4usv(const GLushort *v) { if (mglshim_active && p_glColor4usv) { p_glColor4usv(v); return; } if (a_glColor4usv) a_glColor4usv(v); }
-INTERPOSE(glColor4usv)
 void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) WEAKGL;
 static void (*p_glColorMask)(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
 static void (*a_glColorMask)(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
@@ -581,36 +361,6 @@ static void (*p_glColorMaski)(GLuint index, GLboolean r, GLboolean g, GLboolean 
 static void (*a_glColorMaski)(GLuint index, GLboolean r, GLboolean g, GLboolean b, GLboolean a);
 static void w_glColorMaski(GLuint index, GLboolean r, GLboolean g, GLboolean b, GLboolean a) { if (mglshim_active && p_glColorMaski) { p_glColorMaski(index, r, g, b, a); return; } if (a_glColorMaski) a_glColorMaski(index, r, g, b, a); }
 INTERPOSE(glColorMaski)
-void glColorMaterial(GLenum face, GLenum mode) WEAKGL;
-static void (*p_glColorMaterial)(GLenum face, GLenum mode);
-static void (*a_glColorMaterial)(GLenum face, GLenum mode);
-static void w_glColorMaterial(GLenum face, GLenum mode) { if (mglshim_active && p_glColorMaterial) { p_glColorMaterial(face, mode); return; } if (a_glColorMaterial) a_glColorMaterial(face, mode); }
-INTERPOSE(glColorMaterial)
-void glColorP3ui(GLenum type, GLuint color) WEAKGL;
-static void (*p_glColorP3ui)(GLenum type, GLuint color);
-static void (*a_glColorP3ui)(GLenum type, GLuint color);
-static void w_glColorP3ui(GLenum type, GLuint color) { if (mglshim_active && p_glColorP3ui) { p_glColorP3ui(type, color); return; } if (a_glColorP3ui) a_glColorP3ui(type, color); }
-INTERPOSE(glColorP3ui)
-void glColorP3uiv(GLenum type, const GLuint *color) WEAKGL;
-static void (*p_glColorP3uiv)(GLenum type, const GLuint *color);
-static void (*a_glColorP3uiv)(GLenum type, const GLuint *color);
-static void w_glColorP3uiv(GLenum type, const GLuint *color) { if (mglshim_active && p_glColorP3uiv) { p_glColorP3uiv(type, color); return; } if (a_glColorP3uiv) a_glColorP3uiv(type, color); }
-INTERPOSE(glColorP3uiv)
-void glColorP4ui(GLenum type, GLuint color) WEAKGL;
-static void (*p_glColorP4ui)(GLenum type, GLuint color);
-static void (*a_glColorP4ui)(GLenum type, GLuint color);
-static void w_glColorP4ui(GLenum type, GLuint color) { if (mglshim_active && p_glColorP4ui) { p_glColorP4ui(type, color); return; } if (a_glColorP4ui) a_glColorP4ui(type, color); }
-INTERPOSE(glColorP4ui)
-void glColorP4uiv(GLenum type, const GLuint *color) WEAKGL;
-static void (*p_glColorP4uiv)(GLenum type, const GLuint *color);
-static void (*a_glColorP4uiv)(GLenum type, const GLuint *color);
-static void w_glColorP4uiv(GLenum type, const GLuint *color) { if (mglshim_active && p_glColorP4uiv) { p_glColorP4uiv(type, color); return; } if (a_glColorP4uiv) a_glColorP4uiv(type, color); }
-INTERPOSE(glColorP4uiv)
-void glColorPointer(GLint size, GLenum type, GLsizei stride, const void *pointer) WEAKGL;
-static void (*p_glColorPointer)(GLint size, GLenum type, GLsizei stride, const void *pointer);
-static void (*a_glColorPointer)(GLint size, GLenum type, GLsizei stride, const void *pointer);
-static void w_glColorPointer(GLint size, GLenum type, GLsizei stride, const void *pointer) { if (mglshim_active && p_glColorPointer) { p_glColorPointer(size, type, stride, pointer); return; } if (a_glColorPointer) a_glColorPointer(size, type, stride, pointer); }
-INTERPOSE(glColorPointer)
 void glCompileShader(GLuint shader) WEAKGL;
 static void (*p_glCompileShader)(GLuint shader);
 static void (*a_glCompileShader)(GLuint shader);
@@ -676,11 +426,6 @@ static void (*p_glCopyNamedBufferSubData)(GLuint readBuffer, GLuint writeBuffer,
 static void (*a_glCopyNamedBufferSubData)(GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
 static void w_glCopyNamedBufferSubData(GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size) { if (mglshim_active && p_glCopyNamedBufferSubData) { p_glCopyNamedBufferSubData(readBuffer, writeBuffer, readOffset, writeOffset, size); return; } if (a_glCopyNamedBufferSubData) a_glCopyNamedBufferSubData(readBuffer, writeBuffer, readOffset, writeOffset, size); }
 INTERPOSE(glCopyNamedBufferSubData)
-void glCopyPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type) WEAKGL;
-static void (*p_glCopyPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type);
-static void (*a_glCopyPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type);
-static void w_glCopyPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type) { if (mglshim_active && p_glCopyPixels) { p_glCopyPixels(x, y, width, height, type); return; } if (a_glCopyPixels) a_glCopyPixels(x, y, width, height, type); }
-INTERPOSE(glCopyPixels)
 void glCopyTexImage1D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLint border) WEAKGL;
 static void (*p_glCopyTexImage1D)(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLint border);
 static void (*a_glCopyTexImage1D)(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLint border);
@@ -811,11 +556,6 @@ static void (*p_glDeleteFramebuffers)(GLsizei n, const GLuint *framebuffers);
 static void (*a_glDeleteFramebuffers)(GLsizei n, const GLuint *framebuffers);
 static void w_glDeleteFramebuffers(GLsizei n, const GLuint *framebuffers) { if (mglshim_active && p_glDeleteFramebuffers) { p_glDeleteFramebuffers(n, framebuffers); return; } if (a_glDeleteFramebuffers) a_glDeleteFramebuffers(n, framebuffers); }
 INTERPOSE(glDeleteFramebuffers)
-void glDeleteLists(GLuint list, GLsizei range) WEAKGL;
-static void (*p_glDeleteLists)(GLuint list, GLsizei range);
-static void (*a_glDeleteLists)(GLuint list, GLsizei range);
-static void w_glDeleteLists(GLuint list, GLsizei range) { if (mglshim_active && p_glDeleteLists) { p_glDeleteLists(list, range); return; } if (a_glDeleteLists) a_glDeleteLists(list, range); }
-INTERPOSE(glDeleteLists)
 void glDeleteProgram(GLuint program) WEAKGL;
 static void (*p_glDeleteProgram)(GLuint program);
 static void (*a_glDeleteProgram)(GLuint program);
@@ -906,11 +646,6 @@ static void (*p_glDisable)(GLenum cap);
 static void (*a_glDisable)(GLenum cap);
 static void w_glDisable(GLenum cap) { if (mglshim_active && p_glDisable) { p_glDisable(cap); return; } if (a_glDisable) a_glDisable(cap); }
 INTERPOSE(glDisable)
-void glDisableClientState(GLenum array) WEAKGL;
-static void (*p_glDisableClientState)(GLenum array);
-static void (*a_glDisableClientState)(GLenum array);
-static void w_glDisableClientState(GLenum array) { if (mglshim_active && p_glDisableClientState) { p_glDisableClientState(array); return; } if (a_glDisableClientState) a_glDisableClientState(array); }
-INTERPOSE(glDisableClientState)
 void glDisableVertexArrayAttrib(GLuint vaobj, GLuint index) WEAKGL;
 static void (*p_glDisableVertexArrayAttrib)(GLuint vaobj, GLuint index);
 static void (*a_glDisableVertexArrayAttrib)(GLuint vaobj, GLuint index);
@@ -1001,11 +736,6 @@ static void (*p_glDrawElementsInstancedBaseVertexBaseInstance)(GLenum mode, GLsi
 static void (*a_glDrawElementsInstancedBaseVertexBaseInstance)(GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex, GLuint baseinstance);
 static void w_glDrawElementsInstancedBaseVertexBaseInstance(GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex, GLuint baseinstance) { if (mglshim_active && p_glDrawElementsInstancedBaseVertexBaseInstance) { p_glDrawElementsInstancedBaseVertexBaseInstance(mode, count, type, indices, instancecount, basevertex, baseinstance); return; } if (a_glDrawElementsInstancedBaseVertexBaseInstance) a_glDrawElementsInstancedBaseVertexBaseInstance(mode, count, type, indices, instancecount, basevertex, baseinstance); }
 INTERPOSE(glDrawElementsInstancedBaseVertexBaseInstance)
-void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels) WEAKGL;
-static void (*p_glDrawPixels)(GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels);
-static void (*a_glDrawPixels)(GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels);
-static void w_glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels) { if (mglshim_active && p_glDrawPixels) { p_glDrawPixels(width, height, format, type, pixels); return; } if (a_glDrawPixels) a_glDrawPixels(width, height, format, type, pixels); }
-INTERPOSE(glDrawPixels)
 void glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices) WEAKGL;
 static void (*p_glDrawRangeElements)(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices);
 static void (*a_glDrawRangeElements)(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices);
@@ -1036,31 +766,11 @@ static void (*p_glDrawTransformFeedbackStreamInstanced)(GLenum mode, GLuint id, 
 static void (*a_glDrawTransformFeedbackStreamInstanced)(GLenum mode, GLuint id, GLuint stream, GLsizei instancecount);
 static void w_glDrawTransformFeedbackStreamInstanced(GLenum mode, GLuint id, GLuint stream, GLsizei instancecount) { if (mglshim_active && p_glDrawTransformFeedbackStreamInstanced) { p_glDrawTransformFeedbackStreamInstanced(mode, id, stream, instancecount); return; } if (a_glDrawTransformFeedbackStreamInstanced) a_glDrawTransformFeedbackStreamInstanced(mode, id, stream, instancecount); }
 INTERPOSE(glDrawTransformFeedbackStreamInstanced)
-void glEdgeFlag(GLboolean flag) WEAKGL;
-static void (*p_glEdgeFlag)(GLboolean flag);
-static void (*a_glEdgeFlag)(GLboolean flag);
-static void w_glEdgeFlag(GLboolean flag) { if (mglshim_active && p_glEdgeFlag) { p_glEdgeFlag(flag); return; } if (a_glEdgeFlag) a_glEdgeFlag(flag); }
-INTERPOSE(glEdgeFlag)
-void glEdgeFlagPointer(GLsizei stride, const void *pointer) WEAKGL;
-static void (*p_glEdgeFlagPointer)(GLsizei stride, const void *pointer);
-static void (*a_glEdgeFlagPointer)(GLsizei stride, const void *pointer);
-static void w_glEdgeFlagPointer(GLsizei stride, const void *pointer) { if (mglshim_active && p_glEdgeFlagPointer) { p_glEdgeFlagPointer(stride, pointer); return; } if (a_glEdgeFlagPointer) a_glEdgeFlagPointer(stride, pointer); }
-INTERPOSE(glEdgeFlagPointer)
-void glEdgeFlagv(const GLboolean *flag) WEAKGL;
-static void (*p_glEdgeFlagv)(const GLboolean *flag);
-static void (*a_glEdgeFlagv)(const GLboolean *flag);
-static void w_glEdgeFlagv(const GLboolean *flag) { if (mglshim_active && p_glEdgeFlagv) { p_glEdgeFlagv(flag); return; } if (a_glEdgeFlagv) a_glEdgeFlagv(flag); }
-INTERPOSE(glEdgeFlagv)
 void glEnable(GLenum cap) WEAKGL;
 static void (*p_glEnable)(GLenum cap);
 static void (*a_glEnable)(GLenum cap);
 static void w_glEnable(GLenum cap) { if (mglshim_active && p_glEnable) { p_glEnable(cap); return; } if (a_glEnable) a_glEnable(cap); }
 INTERPOSE(glEnable)
-void glEnableClientState(GLenum array) WEAKGL;
-static void (*p_glEnableClientState)(GLenum array);
-static void (*a_glEnableClientState)(GLenum array);
-static void w_glEnableClientState(GLenum array) { if (mglshim_active && p_glEnableClientState) { p_glEnableClientState(array); return; } if (a_glEnableClientState) a_glEnableClientState(array); }
-INTERPOSE(glEnableClientState)
 void glEnableVertexArrayAttrib(GLuint vaobj, GLuint index) WEAKGL;
 static void (*p_glEnableVertexArrayAttrib)(GLuint vaobj, GLuint index);
 static void (*a_glEnableVertexArrayAttrib)(GLuint vaobj, GLuint index);
@@ -1076,21 +786,11 @@ static void (*p_glEnablei)(GLenum target, GLuint index);
 static void (*a_glEnablei)(GLenum target, GLuint index);
 static void w_glEnablei(GLenum target, GLuint index) { if (mglshim_active && p_glEnablei) { p_glEnablei(target, index); return; } if (a_glEnablei) a_glEnablei(target, index); }
 INTERPOSE(glEnablei)
-void glEnd(void) WEAKGL;
-static void (*p_glEnd)(void);
-static void (*a_glEnd)(void);
-static void w_glEnd(void) { if (mglshim_active && p_glEnd) { p_glEnd(); return; } if (a_glEnd) a_glEnd(); }
-INTERPOSE(glEnd)
 void glEndConditionalRender(void) WEAKGL;
 static void (*p_glEndConditionalRender)(void);
 static void (*a_glEndConditionalRender)(void);
 static void w_glEndConditionalRender(void) { if (mglshim_active && p_glEndConditionalRender) { p_glEndConditionalRender(); return; } if (a_glEndConditionalRender) a_glEndConditionalRender(); }
 INTERPOSE(glEndConditionalRender)
-void glEndList(void) WEAKGL;
-static void (*p_glEndList)(void);
-static void (*a_glEndList)(void);
-static void w_glEndList(void) { if (mglshim_active && p_glEndList) { p_glEndList(); return; } if (a_glEndList) a_glEndList(); }
-INTERPOSE(glEndList)
 void glEndQuery(GLenum target) WEAKGL;
 static void (*p_glEndQuery)(GLenum target);
 static void (*a_glEndQuery)(GLenum target);
@@ -1106,71 +806,6 @@ static void (*p_glEndTransformFeedback)(void);
 static void (*a_glEndTransformFeedback)(void);
 static void w_glEndTransformFeedback(void) { if (mglshim_active && p_glEndTransformFeedback) { p_glEndTransformFeedback(); return; } if (a_glEndTransformFeedback) a_glEndTransformFeedback(); }
 INTERPOSE(glEndTransformFeedback)
-void glEvalCoord1d(GLdouble u) WEAKGL;
-static void (*p_glEvalCoord1d)(GLdouble u);
-static void (*a_glEvalCoord1d)(GLdouble u);
-static void w_glEvalCoord1d(GLdouble u) { if (mglshim_active && p_glEvalCoord1d) { p_glEvalCoord1d(u); return; } if (a_glEvalCoord1d) a_glEvalCoord1d(u); }
-INTERPOSE(glEvalCoord1d)
-void glEvalCoord1dv(const GLdouble *u) WEAKGL;
-static void (*p_glEvalCoord1dv)(const GLdouble *u);
-static void (*a_glEvalCoord1dv)(const GLdouble *u);
-static void w_glEvalCoord1dv(const GLdouble *u) { if (mglshim_active && p_glEvalCoord1dv) { p_glEvalCoord1dv(u); return; } if (a_glEvalCoord1dv) a_glEvalCoord1dv(u); }
-INTERPOSE(glEvalCoord1dv)
-void glEvalCoord1f(GLfloat u) WEAKGL;
-static void (*p_glEvalCoord1f)(GLfloat u);
-static void (*a_glEvalCoord1f)(GLfloat u);
-static void w_glEvalCoord1f(GLfloat u) { if (mglshim_active && p_glEvalCoord1f) { p_glEvalCoord1f(u); return; } if (a_glEvalCoord1f) a_glEvalCoord1f(u); }
-INTERPOSE(glEvalCoord1f)
-void glEvalCoord1fv(const GLfloat *u) WEAKGL;
-static void (*p_glEvalCoord1fv)(const GLfloat *u);
-static void (*a_glEvalCoord1fv)(const GLfloat *u);
-static void w_glEvalCoord1fv(const GLfloat *u) { if (mglshim_active && p_glEvalCoord1fv) { p_glEvalCoord1fv(u); return; } if (a_glEvalCoord1fv) a_glEvalCoord1fv(u); }
-INTERPOSE(glEvalCoord1fv)
-void glEvalCoord2d(GLdouble u, GLdouble v) WEAKGL;
-static void (*p_glEvalCoord2d)(GLdouble u, GLdouble v);
-static void (*a_glEvalCoord2d)(GLdouble u, GLdouble v);
-static void w_glEvalCoord2d(GLdouble u, GLdouble v) { if (mglshim_active && p_glEvalCoord2d) { p_glEvalCoord2d(u, v); return; } if (a_glEvalCoord2d) a_glEvalCoord2d(u, v); }
-INTERPOSE(glEvalCoord2d)
-void glEvalCoord2dv(const GLdouble *u) WEAKGL;
-static void (*p_glEvalCoord2dv)(const GLdouble *u);
-static void (*a_glEvalCoord2dv)(const GLdouble *u);
-static void w_glEvalCoord2dv(const GLdouble *u) { if (mglshim_active && p_glEvalCoord2dv) { p_glEvalCoord2dv(u); return; } if (a_glEvalCoord2dv) a_glEvalCoord2dv(u); }
-INTERPOSE(glEvalCoord2dv)
-void glEvalCoord2f(GLfloat u, GLfloat v) WEAKGL;
-static void (*p_glEvalCoord2f)(GLfloat u, GLfloat v);
-static void (*a_glEvalCoord2f)(GLfloat u, GLfloat v);
-static void w_glEvalCoord2f(GLfloat u, GLfloat v) { if (mglshim_active && p_glEvalCoord2f) { p_glEvalCoord2f(u, v); return; } if (a_glEvalCoord2f) a_glEvalCoord2f(u, v); }
-INTERPOSE(glEvalCoord2f)
-void glEvalCoord2fv(const GLfloat *u) WEAKGL;
-static void (*p_glEvalCoord2fv)(const GLfloat *u);
-static void (*a_glEvalCoord2fv)(const GLfloat *u);
-static void w_glEvalCoord2fv(const GLfloat *u) { if (mglshim_active && p_glEvalCoord2fv) { p_glEvalCoord2fv(u); return; } if (a_glEvalCoord2fv) a_glEvalCoord2fv(u); }
-INTERPOSE(glEvalCoord2fv)
-void glEvalMesh1(GLenum mode, GLint i1, GLint i2) WEAKGL;
-static void (*p_glEvalMesh1)(GLenum mode, GLint i1, GLint i2);
-static void (*a_glEvalMesh1)(GLenum mode, GLint i1, GLint i2);
-static void w_glEvalMesh1(GLenum mode, GLint i1, GLint i2) { if (mglshim_active && p_glEvalMesh1) { p_glEvalMesh1(mode, i1, i2); return; } if (a_glEvalMesh1) a_glEvalMesh1(mode, i1, i2); }
-INTERPOSE(glEvalMesh1)
-void glEvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2) WEAKGL;
-static void (*p_glEvalMesh2)(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2);
-static void (*a_glEvalMesh2)(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2);
-static void w_glEvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2) { if (mglshim_active && p_glEvalMesh2) { p_glEvalMesh2(mode, i1, i2, j1, j2); return; } if (a_glEvalMesh2) a_glEvalMesh2(mode, i1, i2, j1, j2); }
-INTERPOSE(glEvalMesh2)
-void glEvalPoint1(GLint i) WEAKGL;
-static void (*p_glEvalPoint1)(GLint i);
-static void (*a_glEvalPoint1)(GLint i);
-static void w_glEvalPoint1(GLint i) { if (mglshim_active && p_glEvalPoint1) { p_glEvalPoint1(i); return; } if (a_glEvalPoint1) a_glEvalPoint1(i); }
-INTERPOSE(glEvalPoint1)
-void glEvalPoint2(GLint i, GLint j) WEAKGL;
-static void (*p_glEvalPoint2)(GLint i, GLint j);
-static void (*a_glEvalPoint2)(GLint i, GLint j);
-static void w_glEvalPoint2(GLint i, GLint j) { if (mglshim_active && p_glEvalPoint2) { p_glEvalPoint2(i, j); return; } if (a_glEvalPoint2) a_glEvalPoint2(i, j); }
-INTERPOSE(glEvalPoint2)
-void glFeedbackBuffer(GLsizei size, GLenum type, GLfloat *buffer) WEAKGL;
-static void (*p_glFeedbackBuffer)(GLsizei size, GLenum type, GLfloat *buffer);
-static void (*a_glFeedbackBuffer)(GLsizei size, GLenum type, GLfloat *buffer);
-static void w_glFeedbackBuffer(GLsizei size, GLenum type, GLfloat *buffer) { if (mglshim_active && p_glFeedbackBuffer) { p_glFeedbackBuffer(size, type, buffer); return; } if (a_glFeedbackBuffer) a_glFeedbackBuffer(size, type, buffer); }
-INTERPOSE(glFeedbackBuffer)
 GLsync glFenceSync(GLenum condition, GLbitfield flags) WEAKGL;
 static GLsync (*p_glFenceSync)(GLenum condition, GLbitfield flags);
 static GLsync (*a_glFenceSync)(GLenum condition, GLbitfield flags);
@@ -1196,51 +831,6 @@ static void (*p_glFlushMappedNamedBufferRange)(GLuint buffer, GLintptr offset, G
 static void (*a_glFlushMappedNamedBufferRange)(GLuint buffer, GLintptr offset, GLsizeiptr length);
 static void w_glFlushMappedNamedBufferRange(GLuint buffer, GLintptr offset, GLsizeiptr length) { if (mglshim_active && p_glFlushMappedNamedBufferRange) { p_glFlushMappedNamedBufferRange(buffer, offset, length); return; } if (a_glFlushMappedNamedBufferRange) a_glFlushMappedNamedBufferRange(buffer, offset, length); }
 INTERPOSE(glFlushMappedNamedBufferRange)
-void glFogCoordPointer(GLenum type, GLsizei stride, const void *pointer) WEAKGL;
-static void (*p_glFogCoordPointer)(GLenum type, GLsizei stride, const void *pointer);
-static void (*a_glFogCoordPointer)(GLenum type, GLsizei stride, const void *pointer);
-static void w_glFogCoordPointer(GLenum type, GLsizei stride, const void *pointer) { if (mglshim_active && p_glFogCoordPointer) { p_glFogCoordPointer(type, stride, pointer); return; } if (a_glFogCoordPointer) a_glFogCoordPointer(type, stride, pointer); }
-INTERPOSE(glFogCoordPointer)
-void glFogCoordd(GLdouble coord) WEAKGL;
-static void (*p_glFogCoordd)(GLdouble coord);
-static void (*a_glFogCoordd)(GLdouble coord);
-static void w_glFogCoordd(GLdouble coord) { if (mglshim_active && p_glFogCoordd) { p_glFogCoordd(coord); return; } if (a_glFogCoordd) a_glFogCoordd(coord); }
-INTERPOSE(glFogCoordd)
-void glFogCoorddv(const GLdouble *coord) WEAKGL;
-static void (*p_glFogCoorddv)(const GLdouble *coord);
-static void (*a_glFogCoorddv)(const GLdouble *coord);
-static void w_glFogCoorddv(const GLdouble *coord) { if (mglshim_active && p_glFogCoorddv) { p_glFogCoorddv(coord); return; } if (a_glFogCoorddv) a_glFogCoorddv(coord); }
-INTERPOSE(glFogCoorddv)
-void glFogCoordf(GLfloat coord) WEAKGL;
-static void (*p_glFogCoordf)(GLfloat coord);
-static void (*a_glFogCoordf)(GLfloat coord);
-static void w_glFogCoordf(GLfloat coord) { if (mglshim_active && p_glFogCoordf) { p_glFogCoordf(coord); return; } if (a_glFogCoordf) a_glFogCoordf(coord); }
-INTERPOSE(glFogCoordf)
-void glFogCoordfv(const GLfloat *coord) WEAKGL;
-static void (*p_glFogCoordfv)(const GLfloat *coord);
-static void (*a_glFogCoordfv)(const GLfloat *coord);
-static void w_glFogCoordfv(const GLfloat *coord) { if (mglshim_active && p_glFogCoordfv) { p_glFogCoordfv(coord); return; } if (a_glFogCoordfv) a_glFogCoordfv(coord); }
-INTERPOSE(glFogCoordfv)
-void glFogf(GLenum pname, GLfloat param) WEAKGL;
-static void (*p_glFogf)(GLenum pname, GLfloat param);
-static void (*a_glFogf)(GLenum pname, GLfloat param);
-static void w_glFogf(GLenum pname, GLfloat param) { if (mglshim_active && p_glFogf) { p_glFogf(pname, param); return; } if (a_glFogf) a_glFogf(pname, param); }
-INTERPOSE(glFogf)
-void glFogfv(GLenum pname, const GLfloat *params) WEAKGL;
-static void (*p_glFogfv)(GLenum pname, const GLfloat *params);
-static void (*a_glFogfv)(GLenum pname, const GLfloat *params);
-static void w_glFogfv(GLenum pname, const GLfloat *params) { if (mglshim_active && p_glFogfv) { p_glFogfv(pname, params); return; } if (a_glFogfv) a_glFogfv(pname, params); }
-INTERPOSE(glFogfv)
-void glFogi(GLenum pname, GLint param) WEAKGL;
-static void (*p_glFogi)(GLenum pname, GLint param);
-static void (*a_glFogi)(GLenum pname, GLint param);
-static void w_glFogi(GLenum pname, GLint param) { if (mglshim_active && p_glFogi) { p_glFogi(pname, param); return; } if (a_glFogi) a_glFogi(pname, param); }
-INTERPOSE(glFogi)
-void glFogiv(GLenum pname, const GLint *params) WEAKGL;
-static void (*p_glFogiv)(GLenum pname, const GLint *params);
-static void (*a_glFogiv)(GLenum pname, const GLint *params);
-static void w_glFogiv(GLenum pname, const GLint *params) { if (mglshim_active && p_glFogiv) { p_glFogiv(pname, params); return; } if (a_glFogiv) a_glFogiv(pname, params); }
-INTERPOSE(glFogiv)
 void glFramebufferParameteri(GLenum target, GLenum pname, GLint param) WEAKGL;
 static void (*p_glFramebufferParameteri)(GLenum target, GLenum pname, GLint param);
 static void (*a_glFramebufferParameteri)(GLenum target, GLenum pname, GLint param);
@@ -1281,11 +871,6 @@ static void (*p_glFrontFace)(GLenum mode);
 static void (*a_glFrontFace)(GLenum mode);
 static void w_glFrontFace(GLenum mode) { if (mglshim_active && p_glFrontFace) { p_glFrontFace(mode); return; } if (a_glFrontFace) a_glFrontFace(mode); }
 INTERPOSE(glFrontFace)
-void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar) WEAKGL;
-static void (*p_glFrustum)(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar);
-static void (*a_glFrustum)(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar);
-static void w_glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar) { if (mglshim_active && p_glFrustum) { p_glFrustum(left, right, bottom, top, zNear, zFar); return; } if (a_glFrustum) a_glFrustum(left, right, bottom, top, zNear, zFar); }
-INTERPOSE(glFrustum)
 void glGenBuffers(GLsizei n, GLuint *buffers) WEAKGL;
 static void (*p_glGenBuffers)(GLsizei n, GLuint *buffers);
 static void (*a_glGenBuffers)(GLsizei n, GLuint *buffers);
@@ -1296,11 +881,6 @@ static void (*p_glGenFramebuffers)(GLsizei n, GLuint *framebuffers);
 static void (*a_glGenFramebuffers)(GLsizei n, GLuint *framebuffers);
 static void w_glGenFramebuffers(GLsizei n, GLuint *framebuffers) { if (mglshim_active && p_glGenFramebuffers) { p_glGenFramebuffers(n, framebuffers); return; } if (a_glGenFramebuffers) a_glGenFramebuffers(n, framebuffers); }
 INTERPOSE(glGenFramebuffers)
-GLuint glGenLists(GLsizei range) WEAKGL;
-static GLuint (*p_glGenLists)(GLsizei range);
-static GLuint (*a_glGenLists)(GLsizei range);
-static GLuint w_glGenLists(GLsizei range) { if (mglshim_active && p_glGenLists) return p_glGenLists(range); if (a_glGenLists) return a_glGenLists(range); return (GLuint)0; }
-INTERPOSE(glGenLists)
 void glGenProgramPipelines(GLsizei n, GLuint *pipelines) WEAKGL;
 static void (*p_glGenProgramPipelines)(GLsizei n, GLuint *pipelines);
 static void (*a_glGenProgramPipelines)(GLsizei n, GLuint *pipelines);
@@ -1436,11 +1016,6 @@ static void (*p_glGetBufferSubData)(GLenum target, GLintptr offset, GLsizeiptr s
 static void (*a_glGetBufferSubData)(GLenum target, GLintptr offset, GLsizeiptr size, void *data);
 static void w_glGetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, void *data) { if (mglshim_active && p_glGetBufferSubData) { p_glGetBufferSubData(target, offset, size, data); return; } if (a_glGetBufferSubData) a_glGetBufferSubData(target, offset, size, data); }
 INTERPOSE(glGetBufferSubData)
-void glGetClipPlane(GLenum plane, GLdouble *equation) WEAKGL;
-static void (*p_glGetClipPlane)(GLenum plane, GLdouble *equation);
-static void (*a_glGetClipPlane)(GLenum plane, GLdouble *equation);
-static void w_glGetClipPlane(GLenum plane, GLdouble *equation) { if (mglshim_active && p_glGetClipPlane) { p_glGetClipPlane(plane, equation); return; } if (a_glGetClipPlane) a_glGetClipPlane(plane, equation); }
-INTERPOSE(glGetClipPlane)
 void glGetCompressedTexImage(GLenum target, GLint level, void *img) WEAKGL;
 static void (*p_glGetCompressedTexImage)(GLenum target, GLint level, void *img);
 static void (*a_glGetCompressedTexImage)(GLenum target, GLint level, void *img);
@@ -1541,41 +1116,6 @@ static void (*p_glGetInternalformativ)(GLenum target, GLenum internalformat, GLe
 static void (*a_glGetInternalformativ)(GLenum target, GLenum internalformat, GLenum pname, GLsizei count, GLint *params);
 static void w_glGetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei count, GLint *params) { if (mglshim_active && p_glGetInternalformativ) { p_glGetInternalformativ(target, internalformat, pname, count, params); return; } if (a_glGetInternalformativ) a_glGetInternalformativ(target, internalformat, pname, count, params); }
 INTERPOSE(glGetInternalformativ)
-void glGetLightfv(GLenum light, GLenum pname, GLfloat *params) WEAKGL;
-static void (*p_glGetLightfv)(GLenum light, GLenum pname, GLfloat *params);
-static void (*a_glGetLightfv)(GLenum light, GLenum pname, GLfloat *params);
-static void w_glGetLightfv(GLenum light, GLenum pname, GLfloat *params) { if (mglshim_active && p_glGetLightfv) { p_glGetLightfv(light, pname, params); return; } if (a_glGetLightfv) a_glGetLightfv(light, pname, params); }
-INTERPOSE(glGetLightfv)
-void glGetLightiv(GLenum light, GLenum pname, GLint *params) WEAKGL;
-static void (*p_glGetLightiv)(GLenum light, GLenum pname, GLint *params);
-static void (*a_glGetLightiv)(GLenum light, GLenum pname, GLint *params);
-static void w_glGetLightiv(GLenum light, GLenum pname, GLint *params) { if (mglshim_active && p_glGetLightiv) { p_glGetLightiv(light, pname, params); return; } if (a_glGetLightiv) a_glGetLightiv(light, pname, params); }
-INTERPOSE(glGetLightiv)
-void glGetMapdv(GLenum target, GLenum query, GLdouble *v) WEAKGL;
-static void (*p_glGetMapdv)(GLenum target, GLenum query, GLdouble *v);
-static void (*a_glGetMapdv)(GLenum target, GLenum query, GLdouble *v);
-static void w_glGetMapdv(GLenum target, GLenum query, GLdouble *v) { if (mglshim_active && p_glGetMapdv) { p_glGetMapdv(target, query, v); return; } if (a_glGetMapdv) a_glGetMapdv(target, query, v); }
-INTERPOSE(glGetMapdv)
-void glGetMapfv(GLenum target, GLenum query, GLfloat *v) WEAKGL;
-static void (*p_glGetMapfv)(GLenum target, GLenum query, GLfloat *v);
-static void (*a_glGetMapfv)(GLenum target, GLenum query, GLfloat *v);
-static void w_glGetMapfv(GLenum target, GLenum query, GLfloat *v) { if (mglshim_active && p_glGetMapfv) { p_glGetMapfv(target, query, v); return; } if (a_glGetMapfv) a_glGetMapfv(target, query, v); }
-INTERPOSE(glGetMapfv)
-void glGetMapiv(GLenum target, GLenum query, GLint *v) WEAKGL;
-static void (*p_glGetMapiv)(GLenum target, GLenum query, GLint *v);
-static void (*a_glGetMapiv)(GLenum target, GLenum query, GLint *v);
-static void w_glGetMapiv(GLenum target, GLenum query, GLint *v) { if (mglshim_active && p_glGetMapiv) { p_glGetMapiv(target, query, v); return; } if (a_glGetMapiv) a_glGetMapiv(target, query, v); }
-INTERPOSE(glGetMapiv)
-void glGetMaterialfv(GLenum face, GLenum pname, GLfloat *params) WEAKGL;
-static void (*p_glGetMaterialfv)(GLenum face, GLenum pname, GLfloat *params);
-static void (*a_glGetMaterialfv)(GLenum face, GLenum pname, GLfloat *params);
-static void w_glGetMaterialfv(GLenum face, GLenum pname, GLfloat *params) { if (mglshim_active && p_glGetMaterialfv) { p_glGetMaterialfv(face, pname, params); return; } if (a_glGetMaterialfv) a_glGetMaterialfv(face, pname, params); }
-INTERPOSE(glGetMaterialfv)
-void glGetMaterialiv(GLenum face, GLenum pname, GLint *params) WEAKGL;
-static void (*p_glGetMaterialiv)(GLenum face, GLenum pname, GLint *params);
-static void (*a_glGetMaterialiv)(GLenum face, GLenum pname, GLint *params);
-static void w_glGetMaterialiv(GLenum face, GLenum pname, GLint *params) { if (mglshim_active && p_glGetMaterialiv) { p_glGetMaterialiv(face, pname, params); return; } if (a_glGetMaterialiv) a_glGetMaterialiv(face, pname, params); }
-INTERPOSE(glGetMaterialiv)
 void glGetMultisamplefv(GLenum pname, GLuint index, GLfloat *val) WEAKGL;
 static void (*p_glGetMultisamplefv)(GLenum pname, GLuint index, GLfloat *val);
 static void (*a_glGetMultisamplefv)(GLenum pname, GLuint index, GLfloat *val);
@@ -1626,31 +1166,11 @@ static void (*p_glGetObjectPtrLabel)(const void *ptr, GLsizei bufSize, GLsizei *
 static void (*a_glGetObjectPtrLabel)(const void *ptr, GLsizei bufSize, GLsizei *length, GLchar *label);
 static void w_glGetObjectPtrLabel(const void *ptr, GLsizei bufSize, GLsizei *length, GLchar *label) { if (mglshim_active && p_glGetObjectPtrLabel) { p_glGetObjectPtrLabel(ptr, bufSize, length, label); return; } if (a_glGetObjectPtrLabel) a_glGetObjectPtrLabel(ptr, bufSize, length, label); }
 INTERPOSE(glGetObjectPtrLabel)
-void glGetPixelMapfv(GLenum map, GLfloat *values) WEAKGL;
-static void (*p_glGetPixelMapfv)(GLenum map, GLfloat *values);
-static void (*a_glGetPixelMapfv)(GLenum map, GLfloat *values);
-static void w_glGetPixelMapfv(GLenum map, GLfloat *values) { if (mglshim_active && p_glGetPixelMapfv) { p_glGetPixelMapfv(map, values); return; } if (a_glGetPixelMapfv) a_glGetPixelMapfv(map, values); }
-INTERPOSE(glGetPixelMapfv)
-void glGetPixelMapuiv(GLenum map, GLuint *values) WEAKGL;
-static void (*p_glGetPixelMapuiv)(GLenum map, GLuint *values);
-static void (*a_glGetPixelMapuiv)(GLenum map, GLuint *values);
-static void w_glGetPixelMapuiv(GLenum map, GLuint *values) { if (mglshim_active && p_glGetPixelMapuiv) { p_glGetPixelMapuiv(map, values); return; } if (a_glGetPixelMapuiv) a_glGetPixelMapuiv(map, values); }
-INTERPOSE(glGetPixelMapuiv)
-void glGetPixelMapusv(GLenum map, GLushort *values) WEAKGL;
-static void (*p_glGetPixelMapusv)(GLenum map, GLushort *values);
-static void (*a_glGetPixelMapusv)(GLenum map, GLushort *values);
-static void w_glGetPixelMapusv(GLenum map, GLushort *values) { if (mglshim_active && p_glGetPixelMapusv) { p_glGetPixelMapusv(map, values); return; } if (a_glGetPixelMapusv) a_glGetPixelMapusv(map, values); }
-INTERPOSE(glGetPixelMapusv)
 void glGetPointerv(GLenum pname, void **params) WEAKGL;
 static void (*p_glGetPointerv)(GLenum pname, void **params);
 static void (*a_glGetPointerv)(GLenum pname, void **params);
 static void w_glGetPointerv(GLenum pname, void **params) { if (mglshim_active && p_glGetPointerv) { p_glGetPointerv(pname, params); return; } if (a_glGetPointerv) a_glGetPointerv(pname, params); }
 INTERPOSE(glGetPointerv)
-void glGetPolygonStipple(GLubyte *mask) WEAKGL;
-static void (*p_glGetPolygonStipple)(GLubyte *mask);
-static void (*a_glGetPolygonStipple)(GLubyte *mask);
-static void w_glGetPolygonStipple(GLubyte *mask) { if (mglshim_active && p_glGetPolygonStipple) { p_glGetPolygonStipple(mask); return; } if (a_glGetPolygonStipple) a_glGetPolygonStipple(mask); }
-INTERPOSE(glGetPolygonStipple)
 void glGetProgramBinary(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, void *binary) WEAKGL;
 static void (*p_glGetProgramBinary)(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, void *binary);
 static void (*a_glGetProgramBinary)(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, void *binary);
@@ -1806,15 +1326,15 @@ static void (*p_glGetShaderiv)(GLuint shader, GLenum pname, GLint *params);
 static void (*a_glGetShaderiv)(GLuint shader, GLenum pname, GLint *params);
 static void w_glGetShaderiv(GLuint shader, GLenum pname, GLint *params) { if (mglshim_active && p_glGetShaderiv) { p_glGetShaderiv(shader, pname, params); return; } if (a_glGetShaderiv) a_glGetShaderiv(shader, pname, params); }
 INTERPOSE(glGetShaderiv)
-GLubyte const  * glGetString(GLenum name) WEAKGL;
-static GLubyte const  * (*p_glGetString)(GLenum name);
-static GLubyte const  * (*a_glGetString)(GLenum name);
-static GLubyte const  * w_glGetString(GLenum name) { if (mglshim_active && p_glGetString) return p_glGetString(name); if (a_glGetString) return a_glGetString(name); return (GLubyte const  *)0; }
+const GLubyte * glGetString(GLenum name) WEAKGL;
+static const GLubyte * (*p_glGetString)(GLenum name);
+static const GLubyte * (*a_glGetString)(GLenum name);
+static const GLubyte * w_glGetString(GLenum name) { if (mglshim_active && p_glGetString) return p_glGetString(name); if (a_glGetString) return a_glGetString(name); return (const GLubyte *)0; }
 INTERPOSE(glGetString)
-GLubyte const  * glGetStringi(GLenum name, GLuint index) WEAKGL;
-static GLubyte const  * (*p_glGetStringi)(GLenum name, GLuint index);
-static GLubyte const  * (*a_glGetStringi)(GLenum name, GLuint index);
-static GLubyte const  * w_glGetStringi(GLenum name, GLuint index) { if (mglshim_active && p_glGetStringi) return p_glGetStringi(name, index); if (a_glGetStringi) return a_glGetStringi(name, index); return (GLubyte const  *)0; }
+const GLubyte * glGetStringi(GLenum name, GLuint index) WEAKGL;
+static const GLubyte * (*p_glGetStringi)(GLenum name, GLuint index);
+static const GLubyte * (*a_glGetStringi)(GLenum name, GLuint index);
+static const GLubyte * w_glGetStringi(GLenum name, GLuint index) { if (mglshim_active && p_glGetStringi) return p_glGetStringi(name, index); if (a_glGetStringi) return a_glGetStringi(name, index); return (const GLubyte *)0; }
 INTERPOSE(glGetStringi)
 GLuint glGetSubroutineIndex(GLuint program, GLenum shadertype, const GLchar *name) WEAKGL;
 static GLuint (*p_glGetSubroutineIndex)(GLuint program, GLenum shadertype, const GLchar *name);
@@ -1831,31 +1351,6 @@ static void (*p_glGetSynciv)(GLsync sync, GLenum pname, GLsizei count, GLsizei *
 static void (*a_glGetSynciv)(GLsync sync, GLenum pname, GLsizei count, GLsizei *length, GLint *values);
 static void w_glGetSynciv(GLsync sync, GLenum pname, GLsizei count, GLsizei *length, GLint *values) { if (mglshim_active && p_glGetSynciv) { p_glGetSynciv(sync, pname, count, length, values); return; } if (a_glGetSynciv) a_glGetSynciv(sync, pname, count, length, values); }
 INTERPOSE(glGetSynciv)
-void glGetTexEnvfv(GLenum target, GLenum pname, GLfloat *params) WEAKGL;
-static void (*p_glGetTexEnvfv)(GLenum target, GLenum pname, GLfloat *params);
-static void (*a_glGetTexEnvfv)(GLenum target, GLenum pname, GLfloat *params);
-static void w_glGetTexEnvfv(GLenum target, GLenum pname, GLfloat *params) { if (mglshim_active && p_glGetTexEnvfv) { p_glGetTexEnvfv(target, pname, params); return; } if (a_glGetTexEnvfv) a_glGetTexEnvfv(target, pname, params); }
-INTERPOSE(glGetTexEnvfv)
-void glGetTexEnviv(GLenum target, GLenum pname, GLint *params) WEAKGL;
-static void (*p_glGetTexEnviv)(GLenum target, GLenum pname, GLint *params);
-static void (*a_glGetTexEnviv)(GLenum target, GLenum pname, GLint *params);
-static void w_glGetTexEnviv(GLenum target, GLenum pname, GLint *params) { if (mglshim_active && p_glGetTexEnviv) { p_glGetTexEnviv(target, pname, params); return; } if (a_glGetTexEnviv) a_glGetTexEnviv(target, pname, params); }
-INTERPOSE(glGetTexEnviv)
-void glGetTexGendv(GLenum coord, GLenum pname, GLdouble *params) WEAKGL;
-static void (*p_glGetTexGendv)(GLenum coord, GLenum pname, GLdouble *params);
-static void (*a_glGetTexGendv)(GLenum coord, GLenum pname, GLdouble *params);
-static void w_glGetTexGendv(GLenum coord, GLenum pname, GLdouble *params) { if (mglshim_active && p_glGetTexGendv) { p_glGetTexGendv(coord, pname, params); return; } if (a_glGetTexGendv) a_glGetTexGendv(coord, pname, params); }
-INTERPOSE(glGetTexGendv)
-void glGetTexGenfv(GLenum coord, GLenum pname, GLfloat *params) WEAKGL;
-static void (*p_glGetTexGenfv)(GLenum coord, GLenum pname, GLfloat *params);
-static void (*a_glGetTexGenfv)(GLenum coord, GLenum pname, GLfloat *params);
-static void w_glGetTexGenfv(GLenum coord, GLenum pname, GLfloat *params) { if (mglshim_active && p_glGetTexGenfv) { p_glGetTexGenfv(coord, pname, params); return; } if (a_glGetTexGenfv) a_glGetTexGenfv(coord, pname, params); }
-INTERPOSE(glGetTexGenfv)
-void glGetTexGeniv(GLenum coord, GLenum pname, GLint *params) WEAKGL;
-static void (*p_glGetTexGeniv)(GLenum coord, GLenum pname, GLint *params);
-static void (*a_glGetTexGeniv)(GLenum coord, GLenum pname, GLint *params);
-static void w_glGetTexGeniv(GLenum coord, GLenum pname, GLint *params) { if (mglshim_active && p_glGetTexGeniv) { p_glGetTexGeniv(coord, pname, params); return; } if (a_glGetTexGeniv) a_glGetTexGeniv(coord, pname, params); }
-INTERPOSE(glGetTexGeniv)
 void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, void *pixels) WEAKGL;
 static void (*p_glGetTexImage)(GLenum target, GLint level, GLenum format, GLenum type, void *pixels);
 static void (*a_glGetTexImage)(GLenum target, GLint level, GLenum format, GLenum type, void *pixels);
@@ -2041,71 +1536,11 @@ static void (*p_glGetVertexAttribiv)(GLuint index, GLenum pname, GLint *params);
 static void (*a_glGetVertexAttribiv)(GLuint index, GLenum pname, GLint *params);
 static void w_glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params) { if (mglshim_active && p_glGetVertexAttribiv) { p_glGetVertexAttribiv(index, pname, params); return; } if (a_glGetVertexAttribiv) a_glGetVertexAttribiv(index, pname, params); }
 INTERPOSE(glGetVertexAttribiv)
-void glGetnColorTable(GLenum target, GLenum format, GLenum type, GLsizei bufSize, void *table) WEAKGL;
-static void (*p_glGetnColorTable)(GLenum target, GLenum format, GLenum type, GLsizei bufSize, void *table);
-static void (*a_glGetnColorTable)(GLenum target, GLenum format, GLenum type, GLsizei bufSize, void *table);
-static void w_glGetnColorTable(GLenum target, GLenum format, GLenum type, GLsizei bufSize, void *table) { if (mglshim_active && p_glGetnColorTable) { p_glGetnColorTable(target, format, type, bufSize, table); return; } if (a_glGetnColorTable) a_glGetnColorTable(target, format, type, bufSize, table); }
-INTERPOSE(glGetnColorTable)
 void glGetnCompressedTexImage(GLenum target, GLint lod, GLsizei bufSize, void *pixels) WEAKGL;
 static void (*p_glGetnCompressedTexImage)(GLenum target, GLint lod, GLsizei bufSize, void *pixels);
 static void (*a_glGetnCompressedTexImage)(GLenum target, GLint lod, GLsizei bufSize, void *pixels);
 static void w_glGetnCompressedTexImage(GLenum target, GLint lod, GLsizei bufSize, void *pixels) { if (mglshim_active && p_glGetnCompressedTexImage) { p_glGetnCompressedTexImage(target, lod, bufSize, pixels); return; } if (a_glGetnCompressedTexImage) a_glGetnCompressedTexImage(target, lod, bufSize, pixels); }
 INTERPOSE(glGetnCompressedTexImage)
-void glGetnConvolutionFilter(GLenum target, GLenum format, GLenum type, GLsizei bufSize, void *image) WEAKGL;
-static void (*p_glGetnConvolutionFilter)(GLenum target, GLenum format, GLenum type, GLsizei bufSize, void *image);
-static void (*a_glGetnConvolutionFilter)(GLenum target, GLenum format, GLenum type, GLsizei bufSize, void *image);
-static void w_glGetnConvolutionFilter(GLenum target, GLenum format, GLenum type, GLsizei bufSize, void *image) { if (mglshim_active && p_glGetnConvolutionFilter) { p_glGetnConvolutionFilter(target, format, type, bufSize, image); return; } if (a_glGetnConvolutionFilter) a_glGetnConvolutionFilter(target, format, type, bufSize, image); }
-INTERPOSE(glGetnConvolutionFilter)
-void glGetnHistogram(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, void *values) WEAKGL;
-static void (*p_glGetnHistogram)(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, void *values);
-static void (*a_glGetnHistogram)(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, void *values);
-static void w_glGetnHistogram(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, void *values) { if (mglshim_active && p_glGetnHistogram) { p_glGetnHistogram(target, reset, format, type, bufSize, values); return; } if (a_glGetnHistogram) a_glGetnHistogram(target, reset, format, type, bufSize, values); }
-INTERPOSE(glGetnHistogram)
-void glGetnMapdv(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v) WEAKGL;
-static void (*p_glGetnMapdv)(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v);
-static void (*a_glGetnMapdv)(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v);
-static void w_glGetnMapdv(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v) { if (mglshim_active && p_glGetnMapdv) { p_glGetnMapdv(target, query, bufSize, v); return; } if (a_glGetnMapdv) a_glGetnMapdv(target, query, bufSize, v); }
-INTERPOSE(glGetnMapdv)
-void glGetnMapfv(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v) WEAKGL;
-static void (*p_glGetnMapfv)(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v);
-static void (*a_glGetnMapfv)(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v);
-static void w_glGetnMapfv(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v) { if (mglshim_active && p_glGetnMapfv) { p_glGetnMapfv(target, query, bufSize, v); return; } if (a_glGetnMapfv) a_glGetnMapfv(target, query, bufSize, v); }
-INTERPOSE(glGetnMapfv)
-void glGetnMapiv(GLenum target, GLenum query, GLsizei bufSize, GLint *v) WEAKGL;
-static void (*p_glGetnMapiv)(GLenum target, GLenum query, GLsizei bufSize, GLint *v);
-static void (*a_glGetnMapiv)(GLenum target, GLenum query, GLsizei bufSize, GLint *v);
-static void w_glGetnMapiv(GLenum target, GLenum query, GLsizei bufSize, GLint *v) { if (mglshim_active && p_glGetnMapiv) { p_glGetnMapiv(target, query, bufSize, v); return; } if (a_glGetnMapiv) a_glGetnMapiv(target, query, bufSize, v); }
-INTERPOSE(glGetnMapiv)
-void glGetnMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, void *values) WEAKGL;
-static void (*p_glGetnMinmax)(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, void *values);
-static void (*a_glGetnMinmax)(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, void *values);
-static void w_glGetnMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, void *values) { if (mglshim_active && p_glGetnMinmax) { p_glGetnMinmax(target, reset, format, type, bufSize, values); return; } if (a_glGetnMinmax) a_glGetnMinmax(target, reset, format, type, bufSize, values); }
-INTERPOSE(glGetnMinmax)
-void glGetnPixelMapfv(GLenum map, GLsizei bufSize, GLfloat *values) WEAKGL;
-static void (*p_glGetnPixelMapfv)(GLenum map, GLsizei bufSize, GLfloat *values);
-static void (*a_glGetnPixelMapfv)(GLenum map, GLsizei bufSize, GLfloat *values);
-static void w_glGetnPixelMapfv(GLenum map, GLsizei bufSize, GLfloat *values) { if (mglshim_active && p_glGetnPixelMapfv) { p_glGetnPixelMapfv(map, bufSize, values); return; } if (a_glGetnPixelMapfv) a_glGetnPixelMapfv(map, bufSize, values); }
-INTERPOSE(glGetnPixelMapfv)
-void glGetnPixelMapuiv(GLenum map, GLsizei bufSize, GLuint *values) WEAKGL;
-static void (*p_glGetnPixelMapuiv)(GLenum map, GLsizei bufSize, GLuint *values);
-static void (*a_glGetnPixelMapuiv)(GLenum map, GLsizei bufSize, GLuint *values);
-static void w_glGetnPixelMapuiv(GLenum map, GLsizei bufSize, GLuint *values) { if (mglshim_active && p_glGetnPixelMapuiv) { p_glGetnPixelMapuiv(map, bufSize, values); return; } if (a_glGetnPixelMapuiv) a_glGetnPixelMapuiv(map, bufSize, values); }
-INTERPOSE(glGetnPixelMapuiv)
-void glGetnPixelMapusv(GLenum map, GLsizei bufSize, GLushort *values) WEAKGL;
-static void (*p_glGetnPixelMapusv)(GLenum map, GLsizei bufSize, GLushort *values);
-static void (*a_glGetnPixelMapusv)(GLenum map, GLsizei bufSize, GLushort *values);
-static void w_glGetnPixelMapusv(GLenum map, GLsizei bufSize, GLushort *values) { if (mglshim_active && p_glGetnPixelMapusv) { p_glGetnPixelMapusv(map, bufSize, values); return; } if (a_glGetnPixelMapusv) a_glGetnPixelMapusv(map, bufSize, values); }
-INTERPOSE(glGetnPixelMapusv)
-void glGetnPolygonStipple(GLsizei bufSize, GLubyte *pattern) WEAKGL;
-static void (*p_glGetnPolygonStipple)(GLsizei bufSize, GLubyte *pattern);
-static void (*a_glGetnPolygonStipple)(GLsizei bufSize, GLubyte *pattern);
-static void w_glGetnPolygonStipple(GLsizei bufSize, GLubyte *pattern) { if (mglshim_active && p_glGetnPolygonStipple) { p_glGetnPolygonStipple(bufSize, pattern); return; } if (a_glGetnPolygonStipple) a_glGetnPolygonStipple(bufSize, pattern); }
-INTERPOSE(glGetnPolygonStipple)
-void glGetnSeparableFilter(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, void *row, GLsizei columnBufSize, void *column, void *span) WEAKGL;
-static void (*p_glGetnSeparableFilter)(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, void *row, GLsizei columnBufSize, void *column, void *span);
-static void (*a_glGetnSeparableFilter)(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, void *row, GLsizei columnBufSize, void *column, void *span);
-static void w_glGetnSeparableFilter(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, void *row, GLsizei columnBufSize, void *column, void *span) { if (mglshim_active && p_glGetnSeparableFilter) { p_glGetnSeparableFilter(target, format, type, rowBufSize, row, columnBufSize, column, span); return; } if (a_glGetnSeparableFilter) a_glGetnSeparableFilter(target, format, type, rowBufSize, row, columnBufSize, column, span); }
-INTERPOSE(glGetnSeparableFilter)
 void glGetnTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, void *pixels) WEAKGL;
 static void (*p_glGetnTexImage)(GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, void *pixels);
 static void (*a_glGetnTexImage)(GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, void *pixels);
@@ -2136,76 +1571,6 @@ static void (*p_glHint)(GLenum target, GLenum mode);
 static void (*a_glHint)(GLenum target, GLenum mode);
 static void w_glHint(GLenum target, GLenum mode) { if (mglshim_active && p_glHint) { p_glHint(target, mode); return; } if (a_glHint) a_glHint(target, mode); }
 INTERPOSE(glHint)
-void glIndexMask(GLuint mask) WEAKGL;
-static void (*p_glIndexMask)(GLuint mask);
-static void (*a_glIndexMask)(GLuint mask);
-static void w_glIndexMask(GLuint mask) { if (mglshim_active && p_glIndexMask) { p_glIndexMask(mask); return; } if (a_glIndexMask) a_glIndexMask(mask); }
-INTERPOSE(glIndexMask)
-void glIndexPointer(GLenum type, GLsizei stride, const void *pointer) WEAKGL;
-static void (*p_glIndexPointer)(GLenum type, GLsizei stride, const void *pointer);
-static void (*a_glIndexPointer)(GLenum type, GLsizei stride, const void *pointer);
-static void w_glIndexPointer(GLenum type, GLsizei stride, const void *pointer) { if (mglshim_active && p_glIndexPointer) { p_glIndexPointer(type, stride, pointer); return; } if (a_glIndexPointer) a_glIndexPointer(type, stride, pointer); }
-INTERPOSE(glIndexPointer)
-void glIndexd(GLdouble c) WEAKGL;
-static void (*p_glIndexd)(GLdouble c);
-static void (*a_glIndexd)(GLdouble c);
-static void w_glIndexd(GLdouble c) { if (mglshim_active && p_glIndexd) { p_glIndexd(c); return; } if (a_glIndexd) a_glIndexd(c); }
-INTERPOSE(glIndexd)
-void glIndexdv(const GLdouble *c) WEAKGL;
-static void (*p_glIndexdv)(const GLdouble *c);
-static void (*a_glIndexdv)(const GLdouble *c);
-static void w_glIndexdv(const GLdouble *c) { if (mglshim_active && p_glIndexdv) { p_glIndexdv(c); return; } if (a_glIndexdv) a_glIndexdv(c); }
-INTERPOSE(glIndexdv)
-void glIndexf(GLfloat c) WEAKGL;
-static void (*p_glIndexf)(GLfloat c);
-static void (*a_glIndexf)(GLfloat c);
-static void w_glIndexf(GLfloat c) { if (mglshim_active && p_glIndexf) { p_glIndexf(c); return; } if (a_glIndexf) a_glIndexf(c); }
-INTERPOSE(glIndexf)
-void glIndexfv(const GLfloat *c) WEAKGL;
-static void (*p_glIndexfv)(const GLfloat *c);
-static void (*a_glIndexfv)(const GLfloat *c);
-static void w_glIndexfv(const GLfloat *c) { if (mglshim_active && p_glIndexfv) { p_glIndexfv(c); return; } if (a_glIndexfv) a_glIndexfv(c); }
-INTERPOSE(glIndexfv)
-void glIndexi(GLint c) WEAKGL;
-static void (*p_glIndexi)(GLint c);
-static void (*a_glIndexi)(GLint c);
-static void w_glIndexi(GLint c) { if (mglshim_active && p_glIndexi) { p_glIndexi(c); return; } if (a_glIndexi) a_glIndexi(c); }
-INTERPOSE(glIndexi)
-void glIndexiv(const GLint *c) WEAKGL;
-static void (*p_glIndexiv)(const GLint *c);
-static void (*a_glIndexiv)(const GLint *c);
-static void w_glIndexiv(const GLint *c) { if (mglshim_active && p_glIndexiv) { p_glIndexiv(c); return; } if (a_glIndexiv) a_glIndexiv(c); }
-INTERPOSE(glIndexiv)
-void glIndexs(GLshort c) WEAKGL;
-static void (*p_glIndexs)(GLshort c);
-static void (*a_glIndexs)(GLshort c);
-static void w_glIndexs(GLshort c) { if (mglshim_active && p_glIndexs) { p_glIndexs(c); return; } if (a_glIndexs) a_glIndexs(c); }
-INTERPOSE(glIndexs)
-void glIndexsv(const GLshort *c) WEAKGL;
-static void (*p_glIndexsv)(const GLshort *c);
-static void (*a_glIndexsv)(const GLshort *c);
-static void w_glIndexsv(const GLshort *c) { if (mglshim_active && p_glIndexsv) { p_glIndexsv(c); return; } if (a_glIndexsv) a_glIndexsv(c); }
-INTERPOSE(glIndexsv)
-void glIndexub(GLubyte c) WEAKGL;
-static void (*p_glIndexub)(GLubyte c);
-static void (*a_glIndexub)(GLubyte c);
-static void w_glIndexub(GLubyte c) { if (mglshim_active && p_glIndexub) { p_glIndexub(c); return; } if (a_glIndexub) a_glIndexub(c); }
-INTERPOSE(glIndexub)
-void glIndexubv(const GLubyte *c) WEAKGL;
-static void (*p_glIndexubv)(const GLubyte *c);
-static void (*a_glIndexubv)(const GLubyte *c);
-static void w_glIndexubv(const GLubyte *c) { if (mglshim_active && p_glIndexubv) { p_glIndexubv(c); return; } if (a_glIndexubv) a_glIndexubv(c); }
-INTERPOSE(glIndexubv)
-void glInitNames(void) WEAKGL;
-static void (*p_glInitNames)(void);
-static void (*a_glInitNames)(void);
-static void w_glInitNames(void) { if (mglshim_active && p_glInitNames) { p_glInitNames(); return; } if (a_glInitNames) a_glInitNames(); }
-INTERPOSE(glInitNames)
-void glInterleavedArrays(GLenum format, GLsizei stride, const void *pointer) WEAKGL;
-static void (*p_glInterleavedArrays)(GLenum format, GLsizei stride, const void *pointer);
-static void (*a_glInterleavedArrays)(GLenum format, GLsizei stride, const void *pointer);
-static void w_glInterleavedArrays(GLenum format, GLsizei stride, const void *pointer) { if (mglshim_active && p_glInterleavedArrays) { p_glInterleavedArrays(format, stride, pointer); return; } if (a_glInterleavedArrays) a_glInterleavedArrays(format, stride, pointer); }
-INTERPOSE(glInterleavedArrays)
 void glInvalidateBufferData(GLuint buffer) WEAKGL;
 static void (*p_glInvalidateBufferData)(GLuint buffer);
 static void (*a_glInvalidateBufferData)(GLuint buffer);
@@ -2266,11 +1631,6 @@ static GLboolean (*p_glIsFramebuffer)(GLuint framebuffer);
 static GLboolean (*a_glIsFramebuffer)(GLuint framebuffer);
 static GLboolean w_glIsFramebuffer(GLuint framebuffer) { if (mglshim_active && p_glIsFramebuffer) return p_glIsFramebuffer(framebuffer); if (a_glIsFramebuffer) return a_glIsFramebuffer(framebuffer); return (GLboolean)0; }
 INTERPOSE(glIsFramebuffer)
-GLboolean glIsList(GLuint list) WEAKGL;
-static GLboolean (*p_glIsList)(GLuint list);
-static GLboolean (*a_glIsList)(GLuint list);
-static GLboolean w_glIsList(GLuint list) { if (mglshim_active && p_glIsList) return p_glIsList(list); if (a_glIsList) return a_glIsList(list); return (GLboolean)0; }
-INTERPOSE(glIsList)
 GLboolean glIsProgram(GLuint program) WEAKGL;
 static GLboolean (*p_glIsProgram)(GLuint program);
 static GLboolean (*a_glIsProgram)(GLuint program);
@@ -2321,51 +1681,6 @@ static GLboolean (*p_glIsVertexArray)(GLuint array);
 static GLboolean (*a_glIsVertexArray)(GLuint array);
 static GLboolean w_glIsVertexArray(GLuint array) { if (mglshim_active && p_glIsVertexArray) return p_glIsVertexArray(array); if (a_glIsVertexArray) return a_glIsVertexArray(array); return (GLboolean)0; }
 INTERPOSE(glIsVertexArray)
-void glLightModelf(GLenum pname, GLfloat param) WEAKGL;
-static void (*p_glLightModelf)(GLenum pname, GLfloat param);
-static void (*a_glLightModelf)(GLenum pname, GLfloat param);
-static void w_glLightModelf(GLenum pname, GLfloat param) { if (mglshim_active && p_glLightModelf) { p_glLightModelf(pname, param); return; } if (a_glLightModelf) a_glLightModelf(pname, param); }
-INTERPOSE(glLightModelf)
-void glLightModelfv(GLenum pname, const GLfloat *params) WEAKGL;
-static void (*p_glLightModelfv)(GLenum pname, const GLfloat *params);
-static void (*a_glLightModelfv)(GLenum pname, const GLfloat *params);
-static void w_glLightModelfv(GLenum pname, const GLfloat *params) { if (mglshim_active && p_glLightModelfv) { p_glLightModelfv(pname, params); return; } if (a_glLightModelfv) a_glLightModelfv(pname, params); }
-INTERPOSE(glLightModelfv)
-void glLightModeli(GLenum pname, GLint param) WEAKGL;
-static void (*p_glLightModeli)(GLenum pname, GLint param);
-static void (*a_glLightModeli)(GLenum pname, GLint param);
-static void w_glLightModeli(GLenum pname, GLint param) { if (mglshim_active && p_glLightModeli) { p_glLightModeli(pname, param); return; } if (a_glLightModeli) a_glLightModeli(pname, param); }
-INTERPOSE(glLightModeli)
-void glLightModeliv(GLenum pname, const GLint *params) WEAKGL;
-static void (*p_glLightModeliv)(GLenum pname, const GLint *params);
-static void (*a_glLightModeliv)(GLenum pname, const GLint *params);
-static void w_glLightModeliv(GLenum pname, const GLint *params) { if (mglshim_active && p_glLightModeliv) { p_glLightModeliv(pname, params); return; } if (a_glLightModeliv) a_glLightModeliv(pname, params); }
-INTERPOSE(glLightModeliv)
-void glLightf(GLenum light, GLenum pname, GLfloat param) WEAKGL;
-static void (*p_glLightf)(GLenum light, GLenum pname, GLfloat param);
-static void (*a_glLightf)(GLenum light, GLenum pname, GLfloat param);
-static void w_glLightf(GLenum light, GLenum pname, GLfloat param) { if (mglshim_active && p_glLightf) { p_glLightf(light, pname, param); return; } if (a_glLightf) a_glLightf(light, pname, param); }
-INTERPOSE(glLightf)
-void glLightfv(GLenum light, GLenum pname, const GLfloat *params) WEAKGL;
-static void (*p_glLightfv)(GLenum light, GLenum pname, const GLfloat *params);
-static void (*a_glLightfv)(GLenum light, GLenum pname, const GLfloat *params);
-static void w_glLightfv(GLenum light, GLenum pname, const GLfloat *params) { if (mglshim_active && p_glLightfv) { p_glLightfv(light, pname, params); return; } if (a_glLightfv) a_glLightfv(light, pname, params); }
-INTERPOSE(glLightfv)
-void glLighti(GLenum light, GLenum pname, GLint param) WEAKGL;
-static void (*p_glLighti)(GLenum light, GLenum pname, GLint param);
-static void (*a_glLighti)(GLenum light, GLenum pname, GLint param);
-static void w_glLighti(GLenum light, GLenum pname, GLint param) { if (mglshim_active && p_glLighti) { p_glLighti(light, pname, param); return; } if (a_glLighti) a_glLighti(light, pname, param); }
-INTERPOSE(glLighti)
-void glLightiv(GLenum light, GLenum pname, const GLint *params) WEAKGL;
-static void (*p_glLightiv)(GLenum light, GLenum pname, const GLint *params);
-static void (*a_glLightiv)(GLenum light, GLenum pname, const GLint *params);
-static void w_glLightiv(GLenum light, GLenum pname, const GLint *params) { if (mglshim_active && p_glLightiv) { p_glLightiv(light, pname, params); return; } if (a_glLightiv) a_glLightiv(light, pname, params); }
-INTERPOSE(glLightiv)
-void glLineStipple(GLint factor, GLushort pattern) WEAKGL;
-static void (*p_glLineStipple)(GLint factor, GLushort pattern);
-static void (*a_glLineStipple)(GLint factor, GLushort pattern);
-static void w_glLineStipple(GLint factor, GLushort pattern) { if (mglshim_active && p_glLineStipple) { p_glLineStipple(factor, pattern); return; } if (a_glLineStipple) a_glLineStipple(factor, pattern); }
-INTERPOSE(glLineStipple)
 void glLineWidth(GLfloat width) WEAKGL;
 static void (*p_glLineWidth)(GLfloat width);
 static void (*a_glLineWidth)(GLfloat width);
@@ -2376,66 +1691,11 @@ static void (*p_glLinkProgram)(GLuint program);
 static void (*a_glLinkProgram)(GLuint program);
 static void w_glLinkProgram(GLuint program) { if (mglshim_active && p_glLinkProgram) { p_glLinkProgram(program); return; } if (a_glLinkProgram) a_glLinkProgram(program); }
 INTERPOSE(glLinkProgram)
-void glListBase(GLuint base) WEAKGL;
-static void (*p_glListBase)(GLuint base);
-static void (*a_glListBase)(GLuint base);
-static void w_glListBase(GLuint base) { if (mglshim_active && p_glListBase) { p_glListBase(base); return; } if (a_glListBase) a_glListBase(base); }
-INTERPOSE(glListBase)
-void glLoadIdentity(void) WEAKGL;
-static void (*p_glLoadIdentity)(void);
-static void (*a_glLoadIdentity)(void);
-static void w_glLoadIdentity(void) { if (mglshim_active && p_glLoadIdentity) { p_glLoadIdentity(); return; } if (a_glLoadIdentity) a_glLoadIdentity(); }
-INTERPOSE(glLoadIdentity)
-void glLoadMatrixd(const GLdouble *m) WEAKGL;
-static void (*p_glLoadMatrixd)(const GLdouble *m);
-static void (*a_glLoadMatrixd)(const GLdouble *m);
-static void w_glLoadMatrixd(const GLdouble *m) { if (mglshim_active && p_glLoadMatrixd) { p_glLoadMatrixd(m); return; } if (a_glLoadMatrixd) a_glLoadMatrixd(m); }
-INTERPOSE(glLoadMatrixd)
-void glLoadMatrixf(const GLfloat *m) WEAKGL;
-static void (*p_glLoadMatrixf)(const GLfloat *m);
-static void (*a_glLoadMatrixf)(const GLfloat *m);
-static void w_glLoadMatrixf(const GLfloat *m) { if (mglshim_active && p_glLoadMatrixf) { p_glLoadMatrixf(m); return; } if (a_glLoadMatrixf) a_glLoadMatrixf(m); }
-INTERPOSE(glLoadMatrixf)
-void glLoadName(GLuint name) WEAKGL;
-static void (*p_glLoadName)(GLuint name);
-static void (*a_glLoadName)(GLuint name);
-static void w_glLoadName(GLuint name) { if (mglshim_active && p_glLoadName) { p_glLoadName(name); return; } if (a_glLoadName) a_glLoadName(name); }
-INTERPOSE(glLoadName)
-void glLoadTransposeMatrixd(const GLdouble *m) WEAKGL;
-static void (*p_glLoadTransposeMatrixd)(const GLdouble *m);
-static void (*a_glLoadTransposeMatrixd)(const GLdouble *m);
-static void w_glLoadTransposeMatrixd(const GLdouble *m) { if (mglshim_active && p_glLoadTransposeMatrixd) { p_glLoadTransposeMatrixd(m); return; } if (a_glLoadTransposeMatrixd) a_glLoadTransposeMatrixd(m); }
-INTERPOSE(glLoadTransposeMatrixd)
-void glLoadTransposeMatrixf(const GLfloat *m) WEAKGL;
-static void (*p_glLoadTransposeMatrixf)(const GLfloat *m);
-static void (*a_glLoadTransposeMatrixf)(const GLfloat *m);
-static void w_glLoadTransposeMatrixf(const GLfloat *m) { if (mglshim_active && p_glLoadTransposeMatrixf) { p_glLoadTransposeMatrixf(m); return; } if (a_glLoadTransposeMatrixf) a_glLoadTransposeMatrixf(m); }
-INTERPOSE(glLoadTransposeMatrixf)
 void glLogicOp(GLenum opcode) WEAKGL;
 static void (*p_glLogicOp)(GLenum opcode);
 static void (*a_glLogicOp)(GLenum opcode);
 static void w_glLogicOp(GLenum opcode) { if (mglshim_active && p_glLogicOp) { p_glLogicOp(opcode); return; } if (a_glLogicOp) a_glLogicOp(opcode); }
 INTERPOSE(glLogicOp)
-void glMap1d(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, const GLdouble *points) WEAKGL;
-static void (*p_glMap1d)(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, const GLdouble *points);
-static void (*a_glMap1d)(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, const GLdouble *points);
-static void w_glMap1d(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, const GLdouble *points) { if (mglshim_active && p_glMap1d) { p_glMap1d(target, u1, u2, stride, order, points); return; } if (a_glMap1d) a_glMap1d(target, u1, u2, stride, order, points); }
-INTERPOSE(glMap1d)
-void glMap1f(GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, const GLfloat *points) WEAKGL;
-static void (*p_glMap1f)(GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, const GLfloat *points);
-static void (*a_glMap1f)(GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, const GLfloat *points);
-static void w_glMap1f(GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, const GLfloat *points) { if (mglshim_active && p_glMap1f) { p_glMap1f(target, u1, u2, stride, order, points); return; } if (a_glMap1f) a_glMap1f(target, u1, u2, stride, order, points); }
-INTERPOSE(glMap1f)
-void glMap2d(GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder, GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, const GLdouble *points) WEAKGL;
-static void (*p_glMap2d)(GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder, GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, const GLdouble *points);
-static void (*a_glMap2d)(GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder, GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, const GLdouble *points);
-static void w_glMap2d(GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder, GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, const GLdouble *points) { if (mglshim_active && p_glMap2d) { p_glMap2d(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points); return; } if (a_glMap2d) a_glMap2d(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points); }
-INTERPOSE(glMap2d)
-void glMap2f(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat *points) WEAKGL;
-static void (*p_glMap2f)(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat *points);
-static void (*a_glMap2f)(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat *points);
-static void w_glMap2f(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat *points) { if (mglshim_active && p_glMap2f) { p_glMap2f(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points); return; } if (a_glMap2f) a_glMap2f(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points); }
-INTERPOSE(glMap2f)
 void * glMapBuffer(GLenum target, GLenum access) WEAKGL;
 static void * (*p_glMapBuffer)(GLenum target, GLenum access);
 static void * (*a_glMapBuffer)(GLenum target, GLenum access);
@@ -2446,26 +1706,6 @@ static void * (*p_glMapBufferRange)(GLenum target, GLintptr offset, GLsizeiptr l
 static void * (*a_glMapBufferRange)(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
 static void * w_glMapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access) { if (mglshim_active && p_glMapBufferRange) return p_glMapBufferRange(target, offset, length, access); if (a_glMapBufferRange) return a_glMapBufferRange(target, offset, length, access); return (void *)0; }
 INTERPOSE(glMapBufferRange)
-void glMapGrid1d(GLint un, GLdouble u1, GLdouble u2) WEAKGL;
-static void (*p_glMapGrid1d)(GLint un, GLdouble u1, GLdouble u2);
-static void (*a_glMapGrid1d)(GLint un, GLdouble u1, GLdouble u2);
-static void w_glMapGrid1d(GLint un, GLdouble u1, GLdouble u2) { if (mglshim_active && p_glMapGrid1d) { p_glMapGrid1d(un, u1, u2); return; } if (a_glMapGrid1d) a_glMapGrid1d(un, u1, u2); }
-INTERPOSE(glMapGrid1d)
-void glMapGrid1f(GLint un, GLfloat u1, GLfloat u2) WEAKGL;
-static void (*p_glMapGrid1f)(GLint un, GLfloat u1, GLfloat u2);
-static void (*a_glMapGrid1f)(GLint un, GLfloat u1, GLfloat u2);
-static void w_glMapGrid1f(GLint un, GLfloat u1, GLfloat u2) { if (mglshim_active && p_glMapGrid1f) { p_glMapGrid1f(un, u1, u2); return; } if (a_glMapGrid1f) a_glMapGrid1f(un, u1, u2); }
-INTERPOSE(glMapGrid1f)
-void glMapGrid2d(GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2) WEAKGL;
-static void (*p_glMapGrid2d)(GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2);
-static void (*a_glMapGrid2d)(GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2);
-static void w_glMapGrid2d(GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2) { if (mglshim_active && p_glMapGrid2d) { p_glMapGrid2d(un, u1, u2, vn, v1, v2); return; } if (a_glMapGrid2d) a_glMapGrid2d(un, u1, u2, vn, v1, v2); }
-INTERPOSE(glMapGrid2d)
-void glMapGrid2f(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2) WEAKGL;
-static void (*p_glMapGrid2f)(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2);
-static void (*a_glMapGrid2f)(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2);
-static void w_glMapGrid2f(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2) { if (mglshim_active && p_glMapGrid2f) { p_glMapGrid2f(un, u1, u2, vn, v1, v2); return; } if (a_glMapGrid2f) a_glMapGrid2f(un, u1, u2, vn, v1, v2); }
-INTERPOSE(glMapGrid2f)
 void * glMapNamedBuffer(GLuint buffer, GLenum access) WEAKGL;
 static void * (*p_glMapNamedBuffer)(GLuint buffer, GLenum access);
 static void * (*a_glMapNamedBuffer)(GLuint buffer, GLenum access);
@@ -2476,31 +1716,6 @@ static void * (*p_glMapNamedBufferRange)(GLuint buffer, GLintptr offset, GLsizei
 static void * (*a_glMapNamedBufferRange)(GLuint buffer, GLintptr offset, GLsizeiptr length, GLbitfield access);
 static void * w_glMapNamedBufferRange(GLuint buffer, GLintptr offset, GLsizeiptr length, GLbitfield access) { if (mglshim_active && p_glMapNamedBufferRange) return p_glMapNamedBufferRange(buffer, offset, length, access); if (a_glMapNamedBufferRange) return a_glMapNamedBufferRange(buffer, offset, length, access); return (void *)0; }
 INTERPOSE(glMapNamedBufferRange)
-void glMaterialf(GLenum face, GLenum pname, GLfloat param) WEAKGL;
-static void (*p_glMaterialf)(GLenum face, GLenum pname, GLfloat param);
-static void (*a_glMaterialf)(GLenum face, GLenum pname, GLfloat param);
-static void w_glMaterialf(GLenum face, GLenum pname, GLfloat param) { if (mglshim_active && p_glMaterialf) { p_glMaterialf(face, pname, param); return; } if (a_glMaterialf) a_glMaterialf(face, pname, param); }
-INTERPOSE(glMaterialf)
-void glMaterialfv(GLenum face, GLenum pname, const GLfloat *params) WEAKGL;
-static void (*p_glMaterialfv)(GLenum face, GLenum pname, const GLfloat *params);
-static void (*a_glMaterialfv)(GLenum face, GLenum pname, const GLfloat *params);
-static void w_glMaterialfv(GLenum face, GLenum pname, const GLfloat *params) { if (mglshim_active && p_glMaterialfv) { p_glMaterialfv(face, pname, params); return; } if (a_glMaterialfv) a_glMaterialfv(face, pname, params); }
-INTERPOSE(glMaterialfv)
-void glMateriali(GLenum face, GLenum pname, GLint param) WEAKGL;
-static void (*p_glMateriali)(GLenum face, GLenum pname, GLint param);
-static void (*a_glMateriali)(GLenum face, GLenum pname, GLint param);
-static void w_glMateriali(GLenum face, GLenum pname, GLint param) { if (mglshim_active && p_glMateriali) { p_glMateriali(face, pname, param); return; } if (a_glMateriali) a_glMateriali(face, pname, param); }
-INTERPOSE(glMateriali)
-void glMaterialiv(GLenum face, GLenum pname, const GLint *params) WEAKGL;
-static void (*p_glMaterialiv)(GLenum face, GLenum pname, const GLint *params);
-static void (*a_glMaterialiv)(GLenum face, GLenum pname, const GLint *params);
-static void w_glMaterialiv(GLenum face, GLenum pname, const GLint *params) { if (mglshim_active && p_glMaterialiv) { p_glMaterialiv(face, pname, params); return; } if (a_glMaterialiv) a_glMaterialiv(face, pname, params); }
-INTERPOSE(glMaterialiv)
-void glMatrixMode(GLenum mode) WEAKGL;
-static void (*p_glMatrixMode)(GLenum mode);
-static void (*a_glMatrixMode)(GLenum mode);
-static void w_glMatrixMode(GLenum mode) { if (mglshim_active && p_glMatrixMode) { p_glMatrixMode(mode); return; } if (a_glMatrixMode) a_glMatrixMode(mode); }
-INTERPOSE(glMatrixMode)
 void glMemoryBarrier(GLbitfield barriers) WEAKGL;
 static void (*p_glMemoryBarrier)(GLbitfield barriers);
 static void (*a_glMemoryBarrier)(GLbitfield barriers);
@@ -2516,26 +1731,6 @@ static void (*p_glMinSampleShading)(GLfloat value);
 static void (*a_glMinSampleShading)(GLfloat value);
 static void w_glMinSampleShading(GLfloat value) { if (mglshim_active && p_glMinSampleShading) { p_glMinSampleShading(value); return; } if (a_glMinSampleShading) a_glMinSampleShading(value); }
 INTERPOSE(glMinSampleShading)
-void glMultMatrixd(const GLdouble *m) WEAKGL;
-static void (*p_glMultMatrixd)(const GLdouble *m);
-static void (*a_glMultMatrixd)(const GLdouble *m);
-static void w_glMultMatrixd(const GLdouble *m) { if (mglshim_active && p_glMultMatrixd) { p_glMultMatrixd(m); return; } if (a_glMultMatrixd) a_glMultMatrixd(m); }
-INTERPOSE(glMultMatrixd)
-void glMultMatrixf(const GLfloat *m) WEAKGL;
-static void (*p_glMultMatrixf)(const GLfloat *m);
-static void (*a_glMultMatrixf)(const GLfloat *m);
-static void w_glMultMatrixf(const GLfloat *m) { if (mglshim_active && p_glMultMatrixf) { p_glMultMatrixf(m); return; } if (a_glMultMatrixf) a_glMultMatrixf(m); }
-INTERPOSE(glMultMatrixf)
-void glMultTransposeMatrixd(const GLdouble *m) WEAKGL;
-static void (*p_glMultTransposeMatrixd)(const GLdouble *m);
-static void (*a_glMultTransposeMatrixd)(const GLdouble *m);
-static void w_glMultTransposeMatrixd(const GLdouble *m) { if (mglshim_active && p_glMultTransposeMatrixd) { p_glMultTransposeMatrixd(m); return; } if (a_glMultTransposeMatrixd) a_glMultTransposeMatrixd(m); }
-INTERPOSE(glMultTransposeMatrixd)
-void glMultTransposeMatrixf(const GLfloat *m) WEAKGL;
-static void (*p_glMultTransposeMatrixf)(const GLfloat *m);
-static void (*a_glMultTransposeMatrixf)(const GLfloat *m);
-static void w_glMultTransposeMatrixf(const GLfloat *m) { if (mglshim_active && p_glMultTransposeMatrixf) { p_glMultTransposeMatrixf(m); return; } if (a_glMultTransposeMatrixf) a_glMultTransposeMatrixf(m); }
-INTERPOSE(glMultTransposeMatrixf)
 void glMultiDrawArrays(GLenum mode, const GLint *first, const GLsizei *count, GLsizei drawcount) WEAKGL;
 static void (*p_glMultiDrawArrays)(GLenum mode, const GLint *first, const GLsizei *count, GLsizei drawcount);
 static void (*a_glMultiDrawArrays)(GLenum mode, const GLint *first, const GLsizei *count, GLsizei drawcount);
@@ -2571,206 +1766,6 @@ static void (*p_glMultiDrawElementsIndirectCount)(GLenum mode, GLenum type, cons
 static void (*a_glMultiDrawElementsIndirectCount)(GLenum mode, GLenum type, const void *indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride);
 static void w_glMultiDrawElementsIndirectCount(GLenum mode, GLenum type, const void *indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride) { if (mglshim_active && p_glMultiDrawElementsIndirectCount) { p_glMultiDrawElementsIndirectCount(mode, type, indirect, drawcount, maxdrawcount, stride); return; } if (a_glMultiDrawElementsIndirectCount) a_glMultiDrawElementsIndirectCount(mode, type, indirect, drawcount, maxdrawcount, stride); }
 INTERPOSE(glMultiDrawElementsIndirectCount)
-void glMultiTexCoord1d(GLenum target, GLdouble s) WEAKGL;
-static void (*p_glMultiTexCoord1d)(GLenum target, GLdouble s);
-static void (*a_glMultiTexCoord1d)(GLenum target, GLdouble s);
-static void w_glMultiTexCoord1d(GLenum target, GLdouble s) { if (mglshim_active && p_glMultiTexCoord1d) { p_glMultiTexCoord1d(target, s); return; } if (a_glMultiTexCoord1d) a_glMultiTexCoord1d(target, s); }
-INTERPOSE(glMultiTexCoord1d)
-void glMultiTexCoord1dv(GLenum target, const GLdouble *v) WEAKGL;
-static void (*p_glMultiTexCoord1dv)(GLenum target, const GLdouble *v);
-static void (*a_glMultiTexCoord1dv)(GLenum target, const GLdouble *v);
-static void w_glMultiTexCoord1dv(GLenum target, const GLdouble *v) { if (mglshim_active && p_glMultiTexCoord1dv) { p_glMultiTexCoord1dv(target, v); return; } if (a_glMultiTexCoord1dv) a_glMultiTexCoord1dv(target, v); }
-INTERPOSE(glMultiTexCoord1dv)
-void glMultiTexCoord1f(GLenum target, GLfloat s) WEAKGL;
-static void (*p_glMultiTexCoord1f)(GLenum target, GLfloat s);
-static void (*a_glMultiTexCoord1f)(GLenum target, GLfloat s);
-static void w_glMultiTexCoord1f(GLenum target, GLfloat s) { if (mglshim_active && p_glMultiTexCoord1f) { p_glMultiTexCoord1f(target, s); return; } if (a_glMultiTexCoord1f) a_glMultiTexCoord1f(target, s); }
-INTERPOSE(glMultiTexCoord1f)
-void glMultiTexCoord1fv(GLenum target, const GLfloat *v) WEAKGL;
-static void (*p_glMultiTexCoord1fv)(GLenum target, const GLfloat *v);
-static void (*a_glMultiTexCoord1fv)(GLenum target, const GLfloat *v);
-static void w_glMultiTexCoord1fv(GLenum target, const GLfloat *v) { if (mglshim_active && p_glMultiTexCoord1fv) { p_glMultiTexCoord1fv(target, v); return; } if (a_glMultiTexCoord1fv) a_glMultiTexCoord1fv(target, v); }
-INTERPOSE(glMultiTexCoord1fv)
-void glMultiTexCoord1i(GLenum target, GLint s) WEAKGL;
-static void (*p_glMultiTexCoord1i)(GLenum target, GLint s);
-static void (*a_glMultiTexCoord1i)(GLenum target, GLint s);
-static void w_glMultiTexCoord1i(GLenum target, GLint s) { if (mglshim_active && p_glMultiTexCoord1i) { p_glMultiTexCoord1i(target, s); return; } if (a_glMultiTexCoord1i) a_glMultiTexCoord1i(target, s); }
-INTERPOSE(glMultiTexCoord1i)
-void glMultiTexCoord1iv(GLenum target, const GLint *v) WEAKGL;
-static void (*p_glMultiTexCoord1iv)(GLenum target, const GLint *v);
-static void (*a_glMultiTexCoord1iv)(GLenum target, const GLint *v);
-static void w_glMultiTexCoord1iv(GLenum target, const GLint *v) { if (mglshim_active && p_glMultiTexCoord1iv) { p_glMultiTexCoord1iv(target, v); return; } if (a_glMultiTexCoord1iv) a_glMultiTexCoord1iv(target, v); }
-INTERPOSE(glMultiTexCoord1iv)
-void glMultiTexCoord1s(GLenum target, GLshort s) WEAKGL;
-static void (*p_glMultiTexCoord1s)(GLenum target, GLshort s);
-static void (*a_glMultiTexCoord1s)(GLenum target, GLshort s);
-static void w_glMultiTexCoord1s(GLenum target, GLshort s) { if (mglshim_active && p_glMultiTexCoord1s) { p_glMultiTexCoord1s(target, s); return; } if (a_glMultiTexCoord1s) a_glMultiTexCoord1s(target, s); }
-INTERPOSE(glMultiTexCoord1s)
-void glMultiTexCoord1sv(GLenum target, const GLshort *v) WEAKGL;
-static void (*p_glMultiTexCoord1sv)(GLenum target, const GLshort *v);
-static void (*a_glMultiTexCoord1sv)(GLenum target, const GLshort *v);
-static void w_glMultiTexCoord1sv(GLenum target, const GLshort *v) { if (mglshim_active && p_glMultiTexCoord1sv) { p_glMultiTexCoord1sv(target, v); return; } if (a_glMultiTexCoord1sv) a_glMultiTexCoord1sv(target, v); }
-INTERPOSE(glMultiTexCoord1sv)
-void glMultiTexCoord2d(GLenum target, GLdouble s, GLdouble t) WEAKGL;
-static void (*p_glMultiTexCoord2d)(GLenum target, GLdouble s, GLdouble t);
-static void (*a_glMultiTexCoord2d)(GLenum target, GLdouble s, GLdouble t);
-static void w_glMultiTexCoord2d(GLenum target, GLdouble s, GLdouble t) { if (mglshim_active && p_glMultiTexCoord2d) { p_glMultiTexCoord2d(target, s, t); return; } if (a_glMultiTexCoord2d) a_glMultiTexCoord2d(target, s, t); }
-INTERPOSE(glMultiTexCoord2d)
-void glMultiTexCoord2dv(GLenum target, const GLdouble *v) WEAKGL;
-static void (*p_glMultiTexCoord2dv)(GLenum target, const GLdouble *v);
-static void (*a_glMultiTexCoord2dv)(GLenum target, const GLdouble *v);
-static void w_glMultiTexCoord2dv(GLenum target, const GLdouble *v) { if (mglshim_active && p_glMultiTexCoord2dv) { p_glMultiTexCoord2dv(target, v); return; } if (a_glMultiTexCoord2dv) a_glMultiTexCoord2dv(target, v); }
-INTERPOSE(glMultiTexCoord2dv)
-void glMultiTexCoord2f(GLenum target, GLfloat s, GLfloat t) WEAKGL;
-static void (*p_glMultiTexCoord2f)(GLenum target, GLfloat s, GLfloat t);
-static void (*a_glMultiTexCoord2f)(GLenum target, GLfloat s, GLfloat t);
-static void w_glMultiTexCoord2f(GLenum target, GLfloat s, GLfloat t) { if (mglshim_active && p_glMultiTexCoord2f) { p_glMultiTexCoord2f(target, s, t); return; } if (a_glMultiTexCoord2f) a_glMultiTexCoord2f(target, s, t); }
-INTERPOSE(glMultiTexCoord2f)
-void glMultiTexCoord2fv(GLenum target, const GLfloat *v) WEAKGL;
-static void (*p_glMultiTexCoord2fv)(GLenum target, const GLfloat *v);
-static void (*a_glMultiTexCoord2fv)(GLenum target, const GLfloat *v);
-static void w_glMultiTexCoord2fv(GLenum target, const GLfloat *v) { if (mglshim_active && p_glMultiTexCoord2fv) { p_glMultiTexCoord2fv(target, v); return; } if (a_glMultiTexCoord2fv) a_glMultiTexCoord2fv(target, v); }
-INTERPOSE(glMultiTexCoord2fv)
-void glMultiTexCoord2i(GLenum target, GLint s, GLint t) WEAKGL;
-static void (*p_glMultiTexCoord2i)(GLenum target, GLint s, GLint t);
-static void (*a_glMultiTexCoord2i)(GLenum target, GLint s, GLint t);
-static void w_glMultiTexCoord2i(GLenum target, GLint s, GLint t) { if (mglshim_active && p_glMultiTexCoord2i) { p_glMultiTexCoord2i(target, s, t); return; } if (a_glMultiTexCoord2i) a_glMultiTexCoord2i(target, s, t); }
-INTERPOSE(glMultiTexCoord2i)
-void glMultiTexCoord2iv(GLenum target, const GLint *v) WEAKGL;
-static void (*p_glMultiTexCoord2iv)(GLenum target, const GLint *v);
-static void (*a_glMultiTexCoord2iv)(GLenum target, const GLint *v);
-static void w_glMultiTexCoord2iv(GLenum target, const GLint *v) { if (mglshim_active && p_glMultiTexCoord2iv) { p_glMultiTexCoord2iv(target, v); return; } if (a_glMultiTexCoord2iv) a_glMultiTexCoord2iv(target, v); }
-INTERPOSE(glMultiTexCoord2iv)
-void glMultiTexCoord2s(GLenum target, GLshort s, GLshort t) WEAKGL;
-static void (*p_glMultiTexCoord2s)(GLenum target, GLshort s, GLshort t);
-static void (*a_glMultiTexCoord2s)(GLenum target, GLshort s, GLshort t);
-static void w_glMultiTexCoord2s(GLenum target, GLshort s, GLshort t) { if (mglshim_active && p_glMultiTexCoord2s) { p_glMultiTexCoord2s(target, s, t); return; } if (a_glMultiTexCoord2s) a_glMultiTexCoord2s(target, s, t); }
-INTERPOSE(glMultiTexCoord2s)
-void glMultiTexCoord2sv(GLenum target, const GLshort *v) WEAKGL;
-static void (*p_glMultiTexCoord2sv)(GLenum target, const GLshort *v);
-static void (*a_glMultiTexCoord2sv)(GLenum target, const GLshort *v);
-static void w_glMultiTexCoord2sv(GLenum target, const GLshort *v) { if (mglshim_active && p_glMultiTexCoord2sv) { p_glMultiTexCoord2sv(target, v); return; } if (a_glMultiTexCoord2sv) a_glMultiTexCoord2sv(target, v); }
-INTERPOSE(glMultiTexCoord2sv)
-void glMultiTexCoord3d(GLenum target, GLdouble s, GLdouble t, GLdouble r) WEAKGL;
-static void (*p_glMultiTexCoord3d)(GLenum target, GLdouble s, GLdouble t, GLdouble r);
-static void (*a_glMultiTexCoord3d)(GLenum target, GLdouble s, GLdouble t, GLdouble r);
-static void w_glMultiTexCoord3d(GLenum target, GLdouble s, GLdouble t, GLdouble r) { if (mglshim_active && p_glMultiTexCoord3d) { p_glMultiTexCoord3d(target, s, t, r); return; } if (a_glMultiTexCoord3d) a_glMultiTexCoord3d(target, s, t, r); }
-INTERPOSE(glMultiTexCoord3d)
-void glMultiTexCoord3dv(GLenum target, const GLdouble *v) WEAKGL;
-static void (*p_glMultiTexCoord3dv)(GLenum target, const GLdouble *v);
-static void (*a_glMultiTexCoord3dv)(GLenum target, const GLdouble *v);
-static void w_glMultiTexCoord3dv(GLenum target, const GLdouble *v) { if (mglshim_active && p_glMultiTexCoord3dv) { p_glMultiTexCoord3dv(target, v); return; } if (a_glMultiTexCoord3dv) a_glMultiTexCoord3dv(target, v); }
-INTERPOSE(glMultiTexCoord3dv)
-void glMultiTexCoord3f(GLenum target, GLfloat s, GLfloat t, GLfloat r) WEAKGL;
-static void (*p_glMultiTexCoord3f)(GLenum target, GLfloat s, GLfloat t, GLfloat r);
-static void (*a_glMultiTexCoord3f)(GLenum target, GLfloat s, GLfloat t, GLfloat r);
-static void w_glMultiTexCoord3f(GLenum target, GLfloat s, GLfloat t, GLfloat r) { if (mglshim_active && p_glMultiTexCoord3f) { p_glMultiTexCoord3f(target, s, t, r); return; } if (a_glMultiTexCoord3f) a_glMultiTexCoord3f(target, s, t, r); }
-INTERPOSE(glMultiTexCoord3f)
-void glMultiTexCoord3fv(GLenum target, const GLfloat *v) WEAKGL;
-static void (*p_glMultiTexCoord3fv)(GLenum target, const GLfloat *v);
-static void (*a_glMultiTexCoord3fv)(GLenum target, const GLfloat *v);
-static void w_glMultiTexCoord3fv(GLenum target, const GLfloat *v) { if (mglshim_active && p_glMultiTexCoord3fv) { p_glMultiTexCoord3fv(target, v); return; } if (a_glMultiTexCoord3fv) a_glMultiTexCoord3fv(target, v); }
-INTERPOSE(glMultiTexCoord3fv)
-void glMultiTexCoord3i(GLenum target, GLint s, GLint t, GLint r) WEAKGL;
-static void (*p_glMultiTexCoord3i)(GLenum target, GLint s, GLint t, GLint r);
-static void (*a_glMultiTexCoord3i)(GLenum target, GLint s, GLint t, GLint r);
-static void w_glMultiTexCoord3i(GLenum target, GLint s, GLint t, GLint r) { if (mglshim_active && p_glMultiTexCoord3i) { p_glMultiTexCoord3i(target, s, t, r); return; } if (a_glMultiTexCoord3i) a_glMultiTexCoord3i(target, s, t, r); }
-INTERPOSE(glMultiTexCoord3i)
-void glMultiTexCoord3iv(GLenum target, const GLint *v) WEAKGL;
-static void (*p_glMultiTexCoord3iv)(GLenum target, const GLint *v);
-static void (*a_glMultiTexCoord3iv)(GLenum target, const GLint *v);
-static void w_glMultiTexCoord3iv(GLenum target, const GLint *v) { if (mglshim_active && p_glMultiTexCoord3iv) { p_glMultiTexCoord3iv(target, v); return; } if (a_glMultiTexCoord3iv) a_glMultiTexCoord3iv(target, v); }
-INTERPOSE(glMultiTexCoord3iv)
-void glMultiTexCoord3s(GLenum target, GLshort s, GLshort t, GLshort r) WEAKGL;
-static void (*p_glMultiTexCoord3s)(GLenum target, GLshort s, GLshort t, GLshort r);
-static void (*a_glMultiTexCoord3s)(GLenum target, GLshort s, GLshort t, GLshort r);
-static void w_glMultiTexCoord3s(GLenum target, GLshort s, GLshort t, GLshort r) { if (mglshim_active && p_glMultiTexCoord3s) { p_glMultiTexCoord3s(target, s, t, r); return; } if (a_glMultiTexCoord3s) a_glMultiTexCoord3s(target, s, t, r); }
-INTERPOSE(glMultiTexCoord3s)
-void glMultiTexCoord3sv(GLenum target, const GLshort *v) WEAKGL;
-static void (*p_glMultiTexCoord3sv)(GLenum target, const GLshort *v);
-static void (*a_glMultiTexCoord3sv)(GLenum target, const GLshort *v);
-static void w_glMultiTexCoord3sv(GLenum target, const GLshort *v) { if (mglshim_active && p_glMultiTexCoord3sv) { p_glMultiTexCoord3sv(target, v); return; } if (a_glMultiTexCoord3sv) a_glMultiTexCoord3sv(target, v); }
-INTERPOSE(glMultiTexCoord3sv)
-void glMultiTexCoord4d(GLenum target, GLdouble s, GLdouble t, GLdouble r, GLdouble q) WEAKGL;
-static void (*p_glMultiTexCoord4d)(GLenum target, GLdouble s, GLdouble t, GLdouble r, GLdouble q);
-static void (*a_glMultiTexCoord4d)(GLenum target, GLdouble s, GLdouble t, GLdouble r, GLdouble q);
-static void w_glMultiTexCoord4d(GLenum target, GLdouble s, GLdouble t, GLdouble r, GLdouble q) { if (mglshim_active && p_glMultiTexCoord4d) { p_glMultiTexCoord4d(target, s, t, r, q); return; } if (a_glMultiTexCoord4d) a_glMultiTexCoord4d(target, s, t, r, q); }
-INTERPOSE(glMultiTexCoord4d)
-void glMultiTexCoord4dv(GLenum target, const GLdouble *v) WEAKGL;
-static void (*p_glMultiTexCoord4dv)(GLenum target, const GLdouble *v);
-static void (*a_glMultiTexCoord4dv)(GLenum target, const GLdouble *v);
-static void w_glMultiTexCoord4dv(GLenum target, const GLdouble *v) { if (mglshim_active && p_glMultiTexCoord4dv) { p_glMultiTexCoord4dv(target, v); return; } if (a_glMultiTexCoord4dv) a_glMultiTexCoord4dv(target, v); }
-INTERPOSE(glMultiTexCoord4dv)
-void glMultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q) WEAKGL;
-static void (*p_glMultiTexCoord4f)(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
-static void (*a_glMultiTexCoord4f)(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
-static void w_glMultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q) { if (mglshim_active && p_glMultiTexCoord4f) { p_glMultiTexCoord4f(target, s, t, r, q); return; } if (a_glMultiTexCoord4f) a_glMultiTexCoord4f(target, s, t, r, q); }
-INTERPOSE(glMultiTexCoord4f)
-void glMultiTexCoord4fv(GLenum target, const GLfloat *v) WEAKGL;
-static void (*p_glMultiTexCoord4fv)(GLenum target, const GLfloat *v);
-static void (*a_glMultiTexCoord4fv)(GLenum target, const GLfloat *v);
-static void w_glMultiTexCoord4fv(GLenum target, const GLfloat *v) { if (mglshim_active && p_glMultiTexCoord4fv) { p_glMultiTexCoord4fv(target, v); return; } if (a_glMultiTexCoord4fv) a_glMultiTexCoord4fv(target, v); }
-INTERPOSE(glMultiTexCoord4fv)
-void glMultiTexCoord4i(GLenum target, GLint s, GLint t, GLint r, GLint q) WEAKGL;
-static void (*p_glMultiTexCoord4i)(GLenum target, GLint s, GLint t, GLint r, GLint q);
-static void (*a_glMultiTexCoord4i)(GLenum target, GLint s, GLint t, GLint r, GLint q);
-static void w_glMultiTexCoord4i(GLenum target, GLint s, GLint t, GLint r, GLint q) { if (mglshim_active && p_glMultiTexCoord4i) { p_glMultiTexCoord4i(target, s, t, r, q); return; } if (a_glMultiTexCoord4i) a_glMultiTexCoord4i(target, s, t, r, q); }
-INTERPOSE(glMultiTexCoord4i)
-void glMultiTexCoord4iv(GLenum target, const GLint *v) WEAKGL;
-static void (*p_glMultiTexCoord4iv)(GLenum target, const GLint *v);
-static void (*a_glMultiTexCoord4iv)(GLenum target, const GLint *v);
-static void w_glMultiTexCoord4iv(GLenum target, const GLint *v) { if (mglshim_active && p_glMultiTexCoord4iv) { p_glMultiTexCoord4iv(target, v); return; } if (a_glMultiTexCoord4iv) a_glMultiTexCoord4iv(target, v); }
-INTERPOSE(glMultiTexCoord4iv)
-void glMultiTexCoord4s(GLenum target, GLshort s, GLshort t, GLshort r, GLshort q) WEAKGL;
-static void (*p_glMultiTexCoord4s)(GLenum target, GLshort s, GLshort t, GLshort r, GLshort q);
-static void (*a_glMultiTexCoord4s)(GLenum target, GLshort s, GLshort t, GLshort r, GLshort q);
-static void w_glMultiTexCoord4s(GLenum target, GLshort s, GLshort t, GLshort r, GLshort q) { if (mglshim_active && p_glMultiTexCoord4s) { p_glMultiTexCoord4s(target, s, t, r, q); return; } if (a_glMultiTexCoord4s) a_glMultiTexCoord4s(target, s, t, r, q); }
-INTERPOSE(glMultiTexCoord4s)
-void glMultiTexCoord4sv(GLenum target, const GLshort *v) WEAKGL;
-static void (*p_glMultiTexCoord4sv)(GLenum target, const GLshort *v);
-static void (*a_glMultiTexCoord4sv)(GLenum target, const GLshort *v);
-static void w_glMultiTexCoord4sv(GLenum target, const GLshort *v) { if (mglshim_active && p_glMultiTexCoord4sv) { p_glMultiTexCoord4sv(target, v); return; } if (a_glMultiTexCoord4sv) a_glMultiTexCoord4sv(target, v); }
-INTERPOSE(glMultiTexCoord4sv)
-void glMultiTexCoordP1ui(GLenum texture, GLenum type, GLuint coords) WEAKGL;
-static void (*p_glMultiTexCoordP1ui)(GLenum texture, GLenum type, GLuint coords);
-static void (*a_glMultiTexCoordP1ui)(GLenum texture, GLenum type, GLuint coords);
-static void w_glMultiTexCoordP1ui(GLenum texture, GLenum type, GLuint coords) { if (mglshim_active && p_glMultiTexCoordP1ui) { p_glMultiTexCoordP1ui(texture, type, coords); return; } if (a_glMultiTexCoordP1ui) a_glMultiTexCoordP1ui(texture, type, coords); }
-INTERPOSE(glMultiTexCoordP1ui)
-void glMultiTexCoordP1uiv(GLenum texture, GLenum type, const GLuint *coords) WEAKGL;
-static void (*p_glMultiTexCoordP1uiv)(GLenum texture, GLenum type, const GLuint *coords);
-static void (*a_glMultiTexCoordP1uiv)(GLenum texture, GLenum type, const GLuint *coords);
-static void w_glMultiTexCoordP1uiv(GLenum texture, GLenum type, const GLuint *coords) { if (mglshim_active && p_glMultiTexCoordP1uiv) { p_glMultiTexCoordP1uiv(texture, type, coords); return; } if (a_glMultiTexCoordP1uiv) a_glMultiTexCoordP1uiv(texture, type, coords); }
-INTERPOSE(glMultiTexCoordP1uiv)
-void glMultiTexCoordP2ui(GLenum texture, GLenum type, GLuint coords) WEAKGL;
-static void (*p_glMultiTexCoordP2ui)(GLenum texture, GLenum type, GLuint coords);
-static void (*a_glMultiTexCoordP2ui)(GLenum texture, GLenum type, GLuint coords);
-static void w_glMultiTexCoordP2ui(GLenum texture, GLenum type, GLuint coords) { if (mglshim_active && p_glMultiTexCoordP2ui) { p_glMultiTexCoordP2ui(texture, type, coords); return; } if (a_glMultiTexCoordP2ui) a_glMultiTexCoordP2ui(texture, type, coords); }
-INTERPOSE(glMultiTexCoordP2ui)
-void glMultiTexCoordP2uiv(GLenum texture, GLenum type, const GLuint *coords) WEAKGL;
-static void (*p_glMultiTexCoordP2uiv)(GLenum texture, GLenum type, const GLuint *coords);
-static void (*a_glMultiTexCoordP2uiv)(GLenum texture, GLenum type, const GLuint *coords);
-static void w_glMultiTexCoordP2uiv(GLenum texture, GLenum type, const GLuint *coords) { if (mglshim_active && p_glMultiTexCoordP2uiv) { p_glMultiTexCoordP2uiv(texture, type, coords); return; } if (a_glMultiTexCoordP2uiv) a_glMultiTexCoordP2uiv(texture, type, coords); }
-INTERPOSE(glMultiTexCoordP2uiv)
-void glMultiTexCoordP3ui(GLenum texture, GLenum type, GLuint coords) WEAKGL;
-static void (*p_glMultiTexCoordP3ui)(GLenum texture, GLenum type, GLuint coords);
-static void (*a_glMultiTexCoordP3ui)(GLenum texture, GLenum type, GLuint coords);
-static void w_glMultiTexCoordP3ui(GLenum texture, GLenum type, GLuint coords) { if (mglshim_active && p_glMultiTexCoordP3ui) { p_glMultiTexCoordP3ui(texture, type, coords); return; } if (a_glMultiTexCoordP3ui) a_glMultiTexCoordP3ui(texture, type, coords); }
-INTERPOSE(glMultiTexCoordP3ui)
-void glMultiTexCoordP3uiv(GLenum texture, GLenum type, const GLuint *coords) WEAKGL;
-static void (*p_glMultiTexCoordP3uiv)(GLenum texture, GLenum type, const GLuint *coords);
-static void (*a_glMultiTexCoordP3uiv)(GLenum texture, GLenum type, const GLuint *coords);
-static void w_glMultiTexCoordP3uiv(GLenum texture, GLenum type, const GLuint *coords) { if (mglshim_active && p_glMultiTexCoordP3uiv) { p_glMultiTexCoordP3uiv(texture, type, coords); return; } if (a_glMultiTexCoordP3uiv) a_glMultiTexCoordP3uiv(texture, type, coords); }
-INTERPOSE(glMultiTexCoordP3uiv)
-void glMultiTexCoordP4ui(GLenum texture, GLenum type, GLuint coords) WEAKGL;
-static void (*p_glMultiTexCoordP4ui)(GLenum texture, GLenum type, GLuint coords);
-static void (*a_glMultiTexCoordP4ui)(GLenum texture, GLenum type, GLuint coords);
-static void w_glMultiTexCoordP4ui(GLenum texture, GLenum type, GLuint coords) { if (mglshim_active && p_glMultiTexCoordP4ui) { p_glMultiTexCoordP4ui(texture, type, coords); return; } if (a_glMultiTexCoordP4ui) a_glMultiTexCoordP4ui(texture, type, coords); }
-INTERPOSE(glMultiTexCoordP4ui)
-void glMultiTexCoordP4uiv(GLenum texture, GLenum type, const GLuint *coords) WEAKGL;
-static void (*p_glMultiTexCoordP4uiv)(GLenum texture, GLenum type, const GLuint *coords);
-static void (*a_glMultiTexCoordP4uiv)(GLenum texture, GLenum type, const GLuint *coords);
-static void w_glMultiTexCoordP4uiv(GLenum texture, GLenum type, const GLuint *coords) { if (mglshim_active && p_glMultiTexCoordP4uiv) { p_glMultiTexCoordP4uiv(texture, type, coords); return; } if (a_glMultiTexCoordP4uiv) a_glMultiTexCoordP4uiv(texture, type, coords); }
-INTERPOSE(glMultiTexCoordP4uiv)
 void glNamedBufferData(GLuint buffer, GLsizeiptr size, const void *data, GLenum usage) WEAKGL;
 static void (*p_glNamedBufferData)(GLuint buffer, GLsizeiptr size, const void *data, GLenum usage);
 static void (*a_glNamedBufferData)(GLuint buffer, GLsizeiptr size, const void *data, GLenum usage);
@@ -2831,76 +1826,6 @@ static void (*p_glNamedRenderbufferStorageMultisample)(GLuint renderbuffer, GLsi
 static void (*a_glNamedRenderbufferStorageMultisample)(GLuint renderbuffer, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 static void w_glNamedRenderbufferStorageMultisample(GLuint renderbuffer, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height) { if (mglshim_active && p_glNamedRenderbufferStorageMultisample) { p_glNamedRenderbufferStorageMultisample(renderbuffer, samples, internalformat, width, height); return; } if (a_glNamedRenderbufferStorageMultisample) a_glNamedRenderbufferStorageMultisample(renderbuffer, samples, internalformat, width, height); }
 INTERPOSE(glNamedRenderbufferStorageMultisample)
-void glNewList(GLuint list, GLenum mode) WEAKGL;
-static void (*p_glNewList)(GLuint list, GLenum mode);
-static void (*a_glNewList)(GLuint list, GLenum mode);
-static void w_glNewList(GLuint list, GLenum mode) { if (mglshim_active && p_glNewList) { p_glNewList(list, mode); return; } if (a_glNewList) a_glNewList(list, mode); }
-INTERPOSE(glNewList)
-void glNormal3b(GLbyte nx, GLbyte ny, GLbyte nz) WEAKGL;
-static void (*p_glNormal3b)(GLbyte nx, GLbyte ny, GLbyte nz);
-static void (*a_glNormal3b)(GLbyte nx, GLbyte ny, GLbyte nz);
-static void w_glNormal3b(GLbyte nx, GLbyte ny, GLbyte nz) { if (mglshim_active && p_glNormal3b) { p_glNormal3b(nx, ny, nz); return; } if (a_glNormal3b) a_glNormal3b(nx, ny, nz); }
-INTERPOSE(glNormal3b)
-void glNormal3bv(const GLbyte *v) WEAKGL;
-static void (*p_glNormal3bv)(const GLbyte *v);
-static void (*a_glNormal3bv)(const GLbyte *v);
-static void w_glNormal3bv(const GLbyte *v) { if (mglshim_active && p_glNormal3bv) { p_glNormal3bv(v); return; } if (a_glNormal3bv) a_glNormal3bv(v); }
-INTERPOSE(glNormal3bv)
-void glNormal3d(GLdouble nx, GLdouble ny, GLdouble nz) WEAKGL;
-static void (*p_glNormal3d)(GLdouble nx, GLdouble ny, GLdouble nz);
-static void (*a_glNormal3d)(GLdouble nx, GLdouble ny, GLdouble nz);
-static void w_glNormal3d(GLdouble nx, GLdouble ny, GLdouble nz) { if (mglshim_active && p_glNormal3d) { p_glNormal3d(nx, ny, nz); return; } if (a_glNormal3d) a_glNormal3d(nx, ny, nz); }
-INTERPOSE(glNormal3d)
-void glNormal3dv(const GLdouble *v) WEAKGL;
-static void (*p_glNormal3dv)(const GLdouble *v);
-static void (*a_glNormal3dv)(const GLdouble *v);
-static void w_glNormal3dv(const GLdouble *v) { if (mglshim_active && p_glNormal3dv) { p_glNormal3dv(v); return; } if (a_glNormal3dv) a_glNormal3dv(v); }
-INTERPOSE(glNormal3dv)
-void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz) WEAKGL;
-static void (*p_glNormal3f)(GLfloat nx, GLfloat ny, GLfloat nz);
-static void (*a_glNormal3f)(GLfloat nx, GLfloat ny, GLfloat nz);
-static void w_glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz) { if (mglshim_active && p_glNormal3f) { p_glNormal3f(nx, ny, nz); return; } if (a_glNormal3f) a_glNormal3f(nx, ny, nz); }
-INTERPOSE(glNormal3f)
-void glNormal3fv(const GLfloat *v) WEAKGL;
-static void (*p_glNormal3fv)(const GLfloat *v);
-static void (*a_glNormal3fv)(const GLfloat *v);
-static void w_glNormal3fv(const GLfloat *v) { if (mglshim_active && p_glNormal3fv) { p_glNormal3fv(v); return; } if (a_glNormal3fv) a_glNormal3fv(v); }
-INTERPOSE(glNormal3fv)
-void glNormal3i(GLint nx, GLint ny, GLint nz) WEAKGL;
-static void (*p_glNormal3i)(GLint nx, GLint ny, GLint nz);
-static void (*a_glNormal3i)(GLint nx, GLint ny, GLint nz);
-static void w_glNormal3i(GLint nx, GLint ny, GLint nz) { if (mglshim_active && p_glNormal3i) { p_glNormal3i(nx, ny, nz); return; } if (a_glNormal3i) a_glNormal3i(nx, ny, nz); }
-INTERPOSE(glNormal3i)
-void glNormal3iv(const GLint *v) WEAKGL;
-static void (*p_glNormal3iv)(const GLint *v);
-static void (*a_glNormal3iv)(const GLint *v);
-static void w_glNormal3iv(const GLint *v) { if (mglshim_active && p_glNormal3iv) { p_glNormal3iv(v); return; } if (a_glNormal3iv) a_glNormal3iv(v); }
-INTERPOSE(glNormal3iv)
-void glNormal3s(GLshort nx, GLshort ny, GLshort nz) WEAKGL;
-static void (*p_glNormal3s)(GLshort nx, GLshort ny, GLshort nz);
-static void (*a_glNormal3s)(GLshort nx, GLshort ny, GLshort nz);
-static void w_glNormal3s(GLshort nx, GLshort ny, GLshort nz) { if (mglshim_active && p_glNormal3s) { p_glNormal3s(nx, ny, nz); return; } if (a_glNormal3s) a_glNormal3s(nx, ny, nz); }
-INTERPOSE(glNormal3s)
-void glNormal3sv(const GLshort *v) WEAKGL;
-static void (*p_glNormal3sv)(const GLshort *v);
-static void (*a_glNormal3sv)(const GLshort *v);
-static void w_glNormal3sv(const GLshort *v) { if (mglshim_active && p_glNormal3sv) { p_glNormal3sv(v); return; } if (a_glNormal3sv) a_glNormal3sv(v); }
-INTERPOSE(glNormal3sv)
-void glNormalP3ui(GLenum type, GLuint coords) WEAKGL;
-static void (*p_glNormalP3ui)(GLenum type, GLuint coords);
-static void (*a_glNormalP3ui)(GLenum type, GLuint coords);
-static void w_glNormalP3ui(GLenum type, GLuint coords) { if (mglshim_active && p_glNormalP3ui) { p_glNormalP3ui(type, coords); return; } if (a_glNormalP3ui) a_glNormalP3ui(type, coords); }
-INTERPOSE(glNormalP3ui)
-void glNormalP3uiv(GLenum type, const GLuint *coords) WEAKGL;
-static void (*p_glNormalP3uiv)(GLenum type, const GLuint *coords);
-static void (*a_glNormalP3uiv)(GLenum type, const GLuint *coords);
-static void w_glNormalP3uiv(GLenum type, const GLuint *coords) { if (mglshim_active && p_glNormalP3uiv) { p_glNormalP3uiv(type, coords); return; } if (a_glNormalP3uiv) a_glNormalP3uiv(type, coords); }
-INTERPOSE(glNormalP3uiv)
-void glNormalPointer(GLenum type, GLsizei stride, const void *pointer) WEAKGL;
-static void (*p_glNormalPointer)(GLenum type, GLsizei stride, const void *pointer);
-static void (*a_glNormalPointer)(GLenum type, GLsizei stride, const void *pointer);
-static void w_glNormalPointer(GLenum type, GLsizei stride, const void *pointer) { if (mglshim_active && p_glNormalPointer) { p_glNormalPointer(type, stride, pointer); return; } if (a_glNormalPointer) a_glNormalPointer(type, stride, pointer); }
-INTERPOSE(glNormalPointer)
 void glObjectLabel(GLenum identifier, GLuint name, GLsizei length, const GLchar *label) WEAKGL;
 static void (*p_glObjectLabel)(GLenum identifier, GLuint name, GLsizei length, const GLchar *label);
 static void (*a_glObjectLabel)(GLenum identifier, GLuint name, GLsizei length, const GLchar *label);
@@ -2911,16 +1836,6 @@ static void (*p_glObjectPtrLabel)(const void *ptr, GLsizei length, const GLchar 
 static void (*a_glObjectPtrLabel)(const void *ptr, GLsizei length, const GLchar *label);
 static void w_glObjectPtrLabel(const void *ptr, GLsizei length, const GLchar *label) { if (mglshim_active && p_glObjectPtrLabel) { p_glObjectPtrLabel(ptr, length, label); return; } if (a_glObjectPtrLabel) a_glObjectPtrLabel(ptr, length, label); }
 INTERPOSE(glObjectPtrLabel)
-void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar) WEAKGL;
-static void (*p_glOrtho)(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar);
-static void (*a_glOrtho)(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar);
-static void w_glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar) { if (mglshim_active && p_glOrtho) { p_glOrtho(left, right, bottom, top, zNear, zFar); return; } if (a_glOrtho) a_glOrtho(left, right, bottom, top, zNear, zFar); }
-INTERPOSE(glOrtho)
-void glPassThrough(GLfloat token) WEAKGL;
-static void (*p_glPassThrough)(GLfloat token);
-static void (*a_glPassThrough)(GLfloat token);
-static void w_glPassThrough(GLfloat token) { if (mglshim_active && p_glPassThrough) { p_glPassThrough(token); return; } if (a_glPassThrough) a_glPassThrough(token); }
-INTERPOSE(glPassThrough)
 void glPatchParameterfv(GLenum pname, const GLfloat *values) WEAKGL;
 static void (*p_glPatchParameterfv)(GLenum pname, const GLfloat *values);
 static void (*a_glPatchParameterfv)(GLenum pname, const GLfloat *values);
@@ -2936,21 +1851,6 @@ static void (*p_glPauseTransformFeedback)(void);
 static void (*a_glPauseTransformFeedback)(void);
 static void w_glPauseTransformFeedback(void) { if (mglshim_active && p_glPauseTransformFeedback) { p_glPauseTransformFeedback(); return; } if (a_glPauseTransformFeedback) a_glPauseTransformFeedback(); }
 INTERPOSE(glPauseTransformFeedback)
-void glPixelMapfv(GLenum map, GLsizei mapsize, const GLfloat *values) WEAKGL;
-static void (*p_glPixelMapfv)(GLenum map, GLsizei mapsize, const GLfloat *values);
-static void (*a_glPixelMapfv)(GLenum map, GLsizei mapsize, const GLfloat *values);
-static void w_glPixelMapfv(GLenum map, GLsizei mapsize, const GLfloat *values) { if (mglshim_active && p_glPixelMapfv) { p_glPixelMapfv(map, mapsize, values); return; } if (a_glPixelMapfv) a_glPixelMapfv(map, mapsize, values); }
-INTERPOSE(glPixelMapfv)
-void glPixelMapuiv(GLenum map, GLsizei mapsize, const GLuint *values) WEAKGL;
-static void (*p_glPixelMapuiv)(GLenum map, GLsizei mapsize, const GLuint *values);
-static void (*a_glPixelMapuiv)(GLenum map, GLsizei mapsize, const GLuint *values);
-static void w_glPixelMapuiv(GLenum map, GLsizei mapsize, const GLuint *values) { if (mglshim_active && p_glPixelMapuiv) { p_glPixelMapuiv(map, mapsize, values); return; } if (a_glPixelMapuiv) a_glPixelMapuiv(map, mapsize, values); }
-INTERPOSE(glPixelMapuiv)
-void glPixelMapusv(GLenum map, GLsizei mapsize, const GLushort *values) WEAKGL;
-static void (*p_glPixelMapusv)(GLenum map, GLsizei mapsize, const GLushort *values);
-static void (*a_glPixelMapusv)(GLenum map, GLsizei mapsize, const GLushort *values);
-static void w_glPixelMapusv(GLenum map, GLsizei mapsize, const GLushort *values) { if (mglshim_active && p_glPixelMapusv) { p_glPixelMapusv(map, mapsize, values); return; } if (a_glPixelMapusv) a_glPixelMapusv(map, mapsize, values); }
-INTERPOSE(glPixelMapusv)
 void glPixelStoref(GLenum pname, GLfloat param) WEAKGL;
 static void (*p_glPixelStoref)(GLenum pname, GLfloat param);
 static void (*a_glPixelStoref)(GLenum pname, GLfloat param);
@@ -2961,21 +1861,6 @@ static void (*p_glPixelStorei)(GLenum pname, GLint param);
 static void (*a_glPixelStorei)(GLenum pname, GLint param);
 static void w_glPixelStorei(GLenum pname, GLint param) { if (mglshim_active && p_glPixelStorei) { p_glPixelStorei(pname, param); return; } if (a_glPixelStorei) a_glPixelStorei(pname, param); }
 INTERPOSE(glPixelStorei)
-void glPixelTransferf(GLenum pname, GLfloat param) WEAKGL;
-static void (*p_glPixelTransferf)(GLenum pname, GLfloat param);
-static void (*a_glPixelTransferf)(GLenum pname, GLfloat param);
-static void w_glPixelTransferf(GLenum pname, GLfloat param) { if (mglshim_active && p_glPixelTransferf) { p_glPixelTransferf(pname, param); return; } if (a_glPixelTransferf) a_glPixelTransferf(pname, param); }
-INTERPOSE(glPixelTransferf)
-void glPixelTransferi(GLenum pname, GLint param) WEAKGL;
-static void (*p_glPixelTransferi)(GLenum pname, GLint param);
-static void (*a_glPixelTransferi)(GLenum pname, GLint param);
-static void w_glPixelTransferi(GLenum pname, GLint param) { if (mglshim_active && p_glPixelTransferi) { p_glPixelTransferi(pname, param); return; } if (a_glPixelTransferi) a_glPixelTransferi(pname, param); }
-INTERPOSE(glPixelTransferi)
-void glPixelZoom(GLfloat xfactor, GLfloat yfactor) WEAKGL;
-static void (*p_glPixelZoom)(GLfloat xfactor, GLfloat yfactor);
-static void (*a_glPixelZoom)(GLfloat xfactor, GLfloat yfactor);
-static void w_glPixelZoom(GLfloat xfactor, GLfloat yfactor) { if (mglshim_active && p_glPixelZoom) { p_glPixelZoom(xfactor, yfactor); return; } if (a_glPixelZoom) a_glPixelZoom(xfactor, yfactor); }
-INTERPOSE(glPixelZoom)
 void glPointParameterf(GLenum pname, GLfloat param) WEAKGL;
 static void (*p_glPointParameterf)(GLenum pname, GLfloat param);
 static void (*a_glPointParameterf)(GLenum pname, GLfloat param);
@@ -3016,46 +1901,16 @@ static void (*p_glPolygonOffsetClamp)(GLfloat factor, GLfloat units, GLfloat cla
 static void (*a_glPolygonOffsetClamp)(GLfloat factor, GLfloat units, GLfloat clamp);
 static void w_glPolygonOffsetClamp(GLfloat factor, GLfloat units, GLfloat clamp) { if (mglshim_active && p_glPolygonOffsetClamp) { p_glPolygonOffsetClamp(factor, units, clamp); return; } if (a_glPolygonOffsetClamp) a_glPolygonOffsetClamp(factor, units, clamp); }
 INTERPOSE(glPolygonOffsetClamp)
-void glPolygonStipple(const GLubyte *mask) WEAKGL;
-static void (*p_glPolygonStipple)(const GLubyte *mask);
-static void (*a_glPolygonStipple)(const GLubyte *mask);
-static void w_glPolygonStipple(const GLubyte *mask) { if (mglshim_active && p_glPolygonStipple) { p_glPolygonStipple(mask); return; } if (a_glPolygonStipple) a_glPolygonStipple(mask); }
-INTERPOSE(glPolygonStipple)
-void glPopAttrib(void) WEAKGL;
-static void (*p_glPopAttrib)(void);
-static void (*a_glPopAttrib)(void);
-static void w_glPopAttrib(void) { if (mglshim_active && p_glPopAttrib) { p_glPopAttrib(); return; } if (a_glPopAttrib) a_glPopAttrib(); }
-INTERPOSE(glPopAttrib)
-void glPopClientAttrib(void) WEAKGL;
-static void (*p_glPopClientAttrib)(void);
-static void (*a_glPopClientAttrib)(void);
-static void w_glPopClientAttrib(void) { if (mglshim_active && p_glPopClientAttrib) { p_glPopClientAttrib(); return; } if (a_glPopClientAttrib) a_glPopClientAttrib(); }
-INTERPOSE(glPopClientAttrib)
 void glPopDebugGroup(void) WEAKGL;
 static void (*p_glPopDebugGroup)(void);
 static void (*a_glPopDebugGroup)(void);
 static void w_glPopDebugGroup(void) { if (mglshim_active && p_glPopDebugGroup) { p_glPopDebugGroup(); return; } if (a_glPopDebugGroup) a_glPopDebugGroup(); }
 INTERPOSE(glPopDebugGroup)
-void glPopMatrix(void) WEAKGL;
-static void (*p_glPopMatrix)(void);
-static void (*a_glPopMatrix)(void);
-static void w_glPopMatrix(void) { if (mglshim_active && p_glPopMatrix) { p_glPopMatrix(); return; } if (a_glPopMatrix) a_glPopMatrix(); }
-INTERPOSE(glPopMatrix)
-void glPopName(void) WEAKGL;
-static void (*p_glPopName)(void);
-static void (*a_glPopName)(void);
-static void w_glPopName(void) { if (mglshim_active && p_glPopName) { p_glPopName(); return; } if (a_glPopName) a_glPopName(); }
-INTERPOSE(glPopName)
 void glPrimitiveRestartIndex(GLuint index) WEAKGL;
 static void (*p_glPrimitiveRestartIndex)(GLuint index);
 static void (*a_glPrimitiveRestartIndex)(GLuint index);
 static void w_glPrimitiveRestartIndex(GLuint index) { if (mglshim_active && p_glPrimitiveRestartIndex) { p_glPrimitiveRestartIndex(index); return; } if (a_glPrimitiveRestartIndex) a_glPrimitiveRestartIndex(index); }
 INTERPOSE(glPrimitiveRestartIndex)
-void glPrioritizeTextures(GLsizei n, const GLuint *textures, const GLfloat *priorities) WEAKGL;
-static void (*p_glPrioritizeTextures)(GLsizei n, const GLuint *textures, const GLfloat *priorities);
-static void (*a_glPrioritizeTextures)(GLsizei n, const GLuint *textures, const GLfloat *priorities);
-static void w_glPrioritizeTextures(GLsizei n, const GLuint *textures, const GLfloat *priorities) { if (mglshim_active && p_glPrioritizeTextures) { p_glPrioritizeTextures(n, textures, priorities); return; } if (a_glPrioritizeTextures) a_glPrioritizeTextures(n, textures, priorities); }
-INTERPOSE(glPrioritizeTextures)
 void glProgramBinary(GLuint program, GLenum binaryFormat, const void *binary, GLsizei length) WEAKGL;
 static void (*p_glProgramBinary)(GLuint program, GLenum binaryFormat, const void *binary, GLsizei length);
 static void (*a_glProgramBinary)(GLuint program, GLenum binaryFormat, const void *binary, GLsizei length);
@@ -3321,156 +2176,16 @@ static void (*p_glProvokingVertex)(GLenum mode);
 static void (*a_glProvokingVertex)(GLenum mode);
 static void w_glProvokingVertex(GLenum mode) { if (mglshim_active && p_glProvokingVertex) { p_glProvokingVertex(mode); return; } if (a_glProvokingVertex) a_glProvokingVertex(mode); }
 INTERPOSE(glProvokingVertex)
-void glPushAttrib(GLbitfield mask) WEAKGL;
-static void (*p_glPushAttrib)(GLbitfield mask);
-static void (*a_glPushAttrib)(GLbitfield mask);
-static void w_glPushAttrib(GLbitfield mask) { if (mglshim_active && p_glPushAttrib) { p_glPushAttrib(mask); return; } if (a_glPushAttrib) a_glPushAttrib(mask); }
-INTERPOSE(glPushAttrib)
-void glPushClientAttrib(GLbitfield mask) WEAKGL;
-static void (*p_glPushClientAttrib)(GLbitfield mask);
-static void (*a_glPushClientAttrib)(GLbitfield mask);
-static void w_glPushClientAttrib(GLbitfield mask) { if (mglshim_active && p_glPushClientAttrib) { p_glPushClientAttrib(mask); return; } if (a_glPushClientAttrib) a_glPushClientAttrib(mask); }
-INTERPOSE(glPushClientAttrib)
 void glPushDebugGroup(GLenum source, GLuint id, GLsizei length, const GLchar *message) WEAKGL;
 static void (*p_glPushDebugGroup)(GLenum source, GLuint id, GLsizei length, const GLchar *message);
 static void (*a_glPushDebugGroup)(GLenum source, GLuint id, GLsizei length, const GLchar *message);
 static void w_glPushDebugGroup(GLenum source, GLuint id, GLsizei length, const GLchar *message) { if (mglshim_active && p_glPushDebugGroup) { p_glPushDebugGroup(source, id, length, message); return; } if (a_glPushDebugGroup) a_glPushDebugGroup(source, id, length, message); }
 INTERPOSE(glPushDebugGroup)
-void glPushMatrix(void) WEAKGL;
-static void (*p_glPushMatrix)(void);
-static void (*a_glPushMatrix)(void);
-static void w_glPushMatrix(void) { if (mglshim_active && p_glPushMatrix) { p_glPushMatrix(); return; } if (a_glPushMatrix) a_glPushMatrix(); }
-INTERPOSE(glPushMatrix)
-void glPushName(GLuint name) WEAKGL;
-static void (*p_glPushName)(GLuint name);
-static void (*a_glPushName)(GLuint name);
-static void w_glPushName(GLuint name) { if (mglshim_active && p_glPushName) { p_glPushName(name); return; } if (a_glPushName) a_glPushName(name); }
-INTERPOSE(glPushName)
 void glQueryCounter(GLuint id, GLenum target) WEAKGL;
 static void (*p_glQueryCounter)(GLuint id, GLenum target);
 static void (*a_glQueryCounter)(GLuint id, GLenum target);
 static void w_glQueryCounter(GLuint id, GLenum target) { if (mglshim_active && p_glQueryCounter) { p_glQueryCounter(id, target); return; } if (a_glQueryCounter) a_glQueryCounter(id, target); }
 INTERPOSE(glQueryCounter)
-void glRasterPos2d(GLdouble x, GLdouble y) WEAKGL;
-static void (*p_glRasterPos2d)(GLdouble x, GLdouble y);
-static void (*a_glRasterPos2d)(GLdouble x, GLdouble y);
-static void w_glRasterPos2d(GLdouble x, GLdouble y) { if (mglshim_active && p_glRasterPos2d) { p_glRasterPos2d(x, y); return; } if (a_glRasterPos2d) a_glRasterPos2d(x, y); }
-INTERPOSE(glRasterPos2d)
-void glRasterPos2dv(const GLdouble *v) WEAKGL;
-static void (*p_glRasterPos2dv)(const GLdouble *v);
-static void (*a_glRasterPos2dv)(const GLdouble *v);
-static void w_glRasterPos2dv(const GLdouble *v) { if (mglshim_active && p_glRasterPos2dv) { p_glRasterPos2dv(v); return; } if (a_glRasterPos2dv) a_glRasterPos2dv(v); }
-INTERPOSE(glRasterPos2dv)
-void glRasterPos2f(GLfloat x, GLfloat y) WEAKGL;
-static void (*p_glRasterPos2f)(GLfloat x, GLfloat y);
-static void (*a_glRasterPos2f)(GLfloat x, GLfloat y);
-static void w_glRasterPos2f(GLfloat x, GLfloat y) { if (mglshim_active && p_glRasterPos2f) { p_glRasterPos2f(x, y); return; } if (a_glRasterPos2f) a_glRasterPos2f(x, y); }
-INTERPOSE(glRasterPos2f)
-void glRasterPos2fv(const GLfloat *v) WEAKGL;
-static void (*p_glRasterPos2fv)(const GLfloat *v);
-static void (*a_glRasterPos2fv)(const GLfloat *v);
-static void w_glRasterPos2fv(const GLfloat *v) { if (mglshim_active && p_glRasterPos2fv) { p_glRasterPos2fv(v); return; } if (a_glRasterPos2fv) a_glRasterPos2fv(v); }
-INTERPOSE(glRasterPos2fv)
-void glRasterPos2i(GLint x, GLint y) WEAKGL;
-static void (*p_glRasterPos2i)(GLint x, GLint y);
-static void (*a_glRasterPos2i)(GLint x, GLint y);
-static void w_glRasterPos2i(GLint x, GLint y) { if (mglshim_active && p_glRasterPos2i) { p_glRasterPos2i(x, y); return; } if (a_glRasterPos2i) a_glRasterPos2i(x, y); }
-INTERPOSE(glRasterPos2i)
-void glRasterPos2iv(const GLint *v) WEAKGL;
-static void (*p_glRasterPos2iv)(const GLint *v);
-static void (*a_glRasterPos2iv)(const GLint *v);
-static void w_glRasterPos2iv(const GLint *v) { if (mglshim_active && p_glRasterPos2iv) { p_glRasterPos2iv(v); return; } if (a_glRasterPos2iv) a_glRasterPos2iv(v); }
-INTERPOSE(glRasterPos2iv)
-void glRasterPos2s(GLshort x, GLshort y) WEAKGL;
-static void (*p_glRasterPos2s)(GLshort x, GLshort y);
-static void (*a_glRasterPos2s)(GLshort x, GLshort y);
-static void w_glRasterPos2s(GLshort x, GLshort y) { if (mglshim_active && p_glRasterPos2s) { p_glRasterPos2s(x, y); return; } if (a_glRasterPos2s) a_glRasterPos2s(x, y); }
-INTERPOSE(glRasterPos2s)
-void glRasterPos2sv(const GLshort *v) WEAKGL;
-static void (*p_glRasterPos2sv)(const GLshort *v);
-static void (*a_glRasterPos2sv)(const GLshort *v);
-static void w_glRasterPos2sv(const GLshort *v) { if (mglshim_active && p_glRasterPos2sv) { p_glRasterPos2sv(v); return; } if (a_glRasterPos2sv) a_glRasterPos2sv(v); }
-INTERPOSE(glRasterPos2sv)
-void glRasterPos3d(GLdouble x, GLdouble y, GLdouble z) WEAKGL;
-static void (*p_glRasterPos3d)(GLdouble x, GLdouble y, GLdouble z);
-static void (*a_glRasterPos3d)(GLdouble x, GLdouble y, GLdouble z);
-static void w_glRasterPos3d(GLdouble x, GLdouble y, GLdouble z) { if (mglshim_active && p_glRasterPos3d) { p_glRasterPos3d(x, y, z); return; } if (a_glRasterPos3d) a_glRasterPos3d(x, y, z); }
-INTERPOSE(glRasterPos3d)
-void glRasterPos3dv(const GLdouble *v) WEAKGL;
-static void (*p_glRasterPos3dv)(const GLdouble *v);
-static void (*a_glRasterPos3dv)(const GLdouble *v);
-static void w_glRasterPos3dv(const GLdouble *v) { if (mglshim_active && p_glRasterPos3dv) { p_glRasterPos3dv(v); return; } if (a_glRasterPos3dv) a_glRasterPos3dv(v); }
-INTERPOSE(glRasterPos3dv)
-void glRasterPos3f(GLfloat x, GLfloat y, GLfloat z) WEAKGL;
-static void (*p_glRasterPos3f)(GLfloat x, GLfloat y, GLfloat z);
-static void (*a_glRasterPos3f)(GLfloat x, GLfloat y, GLfloat z);
-static void w_glRasterPos3f(GLfloat x, GLfloat y, GLfloat z) { if (mglshim_active && p_glRasterPos3f) { p_glRasterPos3f(x, y, z); return; } if (a_glRasterPos3f) a_glRasterPos3f(x, y, z); }
-INTERPOSE(glRasterPos3f)
-void glRasterPos3fv(const GLfloat *v) WEAKGL;
-static void (*p_glRasterPos3fv)(const GLfloat *v);
-static void (*a_glRasterPos3fv)(const GLfloat *v);
-static void w_glRasterPos3fv(const GLfloat *v) { if (mglshim_active && p_glRasterPos3fv) { p_glRasterPos3fv(v); return; } if (a_glRasterPos3fv) a_glRasterPos3fv(v); }
-INTERPOSE(glRasterPos3fv)
-void glRasterPos3i(GLint x, GLint y, GLint z) WEAKGL;
-static void (*p_glRasterPos3i)(GLint x, GLint y, GLint z);
-static void (*a_glRasterPos3i)(GLint x, GLint y, GLint z);
-static void w_glRasterPos3i(GLint x, GLint y, GLint z) { if (mglshim_active && p_glRasterPos3i) { p_glRasterPos3i(x, y, z); return; } if (a_glRasterPos3i) a_glRasterPos3i(x, y, z); }
-INTERPOSE(glRasterPos3i)
-void glRasterPos3iv(const GLint *v) WEAKGL;
-static void (*p_glRasterPos3iv)(const GLint *v);
-static void (*a_glRasterPos3iv)(const GLint *v);
-static void w_glRasterPos3iv(const GLint *v) { if (mglshim_active && p_glRasterPos3iv) { p_glRasterPos3iv(v); return; } if (a_glRasterPos3iv) a_glRasterPos3iv(v); }
-INTERPOSE(glRasterPos3iv)
-void glRasterPos3s(GLshort x, GLshort y, GLshort z) WEAKGL;
-static void (*p_glRasterPos3s)(GLshort x, GLshort y, GLshort z);
-static void (*a_glRasterPos3s)(GLshort x, GLshort y, GLshort z);
-static void w_glRasterPos3s(GLshort x, GLshort y, GLshort z) { if (mglshim_active && p_glRasterPos3s) { p_glRasterPos3s(x, y, z); return; } if (a_glRasterPos3s) a_glRasterPos3s(x, y, z); }
-INTERPOSE(glRasterPos3s)
-void glRasterPos3sv(const GLshort *v) WEAKGL;
-static void (*p_glRasterPos3sv)(const GLshort *v);
-static void (*a_glRasterPos3sv)(const GLshort *v);
-static void w_glRasterPos3sv(const GLshort *v) { if (mglshim_active && p_glRasterPos3sv) { p_glRasterPos3sv(v); return; } if (a_glRasterPos3sv) a_glRasterPos3sv(v); }
-INTERPOSE(glRasterPos3sv)
-void glRasterPos4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w) WEAKGL;
-static void (*p_glRasterPos4d)(GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-static void (*a_glRasterPos4d)(GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-static void w_glRasterPos4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w) { if (mglshim_active && p_glRasterPos4d) { p_glRasterPos4d(x, y, z, w); return; } if (a_glRasterPos4d) a_glRasterPos4d(x, y, z, w); }
-INTERPOSE(glRasterPos4d)
-void glRasterPos4dv(const GLdouble *v) WEAKGL;
-static void (*p_glRasterPos4dv)(const GLdouble *v);
-static void (*a_glRasterPos4dv)(const GLdouble *v);
-static void w_glRasterPos4dv(const GLdouble *v) { if (mglshim_active && p_glRasterPos4dv) { p_glRasterPos4dv(v); return; } if (a_glRasterPos4dv) a_glRasterPos4dv(v); }
-INTERPOSE(glRasterPos4dv)
-void glRasterPos4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w) WEAKGL;
-static void (*p_glRasterPos4f)(GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-static void (*a_glRasterPos4f)(GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-static void w_glRasterPos4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w) { if (mglshim_active && p_glRasterPos4f) { p_glRasterPos4f(x, y, z, w); return; } if (a_glRasterPos4f) a_glRasterPos4f(x, y, z, w); }
-INTERPOSE(glRasterPos4f)
-void glRasterPos4fv(const GLfloat *v) WEAKGL;
-static void (*p_glRasterPos4fv)(const GLfloat *v);
-static void (*a_glRasterPos4fv)(const GLfloat *v);
-static void w_glRasterPos4fv(const GLfloat *v) { if (mglshim_active && p_glRasterPos4fv) { p_glRasterPos4fv(v); return; } if (a_glRasterPos4fv) a_glRasterPos4fv(v); }
-INTERPOSE(glRasterPos4fv)
-void glRasterPos4i(GLint x, GLint y, GLint z, GLint w) WEAKGL;
-static void (*p_glRasterPos4i)(GLint x, GLint y, GLint z, GLint w);
-static void (*a_glRasterPos4i)(GLint x, GLint y, GLint z, GLint w);
-static void w_glRasterPos4i(GLint x, GLint y, GLint z, GLint w) { if (mglshim_active && p_glRasterPos4i) { p_glRasterPos4i(x, y, z, w); return; } if (a_glRasterPos4i) a_glRasterPos4i(x, y, z, w); }
-INTERPOSE(glRasterPos4i)
-void glRasterPos4iv(const GLint *v) WEAKGL;
-static void (*p_glRasterPos4iv)(const GLint *v);
-static void (*a_glRasterPos4iv)(const GLint *v);
-static void w_glRasterPos4iv(const GLint *v) { if (mglshim_active && p_glRasterPos4iv) { p_glRasterPos4iv(v); return; } if (a_glRasterPos4iv) a_glRasterPos4iv(v); }
-INTERPOSE(glRasterPos4iv)
-void glRasterPos4s(GLshort x, GLshort y, GLshort z, GLshort w) WEAKGL;
-static void (*p_glRasterPos4s)(GLshort x, GLshort y, GLshort z, GLshort w);
-static void (*a_glRasterPos4s)(GLshort x, GLshort y, GLshort z, GLshort w);
-static void w_glRasterPos4s(GLshort x, GLshort y, GLshort z, GLshort w) { if (mglshim_active && p_glRasterPos4s) { p_glRasterPos4s(x, y, z, w); return; } if (a_glRasterPos4s) a_glRasterPos4s(x, y, z, w); }
-INTERPOSE(glRasterPos4s)
-void glRasterPos4sv(const GLshort *v) WEAKGL;
-static void (*p_glRasterPos4sv)(const GLshort *v);
-static void (*a_glRasterPos4sv)(const GLshort *v);
-static void w_glRasterPos4sv(const GLshort *v) { if (mglshim_active && p_glRasterPos4sv) { p_glRasterPos4sv(v); return; } if (a_glRasterPos4sv) a_glRasterPos4sv(v); }
-INTERPOSE(glRasterPos4sv)
 void glReadBuffer(GLenum src) WEAKGL;
 static void (*p_glReadBuffer)(GLenum src);
 static void (*a_glReadBuffer)(GLenum src);
@@ -3486,56 +2201,11 @@ static void (*p_glReadnPixels)(GLint x, GLint y, GLsizei width, GLsizei height, 
 static void (*a_glReadnPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, void *data);
 static void w_glReadnPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, void *data) { if (mglshim_active && p_glReadnPixels) { p_glReadnPixels(x, y, width, height, format, type, bufSize, data); return; } if (a_glReadnPixels) a_glReadnPixels(x, y, width, height, format, type, bufSize, data); }
 INTERPOSE(glReadnPixels)
-void glRectd(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) WEAKGL;
-static void (*p_glRectd)(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2);
-static void (*a_glRectd)(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2);
-static void w_glRectd(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) { if (mglshim_active && p_glRectd) { p_glRectd(x1, y1, x2, y2); return; } if (a_glRectd) a_glRectd(x1, y1, x2, y2); }
-INTERPOSE(glRectd)
-void glRectdv(const GLdouble *v1, const GLdouble *v2) WEAKGL;
-static void (*p_glRectdv)(const GLdouble *v1, const GLdouble *v2);
-static void (*a_glRectdv)(const GLdouble *v1, const GLdouble *v2);
-static void w_glRectdv(const GLdouble *v1, const GLdouble *v2) { if (mglshim_active && p_glRectdv) { p_glRectdv(v1, v2); return; } if (a_glRectdv) a_glRectdv(v1, v2); }
-INTERPOSE(glRectdv)
-void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2) WEAKGL;
-static void (*p_glRectf)(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
-static void (*a_glRectf)(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
-static void w_glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2) { if (mglshim_active && p_glRectf) { p_glRectf(x1, y1, x2, y2); return; } if (a_glRectf) a_glRectf(x1, y1, x2, y2); }
-INTERPOSE(glRectf)
-void glRectfv(const GLfloat *v1, const GLfloat *v2) WEAKGL;
-static void (*p_glRectfv)(const GLfloat *v1, const GLfloat *v2);
-static void (*a_glRectfv)(const GLfloat *v1, const GLfloat *v2);
-static void w_glRectfv(const GLfloat *v1, const GLfloat *v2) { if (mglshim_active && p_glRectfv) { p_glRectfv(v1, v2); return; } if (a_glRectfv) a_glRectfv(v1, v2); }
-INTERPOSE(glRectfv)
-void glRecti(GLint x1, GLint y1, GLint x2, GLint y2) WEAKGL;
-static void (*p_glRecti)(GLint x1, GLint y1, GLint x2, GLint y2);
-static void (*a_glRecti)(GLint x1, GLint y1, GLint x2, GLint y2);
-static void w_glRecti(GLint x1, GLint y1, GLint x2, GLint y2) { if (mglshim_active && p_glRecti) { p_glRecti(x1, y1, x2, y2); return; } if (a_glRecti) a_glRecti(x1, y1, x2, y2); }
-INTERPOSE(glRecti)
-void glRectiv(const GLint *v1, const GLint *v2) WEAKGL;
-static void (*p_glRectiv)(const GLint *v1, const GLint *v2);
-static void (*a_glRectiv)(const GLint *v1, const GLint *v2);
-static void w_glRectiv(const GLint *v1, const GLint *v2) { if (mglshim_active && p_glRectiv) { p_glRectiv(v1, v2); return; } if (a_glRectiv) a_glRectiv(v1, v2); }
-INTERPOSE(glRectiv)
-void glRects(GLshort x1, GLshort y1, GLshort x2, GLshort y2) WEAKGL;
-static void (*p_glRects)(GLshort x1, GLshort y1, GLshort x2, GLshort y2);
-static void (*a_glRects)(GLshort x1, GLshort y1, GLshort x2, GLshort y2);
-static void w_glRects(GLshort x1, GLshort y1, GLshort x2, GLshort y2) { if (mglshim_active && p_glRects) { p_glRects(x1, y1, x2, y2); return; } if (a_glRects) a_glRects(x1, y1, x2, y2); }
-INTERPOSE(glRects)
-void glRectsv(const GLshort *v1, const GLshort *v2) WEAKGL;
-static void (*p_glRectsv)(const GLshort *v1, const GLshort *v2);
-static void (*a_glRectsv)(const GLshort *v1, const GLshort *v2);
-static void w_glRectsv(const GLshort *v1, const GLshort *v2) { if (mglshim_active && p_glRectsv) { p_glRectsv(v1, v2); return; } if (a_glRectsv) a_glRectsv(v1, v2); }
-INTERPOSE(glRectsv)
 void glReleaseShaderCompiler(void) WEAKGL;
 static void (*p_glReleaseShaderCompiler)(void);
 static void (*a_glReleaseShaderCompiler)(void);
 static void w_glReleaseShaderCompiler(void) { if (mglshim_active && p_glReleaseShaderCompiler) { p_glReleaseShaderCompiler(); return; } if (a_glReleaseShaderCompiler) a_glReleaseShaderCompiler(); }
 INTERPOSE(glReleaseShaderCompiler)
-GLint glRenderMode(GLenum mode) WEAKGL;
-static GLint (*p_glRenderMode)(GLenum mode);
-static GLint (*a_glRenderMode)(GLenum mode);
-static GLint w_glRenderMode(GLenum mode) { if (mglshim_active && p_glRenderMode) return p_glRenderMode(mode); if (a_glRenderMode) return a_glRenderMode(mode); return (GLint)0; }
-INTERPOSE(glRenderMode)
 void glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height) WEAKGL;
 static void (*p_glRenderbufferStorage)(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
 static void (*a_glRenderbufferStorage)(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
@@ -3551,16 +2221,6 @@ static void (*p_glResumeTransformFeedback)(void);
 static void (*a_glResumeTransformFeedback)(void);
 static void w_glResumeTransformFeedback(void) { if (mglshim_active && p_glResumeTransformFeedback) { p_glResumeTransformFeedback(); return; } if (a_glResumeTransformFeedback) a_glResumeTransformFeedback(); }
 INTERPOSE(glResumeTransformFeedback)
-void glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z) WEAKGL;
-static void (*p_glRotated)(GLdouble angle, GLdouble x, GLdouble y, GLdouble z);
-static void (*a_glRotated)(GLdouble angle, GLdouble x, GLdouble y, GLdouble z);
-static void w_glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z) { if (mglshim_active && p_glRotated) { p_glRotated(angle, x, y, z); return; } if (a_glRotated) a_glRotated(angle, x, y, z); }
-INTERPOSE(glRotated)
-void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) WEAKGL;
-static void (*p_glRotatef)(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
-static void (*a_glRotatef)(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
-static void w_glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) { if (mglshim_active && p_glRotatef) { p_glRotatef(angle, x, y, z); return; } if (a_glRotatef) a_glRotatef(angle, x, y, z); }
-INTERPOSE(glRotatef)
 void glSampleCoverage(GLfloat value, GLboolean invert) WEAKGL;
 static void (*p_glSampleCoverage)(GLfloat value, GLboolean invert);
 static void (*a_glSampleCoverage)(GLfloat value, GLboolean invert);
@@ -3601,16 +2261,6 @@ static void (*p_glSamplerParameteriv)(GLuint sampler, GLenum pname, const GLint 
 static void (*a_glSamplerParameteriv)(GLuint sampler, GLenum pname, const GLint *param);
 static void w_glSamplerParameteriv(GLuint sampler, GLenum pname, const GLint *param) { if (mglshim_active && p_glSamplerParameteriv) { p_glSamplerParameteriv(sampler, pname, param); return; } if (a_glSamplerParameteriv) a_glSamplerParameteriv(sampler, pname, param); }
 INTERPOSE(glSamplerParameteriv)
-void glScaled(GLdouble x, GLdouble y, GLdouble z) WEAKGL;
-static void (*p_glScaled)(GLdouble x, GLdouble y, GLdouble z);
-static void (*a_glScaled)(GLdouble x, GLdouble y, GLdouble z);
-static void w_glScaled(GLdouble x, GLdouble y, GLdouble z) { if (mglshim_active && p_glScaled) { p_glScaled(x, y, z); return; } if (a_glScaled) a_glScaled(x, y, z); }
-INTERPOSE(glScaled)
-void glScalef(GLfloat x, GLfloat y, GLfloat z) WEAKGL;
-static void (*p_glScalef)(GLfloat x, GLfloat y, GLfloat z);
-static void (*a_glScalef)(GLfloat x, GLfloat y, GLfloat z);
-static void w_glScalef(GLfloat x, GLfloat y, GLfloat z) { if (mglshim_active && p_glScalef) { p_glScalef(x, y, z); return; } if (a_glScalef) a_glScalef(x, y, z); }
-INTERPOSE(glScalef)
 void glScissor(GLint x, GLint y, GLsizei width, GLsizei height) WEAKGL;
 static void (*p_glScissor)(GLint x, GLint y, GLsizei width, GLsizei height);
 static void (*a_glScissor)(GLint x, GLint y, GLsizei width, GLsizei height);
@@ -3631,111 +2281,6 @@ static void (*p_glScissorIndexedv)(GLuint index, const GLint *v);
 static void (*a_glScissorIndexedv)(GLuint index, const GLint *v);
 static void w_glScissorIndexedv(GLuint index, const GLint *v) { if (mglshim_active && p_glScissorIndexedv) { p_glScissorIndexedv(index, v); return; } if (a_glScissorIndexedv) a_glScissorIndexedv(index, v); }
 INTERPOSE(glScissorIndexedv)
-void glSecondaryColor3b(GLbyte red, GLbyte green, GLbyte blue) WEAKGL;
-static void (*p_glSecondaryColor3b)(GLbyte red, GLbyte green, GLbyte blue);
-static void (*a_glSecondaryColor3b)(GLbyte red, GLbyte green, GLbyte blue);
-static void w_glSecondaryColor3b(GLbyte red, GLbyte green, GLbyte blue) { if (mglshim_active && p_glSecondaryColor3b) { p_glSecondaryColor3b(red, green, blue); return; } if (a_glSecondaryColor3b) a_glSecondaryColor3b(red, green, blue); }
-INTERPOSE(glSecondaryColor3b)
-void glSecondaryColor3bv(const GLbyte *v) WEAKGL;
-static void (*p_glSecondaryColor3bv)(const GLbyte *v);
-static void (*a_glSecondaryColor3bv)(const GLbyte *v);
-static void w_glSecondaryColor3bv(const GLbyte *v) { if (mglshim_active && p_glSecondaryColor3bv) { p_glSecondaryColor3bv(v); return; } if (a_glSecondaryColor3bv) a_glSecondaryColor3bv(v); }
-INTERPOSE(glSecondaryColor3bv)
-void glSecondaryColor3d(GLdouble red, GLdouble green, GLdouble blue) WEAKGL;
-static void (*p_glSecondaryColor3d)(GLdouble red, GLdouble green, GLdouble blue);
-static void (*a_glSecondaryColor3d)(GLdouble red, GLdouble green, GLdouble blue);
-static void w_glSecondaryColor3d(GLdouble red, GLdouble green, GLdouble blue) { if (mglshim_active && p_glSecondaryColor3d) { p_glSecondaryColor3d(red, green, blue); return; } if (a_glSecondaryColor3d) a_glSecondaryColor3d(red, green, blue); }
-INTERPOSE(glSecondaryColor3d)
-void glSecondaryColor3dv(const GLdouble *v) WEAKGL;
-static void (*p_glSecondaryColor3dv)(const GLdouble *v);
-static void (*a_glSecondaryColor3dv)(const GLdouble *v);
-static void w_glSecondaryColor3dv(const GLdouble *v) { if (mglshim_active && p_glSecondaryColor3dv) { p_glSecondaryColor3dv(v); return; } if (a_glSecondaryColor3dv) a_glSecondaryColor3dv(v); }
-INTERPOSE(glSecondaryColor3dv)
-void glSecondaryColor3f(GLfloat red, GLfloat green, GLfloat blue) WEAKGL;
-static void (*p_glSecondaryColor3f)(GLfloat red, GLfloat green, GLfloat blue);
-static void (*a_glSecondaryColor3f)(GLfloat red, GLfloat green, GLfloat blue);
-static void w_glSecondaryColor3f(GLfloat red, GLfloat green, GLfloat blue) { if (mglshim_active && p_glSecondaryColor3f) { p_glSecondaryColor3f(red, green, blue); return; } if (a_glSecondaryColor3f) a_glSecondaryColor3f(red, green, blue); }
-INTERPOSE(glSecondaryColor3f)
-void glSecondaryColor3fv(const GLfloat *v) WEAKGL;
-static void (*p_glSecondaryColor3fv)(const GLfloat *v);
-static void (*a_glSecondaryColor3fv)(const GLfloat *v);
-static void w_glSecondaryColor3fv(const GLfloat *v) { if (mglshim_active && p_glSecondaryColor3fv) { p_glSecondaryColor3fv(v); return; } if (a_glSecondaryColor3fv) a_glSecondaryColor3fv(v); }
-INTERPOSE(glSecondaryColor3fv)
-void glSecondaryColor3i(GLint red, GLint green, GLint blue) WEAKGL;
-static void (*p_glSecondaryColor3i)(GLint red, GLint green, GLint blue);
-static void (*a_glSecondaryColor3i)(GLint red, GLint green, GLint blue);
-static void w_glSecondaryColor3i(GLint red, GLint green, GLint blue) { if (mglshim_active && p_glSecondaryColor3i) { p_glSecondaryColor3i(red, green, blue); return; } if (a_glSecondaryColor3i) a_glSecondaryColor3i(red, green, blue); }
-INTERPOSE(glSecondaryColor3i)
-void glSecondaryColor3iv(const GLint *v) WEAKGL;
-static void (*p_glSecondaryColor3iv)(const GLint *v);
-static void (*a_glSecondaryColor3iv)(const GLint *v);
-static void w_glSecondaryColor3iv(const GLint *v) { if (mglshim_active && p_glSecondaryColor3iv) { p_glSecondaryColor3iv(v); return; } if (a_glSecondaryColor3iv) a_glSecondaryColor3iv(v); }
-INTERPOSE(glSecondaryColor3iv)
-void glSecondaryColor3s(GLshort red, GLshort green, GLshort blue) WEAKGL;
-static void (*p_glSecondaryColor3s)(GLshort red, GLshort green, GLshort blue);
-static void (*a_glSecondaryColor3s)(GLshort red, GLshort green, GLshort blue);
-static void w_glSecondaryColor3s(GLshort red, GLshort green, GLshort blue) { if (mglshim_active && p_glSecondaryColor3s) { p_glSecondaryColor3s(red, green, blue); return; } if (a_glSecondaryColor3s) a_glSecondaryColor3s(red, green, blue); }
-INTERPOSE(glSecondaryColor3s)
-void glSecondaryColor3sv(const GLshort *v) WEAKGL;
-static void (*p_glSecondaryColor3sv)(const GLshort *v);
-static void (*a_glSecondaryColor3sv)(const GLshort *v);
-static void w_glSecondaryColor3sv(const GLshort *v) { if (mglshim_active && p_glSecondaryColor3sv) { p_glSecondaryColor3sv(v); return; } if (a_glSecondaryColor3sv) a_glSecondaryColor3sv(v); }
-INTERPOSE(glSecondaryColor3sv)
-void glSecondaryColor3ub(GLubyte red, GLubyte green, GLubyte blue) WEAKGL;
-static void (*p_glSecondaryColor3ub)(GLubyte red, GLubyte green, GLubyte blue);
-static void (*a_glSecondaryColor3ub)(GLubyte red, GLubyte green, GLubyte blue);
-static void w_glSecondaryColor3ub(GLubyte red, GLubyte green, GLubyte blue) { if (mglshim_active && p_glSecondaryColor3ub) { p_glSecondaryColor3ub(red, green, blue); return; } if (a_glSecondaryColor3ub) a_glSecondaryColor3ub(red, green, blue); }
-INTERPOSE(glSecondaryColor3ub)
-void glSecondaryColor3ubv(const GLubyte *v) WEAKGL;
-static void (*p_glSecondaryColor3ubv)(const GLubyte *v);
-static void (*a_glSecondaryColor3ubv)(const GLubyte *v);
-static void w_glSecondaryColor3ubv(const GLubyte *v) { if (mglshim_active && p_glSecondaryColor3ubv) { p_glSecondaryColor3ubv(v); return; } if (a_glSecondaryColor3ubv) a_glSecondaryColor3ubv(v); }
-INTERPOSE(glSecondaryColor3ubv)
-void glSecondaryColor3ui(GLuint red, GLuint green, GLuint blue) WEAKGL;
-static void (*p_glSecondaryColor3ui)(GLuint red, GLuint green, GLuint blue);
-static void (*a_glSecondaryColor3ui)(GLuint red, GLuint green, GLuint blue);
-static void w_glSecondaryColor3ui(GLuint red, GLuint green, GLuint blue) { if (mglshim_active && p_glSecondaryColor3ui) { p_glSecondaryColor3ui(red, green, blue); return; } if (a_glSecondaryColor3ui) a_glSecondaryColor3ui(red, green, blue); }
-INTERPOSE(glSecondaryColor3ui)
-void glSecondaryColor3uiv(const GLuint *v) WEAKGL;
-static void (*p_glSecondaryColor3uiv)(const GLuint *v);
-static void (*a_glSecondaryColor3uiv)(const GLuint *v);
-static void w_glSecondaryColor3uiv(const GLuint *v) { if (mglshim_active && p_glSecondaryColor3uiv) { p_glSecondaryColor3uiv(v); return; } if (a_glSecondaryColor3uiv) a_glSecondaryColor3uiv(v); }
-INTERPOSE(glSecondaryColor3uiv)
-void glSecondaryColor3us(GLushort red, GLushort green, GLushort blue) WEAKGL;
-static void (*p_glSecondaryColor3us)(GLushort red, GLushort green, GLushort blue);
-static void (*a_glSecondaryColor3us)(GLushort red, GLushort green, GLushort blue);
-static void w_glSecondaryColor3us(GLushort red, GLushort green, GLushort blue) { if (mglshim_active && p_glSecondaryColor3us) { p_glSecondaryColor3us(red, green, blue); return; } if (a_glSecondaryColor3us) a_glSecondaryColor3us(red, green, blue); }
-INTERPOSE(glSecondaryColor3us)
-void glSecondaryColor3usv(const GLushort *v) WEAKGL;
-static void (*p_glSecondaryColor3usv)(const GLushort *v);
-static void (*a_glSecondaryColor3usv)(const GLushort *v);
-static void w_glSecondaryColor3usv(const GLushort *v) { if (mglshim_active && p_glSecondaryColor3usv) { p_glSecondaryColor3usv(v); return; } if (a_glSecondaryColor3usv) a_glSecondaryColor3usv(v); }
-INTERPOSE(glSecondaryColor3usv)
-void glSecondaryColorP3ui(GLenum type, GLuint color) WEAKGL;
-static void (*p_glSecondaryColorP3ui)(GLenum type, GLuint color);
-static void (*a_glSecondaryColorP3ui)(GLenum type, GLuint color);
-static void w_glSecondaryColorP3ui(GLenum type, GLuint color) { if (mglshim_active && p_glSecondaryColorP3ui) { p_glSecondaryColorP3ui(type, color); return; } if (a_glSecondaryColorP3ui) a_glSecondaryColorP3ui(type, color); }
-INTERPOSE(glSecondaryColorP3ui)
-void glSecondaryColorP3uiv(GLenum type, const GLuint *color) WEAKGL;
-static void (*p_glSecondaryColorP3uiv)(GLenum type, const GLuint *color);
-static void (*a_glSecondaryColorP3uiv)(GLenum type, const GLuint *color);
-static void w_glSecondaryColorP3uiv(GLenum type, const GLuint *color) { if (mglshim_active && p_glSecondaryColorP3uiv) { p_glSecondaryColorP3uiv(type, color); return; } if (a_glSecondaryColorP3uiv) a_glSecondaryColorP3uiv(type, color); }
-INTERPOSE(glSecondaryColorP3uiv)
-void glSecondaryColorPointer(GLint size, GLenum type, GLsizei stride, const void *pointer) WEAKGL;
-static void (*p_glSecondaryColorPointer)(GLint size, GLenum type, GLsizei stride, const void *pointer);
-static void (*a_glSecondaryColorPointer)(GLint size, GLenum type, GLsizei stride, const void *pointer);
-static void w_glSecondaryColorPointer(GLint size, GLenum type, GLsizei stride, const void *pointer) { if (mglshim_active && p_glSecondaryColorPointer) { p_glSecondaryColorPointer(size, type, stride, pointer); return; } if (a_glSecondaryColorPointer) a_glSecondaryColorPointer(size, type, stride, pointer); }
-INTERPOSE(glSecondaryColorPointer)
-void glSelectBuffer(GLsizei size, GLuint *buffer) WEAKGL;
-static void (*p_glSelectBuffer)(GLsizei size, GLuint *buffer);
-static void (*a_glSelectBuffer)(GLsizei size, GLuint *buffer);
-static void w_glSelectBuffer(GLsizei size, GLuint *buffer) { if (mglshim_active && p_glSelectBuffer) { p_glSelectBuffer(size, buffer); return; } if (a_glSelectBuffer) a_glSelectBuffer(size, buffer); }
-INTERPOSE(glSelectBuffer)
-void glShadeModel(GLenum mode) WEAKGL;
-static void (*p_glShadeModel)(GLenum mode);
-static void (*a_glShadeModel)(GLenum mode);
-static void w_glShadeModel(GLenum mode) { if (mglshim_active && p_glShadeModel) { p_glShadeModel(mode); return; } if (a_glShadeModel) a_glShadeModel(mode); }
-INTERPOSE(glShadeModel)
 void glShaderBinary(GLsizei count, const GLuint *shaders, GLenum binaryFormat, const void *binary, GLsizei length) WEAKGL;
 static void (*p_glShaderBinary)(GLsizei count, const GLuint *shaders, GLenum binaryFormat, const void *binary, GLsizei length);
 static void (*a_glShaderBinary)(GLsizei count, const GLuint *shaders, GLenum binaryFormat, const void *binary, GLsizei length);
@@ -3796,261 +2341,6 @@ static void (*p_glTexBufferRange)(GLenum target, GLenum internalformat, GLuint b
 static void (*a_glTexBufferRange)(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size);
 static void w_glTexBufferRange(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size) { if (mglshim_active && p_glTexBufferRange) { p_glTexBufferRange(target, internalformat, buffer, offset, size); return; } if (a_glTexBufferRange) a_glTexBufferRange(target, internalformat, buffer, offset, size); }
 INTERPOSE(glTexBufferRange)
-void glTexCoord1d(GLdouble s) WEAKGL;
-static void (*p_glTexCoord1d)(GLdouble s);
-static void (*a_glTexCoord1d)(GLdouble s);
-static void w_glTexCoord1d(GLdouble s) { if (mglshim_active && p_glTexCoord1d) { p_glTexCoord1d(s); return; } if (a_glTexCoord1d) a_glTexCoord1d(s); }
-INTERPOSE(glTexCoord1d)
-void glTexCoord1dv(const GLdouble *v) WEAKGL;
-static void (*p_glTexCoord1dv)(const GLdouble *v);
-static void (*a_glTexCoord1dv)(const GLdouble *v);
-static void w_glTexCoord1dv(const GLdouble *v) { if (mglshim_active && p_glTexCoord1dv) { p_glTexCoord1dv(v); return; } if (a_glTexCoord1dv) a_glTexCoord1dv(v); }
-INTERPOSE(glTexCoord1dv)
-void glTexCoord1f(GLfloat s) WEAKGL;
-static void (*p_glTexCoord1f)(GLfloat s);
-static void (*a_glTexCoord1f)(GLfloat s);
-static void w_glTexCoord1f(GLfloat s) { if (mglshim_active && p_glTexCoord1f) { p_glTexCoord1f(s); return; } if (a_glTexCoord1f) a_glTexCoord1f(s); }
-INTERPOSE(glTexCoord1f)
-void glTexCoord1fv(const GLfloat *v) WEAKGL;
-static void (*p_glTexCoord1fv)(const GLfloat *v);
-static void (*a_glTexCoord1fv)(const GLfloat *v);
-static void w_glTexCoord1fv(const GLfloat *v) { if (mglshim_active && p_glTexCoord1fv) { p_glTexCoord1fv(v); return; } if (a_glTexCoord1fv) a_glTexCoord1fv(v); }
-INTERPOSE(glTexCoord1fv)
-void glTexCoord1i(GLint s) WEAKGL;
-static void (*p_glTexCoord1i)(GLint s);
-static void (*a_glTexCoord1i)(GLint s);
-static void w_glTexCoord1i(GLint s) { if (mglshim_active && p_glTexCoord1i) { p_glTexCoord1i(s); return; } if (a_glTexCoord1i) a_glTexCoord1i(s); }
-INTERPOSE(glTexCoord1i)
-void glTexCoord1iv(const GLint *v) WEAKGL;
-static void (*p_glTexCoord1iv)(const GLint *v);
-static void (*a_glTexCoord1iv)(const GLint *v);
-static void w_glTexCoord1iv(const GLint *v) { if (mglshim_active && p_glTexCoord1iv) { p_glTexCoord1iv(v); return; } if (a_glTexCoord1iv) a_glTexCoord1iv(v); }
-INTERPOSE(glTexCoord1iv)
-void glTexCoord1s(GLshort s) WEAKGL;
-static void (*p_glTexCoord1s)(GLshort s);
-static void (*a_glTexCoord1s)(GLshort s);
-static void w_glTexCoord1s(GLshort s) { if (mglshim_active && p_glTexCoord1s) { p_glTexCoord1s(s); return; } if (a_glTexCoord1s) a_glTexCoord1s(s); }
-INTERPOSE(glTexCoord1s)
-void glTexCoord1sv(const GLshort *v) WEAKGL;
-static void (*p_glTexCoord1sv)(const GLshort *v);
-static void (*a_glTexCoord1sv)(const GLshort *v);
-static void w_glTexCoord1sv(const GLshort *v) { if (mglshim_active && p_glTexCoord1sv) { p_glTexCoord1sv(v); return; } if (a_glTexCoord1sv) a_glTexCoord1sv(v); }
-INTERPOSE(glTexCoord1sv)
-void glTexCoord2d(GLdouble s, GLdouble t) WEAKGL;
-static void (*p_glTexCoord2d)(GLdouble s, GLdouble t);
-static void (*a_glTexCoord2d)(GLdouble s, GLdouble t);
-static void w_glTexCoord2d(GLdouble s, GLdouble t) { if (mglshim_active && p_glTexCoord2d) { p_glTexCoord2d(s, t); return; } if (a_glTexCoord2d) a_glTexCoord2d(s, t); }
-INTERPOSE(glTexCoord2d)
-void glTexCoord2dv(const GLdouble *v) WEAKGL;
-static void (*p_glTexCoord2dv)(const GLdouble *v);
-static void (*a_glTexCoord2dv)(const GLdouble *v);
-static void w_glTexCoord2dv(const GLdouble *v) { if (mglshim_active && p_glTexCoord2dv) { p_glTexCoord2dv(v); return; } if (a_glTexCoord2dv) a_glTexCoord2dv(v); }
-INTERPOSE(glTexCoord2dv)
-void glTexCoord2f(GLfloat s, GLfloat t) WEAKGL;
-static void (*p_glTexCoord2f)(GLfloat s, GLfloat t);
-static void (*a_glTexCoord2f)(GLfloat s, GLfloat t);
-static void w_glTexCoord2f(GLfloat s, GLfloat t) { if (mglshim_active && p_glTexCoord2f) { p_glTexCoord2f(s, t); return; } if (a_glTexCoord2f) a_glTexCoord2f(s, t); }
-INTERPOSE(glTexCoord2f)
-void glTexCoord2fv(const GLfloat *v) WEAKGL;
-static void (*p_glTexCoord2fv)(const GLfloat *v);
-static void (*a_glTexCoord2fv)(const GLfloat *v);
-static void w_glTexCoord2fv(const GLfloat *v) { if (mglshim_active && p_glTexCoord2fv) { p_glTexCoord2fv(v); return; } if (a_glTexCoord2fv) a_glTexCoord2fv(v); }
-INTERPOSE(glTexCoord2fv)
-void glTexCoord2i(GLint s, GLint t) WEAKGL;
-static void (*p_glTexCoord2i)(GLint s, GLint t);
-static void (*a_glTexCoord2i)(GLint s, GLint t);
-static void w_glTexCoord2i(GLint s, GLint t) { if (mglshim_active && p_glTexCoord2i) { p_glTexCoord2i(s, t); return; } if (a_glTexCoord2i) a_glTexCoord2i(s, t); }
-INTERPOSE(glTexCoord2i)
-void glTexCoord2iv(const GLint *v) WEAKGL;
-static void (*p_glTexCoord2iv)(const GLint *v);
-static void (*a_glTexCoord2iv)(const GLint *v);
-static void w_glTexCoord2iv(const GLint *v) { if (mglshim_active && p_glTexCoord2iv) { p_glTexCoord2iv(v); return; } if (a_glTexCoord2iv) a_glTexCoord2iv(v); }
-INTERPOSE(glTexCoord2iv)
-void glTexCoord2s(GLshort s, GLshort t) WEAKGL;
-static void (*p_glTexCoord2s)(GLshort s, GLshort t);
-static void (*a_glTexCoord2s)(GLshort s, GLshort t);
-static void w_glTexCoord2s(GLshort s, GLshort t) { if (mglshim_active && p_glTexCoord2s) { p_glTexCoord2s(s, t); return; } if (a_glTexCoord2s) a_glTexCoord2s(s, t); }
-INTERPOSE(glTexCoord2s)
-void glTexCoord2sv(const GLshort *v) WEAKGL;
-static void (*p_glTexCoord2sv)(const GLshort *v);
-static void (*a_glTexCoord2sv)(const GLshort *v);
-static void w_glTexCoord2sv(const GLshort *v) { if (mglshim_active && p_glTexCoord2sv) { p_glTexCoord2sv(v); return; } if (a_glTexCoord2sv) a_glTexCoord2sv(v); }
-INTERPOSE(glTexCoord2sv)
-void glTexCoord3d(GLdouble s, GLdouble t, GLdouble r) WEAKGL;
-static void (*p_glTexCoord3d)(GLdouble s, GLdouble t, GLdouble r);
-static void (*a_glTexCoord3d)(GLdouble s, GLdouble t, GLdouble r);
-static void w_glTexCoord3d(GLdouble s, GLdouble t, GLdouble r) { if (mglshim_active && p_glTexCoord3d) { p_glTexCoord3d(s, t, r); return; } if (a_glTexCoord3d) a_glTexCoord3d(s, t, r); }
-INTERPOSE(glTexCoord3d)
-void glTexCoord3dv(const GLdouble *v) WEAKGL;
-static void (*p_glTexCoord3dv)(const GLdouble *v);
-static void (*a_glTexCoord3dv)(const GLdouble *v);
-static void w_glTexCoord3dv(const GLdouble *v) { if (mglshim_active && p_glTexCoord3dv) { p_glTexCoord3dv(v); return; } if (a_glTexCoord3dv) a_glTexCoord3dv(v); }
-INTERPOSE(glTexCoord3dv)
-void glTexCoord3f(GLfloat s, GLfloat t, GLfloat r) WEAKGL;
-static void (*p_glTexCoord3f)(GLfloat s, GLfloat t, GLfloat r);
-static void (*a_glTexCoord3f)(GLfloat s, GLfloat t, GLfloat r);
-static void w_glTexCoord3f(GLfloat s, GLfloat t, GLfloat r) { if (mglshim_active && p_glTexCoord3f) { p_glTexCoord3f(s, t, r); return; } if (a_glTexCoord3f) a_glTexCoord3f(s, t, r); }
-INTERPOSE(glTexCoord3f)
-void glTexCoord3fv(const GLfloat *v) WEAKGL;
-static void (*p_glTexCoord3fv)(const GLfloat *v);
-static void (*a_glTexCoord3fv)(const GLfloat *v);
-static void w_glTexCoord3fv(const GLfloat *v) { if (mglshim_active && p_glTexCoord3fv) { p_glTexCoord3fv(v); return; } if (a_glTexCoord3fv) a_glTexCoord3fv(v); }
-INTERPOSE(glTexCoord3fv)
-void glTexCoord3i(GLint s, GLint t, GLint r) WEAKGL;
-static void (*p_glTexCoord3i)(GLint s, GLint t, GLint r);
-static void (*a_glTexCoord3i)(GLint s, GLint t, GLint r);
-static void w_glTexCoord3i(GLint s, GLint t, GLint r) { if (mglshim_active && p_glTexCoord3i) { p_glTexCoord3i(s, t, r); return; } if (a_glTexCoord3i) a_glTexCoord3i(s, t, r); }
-INTERPOSE(glTexCoord3i)
-void glTexCoord3iv(const GLint *v) WEAKGL;
-static void (*p_glTexCoord3iv)(const GLint *v);
-static void (*a_glTexCoord3iv)(const GLint *v);
-static void w_glTexCoord3iv(const GLint *v) { if (mglshim_active && p_glTexCoord3iv) { p_glTexCoord3iv(v); return; } if (a_glTexCoord3iv) a_glTexCoord3iv(v); }
-INTERPOSE(glTexCoord3iv)
-void glTexCoord3s(GLshort s, GLshort t, GLshort r) WEAKGL;
-static void (*p_glTexCoord3s)(GLshort s, GLshort t, GLshort r);
-static void (*a_glTexCoord3s)(GLshort s, GLshort t, GLshort r);
-static void w_glTexCoord3s(GLshort s, GLshort t, GLshort r) { if (mglshim_active && p_glTexCoord3s) { p_glTexCoord3s(s, t, r); return; } if (a_glTexCoord3s) a_glTexCoord3s(s, t, r); }
-INTERPOSE(glTexCoord3s)
-void glTexCoord3sv(const GLshort *v) WEAKGL;
-static void (*p_glTexCoord3sv)(const GLshort *v);
-static void (*a_glTexCoord3sv)(const GLshort *v);
-static void w_glTexCoord3sv(const GLshort *v) { if (mglshim_active && p_glTexCoord3sv) { p_glTexCoord3sv(v); return; } if (a_glTexCoord3sv) a_glTexCoord3sv(v); }
-INTERPOSE(glTexCoord3sv)
-void glTexCoord4d(GLdouble s, GLdouble t, GLdouble r, GLdouble q) WEAKGL;
-static void (*p_glTexCoord4d)(GLdouble s, GLdouble t, GLdouble r, GLdouble q);
-static void (*a_glTexCoord4d)(GLdouble s, GLdouble t, GLdouble r, GLdouble q);
-static void w_glTexCoord4d(GLdouble s, GLdouble t, GLdouble r, GLdouble q) { if (mglshim_active && p_glTexCoord4d) { p_glTexCoord4d(s, t, r, q); return; } if (a_glTexCoord4d) a_glTexCoord4d(s, t, r, q); }
-INTERPOSE(glTexCoord4d)
-void glTexCoord4dv(const GLdouble *v) WEAKGL;
-static void (*p_glTexCoord4dv)(const GLdouble *v);
-static void (*a_glTexCoord4dv)(const GLdouble *v);
-static void w_glTexCoord4dv(const GLdouble *v) { if (mglshim_active && p_glTexCoord4dv) { p_glTexCoord4dv(v); return; } if (a_glTexCoord4dv) a_glTexCoord4dv(v); }
-INTERPOSE(glTexCoord4dv)
-void glTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q) WEAKGL;
-static void (*p_glTexCoord4f)(GLfloat s, GLfloat t, GLfloat r, GLfloat q);
-static void (*a_glTexCoord4f)(GLfloat s, GLfloat t, GLfloat r, GLfloat q);
-static void w_glTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q) { if (mglshim_active && p_glTexCoord4f) { p_glTexCoord4f(s, t, r, q); return; } if (a_glTexCoord4f) a_glTexCoord4f(s, t, r, q); }
-INTERPOSE(glTexCoord4f)
-void glTexCoord4fv(const GLfloat *v) WEAKGL;
-static void (*p_glTexCoord4fv)(const GLfloat *v);
-static void (*a_glTexCoord4fv)(const GLfloat *v);
-static void w_glTexCoord4fv(const GLfloat *v) { if (mglshim_active && p_glTexCoord4fv) { p_glTexCoord4fv(v); return; } if (a_glTexCoord4fv) a_glTexCoord4fv(v); }
-INTERPOSE(glTexCoord4fv)
-void glTexCoord4i(GLint s, GLint t, GLint r, GLint q) WEAKGL;
-static void (*p_glTexCoord4i)(GLint s, GLint t, GLint r, GLint q);
-static void (*a_glTexCoord4i)(GLint s, GLint t, GLint r, GLint q);
-static void w_glTexCoord4i(GLint s, GLint t, GLint r, GLint q) { if (mglshim_active && p_glTexCoord4i) { p_glTexCoord4i(s, t, r, q); return; } if (a_glTexCoord4i) a_glTexCoord4i(s, t, r, q); }
-INTERPOSE(glTexCoord4i)
-void glTexCoord4iv(const GLint *v) WEAKGL;
-static void (*p_glTexCoord4iv)(const GLint *v);
-static void (*a_glTexCoord4iv)(const GLint *v);
-static void w_glTexCoord4iv(const GLint *v) { if (mglshim_active && p_glTexCoord4iv) { p_glTexCoord4iv(v); return; } if (a_glTexCoord4iv) a_glTexCoord4iv(v); }
-INTERPOSE(glTexCoord4iv)
-void glTexCoord4s(GLshort s, GLshort t, GLshort r, GLshort q) WEAKGL;
-static void (*p_glTexCoord4s)(GLshort s, GLshort t, GLshort r, GLshort q);
-static void (*a_glTexCoord4s)(GLshort s, GLshort t, GLshort r, GLshort q);
-static void w_glTexCoord4s(GLshort s, GLshort t, GLshort r, GLshort q) { if (mglshim_active && p_glTexCoord4s) { p_glTexCoord4s(s, t, r, q); return; } if (a_glTexCoord4s) a_glTexCoord4s(s, t, r, q); }
-INTERPOSE(glTexCoord4s)
-void glTexCoord4sv(const GLshort *v) WEAKGL;
-static void (*p_glTexCoord4sv)(const GLshort *v);
-static void (*a_glTexCoord4sv)(const GLshort *v);
-static void w_glTexCoord4sv(const GLshort *v) { if (mglshim_active && p_glTexCoord4sv) { p_glTexCoord4sv(v); return; } if (a_glTexCoord4sv) a_glTexCoord4sv(v); }
-INTERPOSE(glTexCoord4sv)
-void glTexCoordP1ui(GLenum type, GLuint coords) WEAKGL;
-static void (*p_glTexCoordP1ui)(GLenum type, GLuint coords);
-static void (*a_glTexCoordP1ui)(GLenum type, GLuint coords);
-static void w_glTexCoordP1ui(GLenum type, GLuint coords) { if (mglshim_active && p_glTexCoordP1ui) { p_glTexCoordP1ui(type, coords); return; } if (a_glTexCoordP1ui) a_glTexCoordP1ui(type, coords); }
-INTERPOSE(glTexCoordP1ui)
-void glTexCoordP1uiv(GLenum type, const GLuint *coords) WEAKGL;
-static void (*p_glTexCoordP1uiv)(GLenum type, const GLuint *coords);
-static void (*a_glTexCoordP1uiv)(GLenum type, const GLuint *coords);
-static void w_glTexCoordP1uiv(GLenum type, const GLuint *coords) { if (mglshim_active && p_glTexCoordP1uiv) { p_glTexCoordP1uiv(type, coords); return; } if (a_glTexCoordP1uiv) a_glTexCoordP1uiv(type, coords); }
-INTERPOSE(glTexCoordP1uiv)
-void glTexCoordP2ui(GLenum type, GLuint coords) WEAKGL;
-static void (*p_glTexCoordP2ui)(GLenum type, GLuint coords);
-static void (*a_glTexCoordP2ui)(GLenum type, GLuint coords);
-static void w_glTexCoordP2ui(GLenum type, GLuint coords) { if (mglshim_active && p_glTexCoordP2ui) { p_glTexCoordP2ui(type, coords); return; } if (a_glTexCoordP2ui) a_glTexCoordP2ui(type, coords); }
-INTERPOSE(glTexCoordP2ui)
-void glTexCoordP2uiv(GLenum type, const GLuint *coords) WEAKGL;
-static void (*p_glTexCoordP2uiv)(GLenum type, const GLuint *coords);
-static void (*a_glTexCoordP2uiv)(GLenum type, const GLuint *coords);
-static void w_glTexCoordP2uiv(GLenum type, const GLuint *coords) { if (mglshim_active && p_glTexCoordP2uiv) { p_glTexCoordP2uiv(type, coords); return; } if (a_glTexCoordP2uiv) a_glTexCoordP2uiv(type, coords); }
-INTERPOSE(glTexCoordP2uiv)
-void glTexCoordP3ui(GLenum type, GLuint coords) WEAKGL;
-static void (*p_glTexCoordP3ui)(GLenum type, GLuint coords);
-static void (*a_glTexCoordP3ui)(GLenum type, GLuint coords);
-static void w_glTexCoordP3ui(GLenum type, GLuint coords) { if (mglshim_active && p_glTexCoordP3ui) { p_glTexCoordP3ui(type, coords); return; } if (a_glTexCoordP3ui) a_glTexCoordP3ui(type, coords); }
-INTERPOSE(glTexCoordP3ui)
-void glTexCoordP3uiv(GLenum type, const GLuint *coords) WEAKGL;
-static void (*p_glTexCoordP3uiv)(GLenum type, const GLuint *coords);
-static void (*a_glTexCoordP3uiv)(GLenum type, const GLuint *coords);
-static void w_glTexCoordP3uiv(GLenum type, const GLuint *coords) { if (mglshim_active && p_glTexCoordP3uiv) { p_glTexCoordP3uiv(type, coords); return; } if (a_glTexCoordP3uiv) a_glTexCoordP3uiv(type, coords); }
-INTERPOSE(glTexCoordP3uiv)
-void glTexCoordP4ui(GLenum type, GLuint coords) WEAKGL;
-static void (*p_glTexCoordP4ui)(GLenum type, GLuint coords);
-static void (*a_glTexCoordP4ui)(GLenum type, GLuint coords);
-static void w_glTexCoordP4ui(GLenum type, GLuint coords) { if (mglshim_active && p_glTexCoordP4ui) { p_glTexCoordP4ui(type, coords); return; } if (a_glTexCoordP4ui) a_glTexCoordP4ui(type, coords); }
-INTERPOSE(glTexCoordP4ui)
-void glTexCoordP4uiv(GLenum type, const GLuint *coords) WEAKGL;
-static void (*p_glTexCoordP4uiv)(GLenum type, const GLuint *coords);
-static void (*a_glTexCoordP4uiv)(GLenum type, const GLuint *coords);
-static void w_glTexCoordP4uiv(GLenum type, const GLuint *coords) { if (mglshim_active && p_glTexCoordP4uiv) { p_glTexCoordP4uiv(type, coords); return; } if (a_glTexCoordP4uiv) a_glTexCoordP4uiv(type, coords); }
-INTERPOSE(glTexCoordP4uiv)
-void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const void *pointer) WEAKGL;
-static void (*p_glTexCoordPointer)(GLint size, GLenum type, GLsizei stride, const void *pointer);
-static void (*a_glTexCoordPointer)(GLint size, GLenum type, GLsizei stride, const void *pointer);
-static void w_glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const void *pointer) { if (mglshim_active && p_glTexCoordPointer) { p_glTexCoordPointer(size, type, stride, pointer); return; } if (a_glTexCoordPointer) a_glTexCoordPointer(size, type, stride, pointer); }
-INTERPOSE(glTexCoordPointer)
-void glTexEnvf(GLenum target, GLenum pname, GLfloat param) WEAKGL;
-static void (*p_glTexEnvf)(GLenum target, GLenum pname, GLfloat param);
-static void (*a_glTexEnvf)(GLenum target, GLenum pname, GLfloat param);
-static void w_glTexEnvf(GLenum target, GLenum pname, GLfloat param) { if (mglshim_active && p_glTexEnvf) { p_glTexEnvf(target, pname, param); return; } if (a_glTexEnvf) a_glTexEnvf(target, pname, param); }
-INTERPOSE(glTexEnvf)
-void glTexEnvfv(GLenum target, GLenum pname, const GLfloat *params) WEAKGL;
-static void (*p_glTexEnvfv)(GLenum target, GLenum pname, const GLfloat *params);
-static void (*a_glTexEnvfv)(GLenum target, GLenum pname, const GLfloat *params);
-static void w_glTexEnvfv(GLenum target, GLenum pname, const GLfloat *params) { if (mglshim_active && p_glTexEnvfv) { p_glTexEnvfv(target, pname, params); return; } if (a_glTexEnvfv) a_glTexEnvfv(target, pname, params); }
-INTERPOSE(glTexEnvfv)
-void glTexEnvi(GLenum target, GLenum pname, GLint param) WEAKGL;
-static void (*p_glTexEnvi)(GLenum target, GLenum pname, GLint param);
-static void (*a_glTexEnvi)(GLenum target, GLenum pname, GLint param);
-static void w_glTexEnvi(GLenum target, GLenum pname, GLint param) { if (mglshim_active && p_glTexEnvi) { p_glTexEnvi(target, pname, param); return; } if (a_glTexEnvi) a_glTexEnvi(target, pname, param); }
-INTERPOSE(glTexEnvi)
-void glTexEnviv(GLenum target, GLenum pname, const GLint *params) WEAKGL;
-static void (*p_glTexEnviv)(GLenum target, GLenum pname, const GLint *params);
-static void (*a_glTexEnviv)(GLenum target, GLenum pname, const GLint *params);
-static void w_glTexEnviv(GLenum target, GLenum pname, const GLint *params) { if (mglshim_active && p_glTexEnviv) { p_glTexEnviv(target, pname, params); return; } if (a_glTexEnviv) a_glTexEnviv(target, pname, params); }
-INTERPOSE(glTexEnviv)
-void glTexGend(GLenum coord, GLenum pname, GLdouble param) WEAKGL;
-static void (*p_glTexGend)(GLenum coord, GLenum pname, GLdouble param);
-static void (*a_glTexGend)(GLenum coord, GLenum pname, GLdouble param);
-static void w_glTexGend(GLenum coord, GLenum pname, GLdouble param) { if (mglshim_active && p_glTexGend) { p_glTexGend(coord, pname, param); return; } if (a_glTexGend) a_glTexGend(coord, pname, param); }
-INTERPOSE(glTexGend)
-void glTexGendv(GLenum coord, GLenum pname, const GLdouble *params) WEAKGL;
-static void (*p_glTexGendv)(GLenum coord, GLenum pname, const GLdouble *params);
-static void (*a_glTexGendv)(GLenum coord, GLenum pname, const GLdouble *params);
-static void w_glTexGendv(GLenum coord, GLenum pname, const GLdouble *params) { if (mglshim_active && p_glTexGendv) { p_glTexGendv(coord, pname, params); return; } if (a_glTexGendv) a_glTexGendv(coord, pname, params); }
-INTERPOSE(glTexGendv)
-void glTexGenf(GLenum coord, GLenum pname, GLfloat param) WEAKGL;
-static void (*p_glTexGenf)(GLenum coord, GLenum pname, GLfloat param);
-static void (*a_glTexGenf)(GLenum coord, GLenum pname, GLfloat param);
-static void w_glTexGenf(GLenum coord, GLenum pname, GLfloat param) { if (mglshim_active && p_glTexGenf) { p_glTexGenf(coord, pname, param); return; } if (a_glTexGenf) a_glTexGenf(coord, pname, param); }
-INTERPOSE(glTexGenf)
-void glTexGenfv(GLenum coord, GLenum pname, const GLfloat *params) WEAKGL;
-static void (*p_glTexGenfv)(GLenum coord, GLenum pname, const GLfloat *params);
-static void (*a_glTexGenfv)(GLenum coord, GLenum pname, const GLfloat *params);
-static void w_glTexGenfv(GLenum coord, GLenum pname, const GLfloat *params) { if (mglshim_active && p_glTexGenfv) { p_glTexGenfv(coord, pname, params); return; } if (a_glTexGenfv) a_glTexGenfv(coord, pname, params); }
-INTERPOSE(glTexGenfv)
-void glTexGeni(GLenum coord, GLenum pname, GLint param) WEAKGL;
-static void (*p_glTexGeni)(GLenum coord, GLenum pname, GLint param);
-static void (*a_glTexGeni)(GLenum coord, GLenum pname, GLint param);
-static void w_glTexGeni(GLenum coord, GLenum pname, GLint param) { if (mglshim_active && p_glTexGeni) { p_glTexGeni(coord, pname, param); return; } if (a_glTexGeni) a_glTexGeni(coord, pname, param); }
-INTERPOSE(glTexGeni)
-void glTexGeniv(GLenum coord, GLenum pname, const GLint *params) WEAKGL;
-static void (*p_glTexGeniv)(GLenum coord, GLenum pname, const GLint *params);
-static void (*a_glTexGeniv)(GLenum coord, GLenum pname, const GLint *params);
-static void w_glTexGeniv(GLenum coord, GLenum pname, const GLint *params) { if (mglshim_active && p_glTexGeniv) { p_glTexGeniv(coord, pname, params); return; } if (a_glTexGeniv) a_glTexGeniv(coord, pname, params); }
-INTERPOSE(glTexGeniv)
 void glTexImage1D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const void *pixels) WEAKGL;
 static void (*p_glTexImage1D)(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const void *pixels);
 static void (*a_glTexImage1D)(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const void *pixels);
@@ -4251,16 +2541,6 @@ static void (*p_glTransformFeedbackVaryings)(GLuint program, GLsizei count, cons
 static void (*a_glTransformFeedbackVaryings)(GLuint program, GLsizei count, const GLchar *const*varyings, GLenum bufferMode);
 static void w_glTransformFeedbackVaryings(GLuint program, GLsizei count, const GLchar *const*varyings, GLenum bufferMode) { if (mglshim_active && p_glTransformFeedbackVaryings) { p_glTransformFeedbackVaryings(program, count, varyings, bufferMode); return; } if (a_glTransformFeedbackVaryings) a_glTransformFeedbackVaryings(program, count, varyings, bufferMode); }
 INTERPOSE(glTransformFeedbackVaryings)
-void glTranslated(GLdouble x, GLdouble y, GLdouble z) WEAKGL;
-static void (*p_glTranslated)(GLdouble x, GLdouble y, GLdouble z);
-static void (*a_glTranslated)(GLdouble x, GLdouble y, GLdouble z);
-static void w_glTranslated(GLdouble x, GLdouble y, GLdouble z) { if (mglshim_active && p_glTranslated) { p_glTranslated(x, y, z); return; } if (a_glTranslated) a_glTranslated(x, y, z); }
-INTERPOSE(glTranslated)
-void glTranslatef(GLfloat x, GLfloat y, GLfloat z) WEAKGL;
-static void (*p_glTranslatef)(GLfloat x, GLfloat y, GLfloat z);
-static void (*a_glTranslatef)(GLfloat x, GLfloat y, GLfloat z);
-static void w_glTranslatef(GLfloat x, GLfloat y, GLfloat z) { if (mglshim_active && p_glTranslatef) { p_glTranslatef(x, y, z); return; } if (a_glTranslatef) a_glTranslatef(x, y, z); }
-INTERPOSE(glTranslatef)
 void glUniform1d(GLint location, GLdouble x) WEAKGL;
 static void (*p_glUniform1d)(GLint location, GLdouble x);
 static void (*a_glUniform1d)(GLint location, GLdouble x);
@@ -4551,126 +2831,6 @@ static void (*p_glValidateProgramPipeline)(GLuint pipeline);
 static void (*a_glValidateProgramPipeline)(GLuint pipeline);
 static void w_glValidateProgramPipeline(GLuint pipeline) { if (mglshim_active && p_glValidateProgramPipeline) { p_glValidateProgramPipeline(pipeline); return; } if (a_glValidateProgramPipeline) a_glValidateProgramPipeline(pipeline); }
 INTERPOSE(glValidateProgramPipeline)
-void glVertex2d(GLdouble x, GLdouble y) WEAKGL;
-static void (*p_glVertex2d)(GLdouble x, GLdouble y);
-static void (*a_glVertex2d)(GLdouble x, GLdouble y);
-static void w_glVertex2d(GLdouble x, GLdouble y) { if (mglshim_active && p_glVertex2d) { p_glVertex2d(x, y); return; } if (a_glVertex2d) a_glVertex2d(x, y); }
-INTERPOSE(glVertex2d)
-void glVertex2dv(const GLdouble *v) WEAKGL;
-static void (*p_glVertex2dv)(const GLdouble *v);
-static void (*a_glVertex2dv)(const GLdouble *v);
-static void w_glVertex2dv(const GLdouble *v) { if (mglshim_active && p_glVertex2dv) { p_glVertex2dv(v); return; } if (a_glVertex2dv) a_glVertex2dv(v); }
-INTERPOSE(glVertex2dv)
-void glVertex2f(GLfloat x, GLfloat y) WEAKGL;
-static void (*p_glVertex2f)(GLfloat x, GLfloat y);
-static void (*a_glVertex2f)(GLfloat x, GLfloat y);
-static void w_glVertex2f(GLfloat x, GLfloat y) { if (mglshim_active && p_glVertex2f) { p_glVertex2f(x, y); return; } if (a_glVertex2f) a_glVertex2f(x, y); }
-INTERPOSE(glVertex2f)
-void glVertex2fv(const GLfloat *v) WEAKGL;
-static void (*p_glVertex2fv)(const GLfloat *v);
-static void (*a_glVertex2fv)(const GLfloat *v);
-static void w_glVertex2fv(const GLfloat *v) { if (mglshim_active && p_glVertex2fv) { p_glVertex2fv(v); return; } if (a_glVertex2fv) a_glVertex2fv(v); }
-INTERPOSE(glVertex2fv)
-void glVertex2i(GLint x, GLint y) WEAKGL;
-static void (*p_glVertex2i)(GLint x, GLint y);
-static void (*a_glVertex2i)(GLint x, GLint y);
-static void w_glVertex2i(GLint x, GLint y) { if (mglshim_active && p_glVertex2i) { p_glVertex2i(x, y); return; } if (a_glVertex2i) a_glVertex2i(x, y); }
-INTERPOSE(glVertex2i)
-void glVertex2iv(const GLint *v) WEAKGL;
-static void (*p_glVertex2iv)(const GLint *v);
-static void (*a_glVertex2iv)(const GLint *v);
-static void w_glVertex2iv(const GLint *v) { if (mglshim_active && p_glVertex2iv) { p_glVertex2iv(v); return; } if (a_glVertex2iv) a_glVertex2iv(v); }
-INTERPOSE(glVertex2iv)
-void glVertex2s(GLshort x, GLshort y) WEAKGL;
-static void (*p_glVertex2s)(GLshort x, GLshort y);
-static void (*a_glVertex2s)(GLshort x, GLshort y);
-static void w_glVertex2s(GLshort x, GLshort y) { if (mglshim_active && p_glVertex2s) { p_glVertex2s(x, y); return; } if (a_glVertex2s) a_glVertex2s(x, y); }
-INTERPOSE(glVertex2s)
-void glVertex2sv(const GLshort *v) WEAKGL;
-static void (*p_glVertex2sv)(const GLshort *v);
-static void (*a_glVertex2sv)(const GLshort *v);
-static void w_glVertex2sv(const GLshort *v) { if (mglshim_active && p_glVertex2sv) { p_glVertex2sv(v); return; } if (a_glVertex2sv) a_glVertex2sv(v); }
-INTERPOSE(glVertex2sv)
-void glVertex3d(GLdouble x, GLdouble y, GLdouble z) WEAKGL;
-static void (*p_glVertex3d)(GLdouble x, GLdouble y, GLdouble z);
-static void (*a_glVertex3d)(GLdouble x, GLdouble y, GLdouble z);
-static void w_glVertex3d(GLdouble x, GLdouble y, GLdouble z) { if (mglshim_active && p_glVertex3d) { p_glVertex3d(x, y, z); return; } if (a_glVertex3d) a_glVertex3d(x, y, z); }
-INTERPOSE(glVertex3d)
-void glVertex3dv(const GLdouble *v) WEAKGL;
-static void (*p_glVertex3dv)(const GLdouble *v);
-static void (*a_glVertex3dv)(const GLdouble *v);
-static void w_glVertex3dv(const GLdouble *v) { if (mglshim_active && p_glVertex3dv) { p_glVertex3dv(v); return; } if (a_glVertex3dv) a_glVertex3dv(v); }
-INTERPOSE(glVertex3dv)
-void glVertex3f(GLfloat x, GLfloat y, GLfloat z) WEAKGL;
-static void (*p_glVertex3f)(GLfloat x, GLfloat y, GLfloat z);
-static void (*a_glVertex3f)(GLfloat x, GLfloat y, GLfloat z);
-static void w_glVertex3f(GLfloat x, GLfloat y, GLfloat z) { if (mglshim_active && p_glVertex3f) { p_glVertex3f(x, y, z); return; } if (a_glVertex3f) a_glVertex3f(x, y, z); }
-INTERPOSE(glVertex3f)
-void glVertex3fv(const GLfloat *v) WEAKGL;
-static void (*p_glVertex3fv)(const GLfloat *v);
-static void (*a_glVertex3fv)(const GLfloat *v);
-static void w_glVertex3fv(const GLfloat *v) { if (mglshim_active && p_glVertex3fv) { p_glVertex3fv(v); return; } if (a_glVertex3fv) a_glVertex3fv(v); }
-INTERPOSE(glVertex3fv)
-void glVertex3i(GLint x, GLint y, GLint z) WEAKGL;
-static void (*p_glVertex3i)(GLint x, GLint y, GLint z);
-static void (*a_glVertex3i)(GLint x, GLint y, GLint z);
-static void w_glVertex3i(GLint x, GLint y, GLint z) { if (mglshim_active && p_glVertex3i) { p_glVertex3i(x, y, z); return; } if (a_glVertex3i) a_glVertex3i(x, y, z); }
-INTERPOSE(glVertex3i)
-void glVertex3iv(const GLint *v) WEAKGL;
-static void (*p_glVertex3iv)(const GLint *v);
-static void (*a_glVertex3iv)(const GLint *v);
-static void w_glVertex3iv(const GLint *v) { if (mglshim_active && p_glVertex3iv) { p_glVertex3iv(v); return; } if (a_glVertex3iv) a_glVertex3iv(v); }
-INTERPOSE(glVertex3iv)
-void glVertex3s(GLshort x, GLshort y, GLshort z) WEAKGL;
-static void (*p_glVertex3s)(GLshort x, GLshort y, GLshort z);
-static void (*a_glVertex3s)(GLshort x, GLshort y, GLshort z);
-static void w_glVertex3s(GLshort x, GLshort y, GLshort z) { if (mglshim_active && p_glVertex3s) { p_glVertex3s(x, y, z); return; } if (a_glVertex3s) a_glVertex3s(x, y, z); }
-INTERPOSE(glVertex3s)
-void glVertex3sv(const GLshort *v) WEAKGL;
-static void (*p_glVertex3sv)(const GLshort *v);
-static void (*a_glVertex3sv)(const GLshort *v);
-static void w_glVertex3sv(const GLshort *v) { if (mglshim_active && p_glVertex3sv) { p_glVertex3sv(v); return; } if (a_glVertex3sv) a_glVertex3sv(v); }
-INTERPOSE(glVertex3sv)
-void glVertex4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w) WEAKGL;
-static void (*p_glVertex4d)(GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-static void (*a_glVertex4d)(GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-static void w_glVertex4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w) { if (mglshim_active && p_glVertex4d) { p_glVertex4d(x, y, z, w); return; } if (a_glVertex4d) a_glVertex4d(x, y, z, w); }
-INTERPOSE(glVertex4d)
-void glVertex4dv(const GLdouble *v) WEAKGL;
-static void (*p_glVertex4dv)(const GLdouble *v);
-static void (*a_glVertex4dv)(const GLdouble *v);
-static void w_glVertex4dv(const GLdouble *v) { if (mglshim_active && p_glVertex4dv) { p_glVertex4dv(v); return; } if (a_glVertex4dv) a_glVertex4dv(v); }
-INTERPOSE(glVertex4dv)
-void glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w) WEAKGL;
-static void (*p_glVertex4f)(GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-static void (*a_glVertex4f)(GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-static void w_glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w) { if (mglshim_active && p_glVertex4f) { p_glVertex4f(x, y, z, w); return; } if (a_glVertex4f) a_glVertex4f(x, y, z, w); }
-INTERPOSE(glVertex4f)
-void glVertex4fv(const GLfloat *v) WEAKGL;
-static void (*p_glVertex4fv)(const GLfloat *v);
-static void (*a_glVertex4fv)(const GLfloat *v);
-static void w_glVertex4fv(const GLfloat *v) { if (mglshim_active && p_glVertex4fv) { p_glVertex4fv(v); return; } if (a_glVertex4fv) a_glVertex4fv(v); }
-INTERPOSE(glVertex4fv)
-void glVertex4i(GLint x, GLint y, GLint z, GLint w) WEAKGL;
-static void (*p_glVertex4i)(GLint x, GLint y, GLint z, GLint w);
-static void (*a_glVertex4i)(GLint x, GLint y, GLint z, GLint w);
-static void w_glVertex4i(GLint x, GLint y, GLint z, GLint w) { if (mglshim_active && p_glVertex4i) { p_glVertex4i(x, y, z, w); return; } if (a_glVertex4i) a_glVertex4i(x, y, z, w); }
-INTERPOSE(glVertex4i)
-void glVertex4iv(const GLint *v) WEAKGL;
-static void (*p_glVertex4iv)(const GLint *v);
-static void (*a_glVertex4iv)(const GLint *v);
-static void w_glVertex4iv(const GLint *v) { if (mglshim_active && p_glVertex4iv) { p_glVertex4iv(v); return; } if (a_glVertex4iv) a_glVertex4iv(v); }
-INTERPOSE(glVertex4iv)
-void glVertex4s(GLshort x, GLshort y, GLshort z, GLshort w) WEAKGL;
-static void (*p_glVertex4s)(GLshort x, GLshort y, GLshort z, GLshort w);
-static void (*a_glVertex4s)(GLshort x, GLshort y, GLshort z, GLshort w);
-static void w_glVertex4s(GLshort x, GLshort y, GLshort z, GLshort w) { if (mglshim_active && p_glVertex4s) { p_glVertex4s(x, y, z, w); return; } if (a_glVertex4s) a_glVertex4s(x, y, z, w); }
-INTERPOSE(glVertex4s)
-void glVertex4sv(const GLshort *v) WEAKGL;
-static void (*p_glVertex4sv)(const GLshort *v);
-static void (*a_glVertex4sv)(const GLshort *v);
-static void w_glVertex4sv(const GLshort *v) { if (mglshim_active && p_glVertex4sv) { p_glVertex4sv(v); return; } if (a_glVertex4sv) a_glVertex4sv(v); }
-INTERPOSE(glVertex4sv)
 void glVertexArrayAttribBinding(GLuint vaobj, GLuint attribindex, GLuint bindingindex) WEAKGL;
 static void (*p_glVertexArrayAttribBinding)(GLuint vaobj, GLuint attribindex, GLuint bindingindex);
 static void (*a_glVertexArrayAttribBinding)(GLuint vaobj, GLuint attribindex, GLuint bindingindex);
@@ -5116,41 +3276,6 @@ static void (*p_glVertexBindingDivisor)(GLuint bindingindex, GLuint divisor);
 static void (*a_glVertexBindingDivisor)(GLuint bindingindex, GLuint divisor);
 static void w_glVertexBindingDivisor(GLuint bindingindex, GLuint divisor) { if (mglshim_active && p_glVertexBindingDivisor) { p_glVertexBindingDivisor(bindingindex, divisor); return; } if (a_glVertexBindingDivisor) a_glVertexBindingDivisor(bindingindex, divisor); }
 INTERPOSE(glVertexBindingDivisor)
-void glVertexP2ui(GLenum type, GLuint value) WEAKGL;
-static void (*p_glVertexP2ui)(GLenum type, GLuint value);
-static void (*a_glVertexP2ui)(GLenum type, GLuint value);
-static void w_glVertexP2ui(GLenum type, GLuint value) { if (mglshim_active && p_glVertexP2ui) { p_glVertexP2ui(type, value); return; } if (a_glVertexP2ui) a_glVertexP2ui(type, value); }
-INTERPOSE(glVertexP2ui)
-void glVertexP2uiv(GLenum type, const GLuint *value) WEAKGL;
-static void (*p_glVertexP2uiv)(GLenum type, const GLuint *value);
-static void (*a_glVertexP2uiv)(GLenum type, const GLuint *value);
-static void w_glVertexP2uiv(GLenum type, const GLuint *value) { if (mglshim_active && p_glVertexP2uiv) { p_glVertexP2uiv(type, value); return; } if (a_glVertexP2uiv) a_glVertexP2uiv(type, value); }
-INTERPOSE(glVertexP2uiv)
-void glVertexP3ui(GLenum type, GLuint value) WEAKGL;
-static void (*p_glVertexP3ui)(GLenum type, GLuint value);
-static void (*a_glVertexP3ui)(GLenum type, GLuint value);
-static void w_glVertexP3ui(GLenum type, GLuint value) { if (mglshim_active && p_glVertexP3ui) { p_glVertexP3ui(type, value); return; } if (a_glVertexP3ui) a_glVertexP3ui(type, value); }
-INTERPOSE(glVertexP3ui)
-void glVertexP3uiv(GLenum type, const GLuint *value) WEAKGL;
-static void (*p_glVertexP3uiv)(GLenum type, const GLuint *value);
-static void (*a_glVertexP3uiv)(GLenum type, const GLuint *value);
-static void w_glVertexP3uiv(GLenum type, const GLuint *value) { if (mglshim_active && p_glVertexP3uiv) { p_glVertexP3uiv(type, value); return; } if (a_glVertexP3uiv) a_glVertexP3uiv(type, value); }
-INTERPOSE(glVertexP3uiv)
-void glVertexP4ui(GLenum type, GLuint value) WEAKGL;
-static void (*p_glVertexP4ui)(GLenum type, GLuint value);
-static void (*a_glVertexP4ui)(GLenum type, GLuint value);
-static void w_glVertexP4ui(GLenum type, GLuint value) { if (mglshim_active && p_glVertexP4ui) { p_glVertexP4ui(type, value); return; } if (a_glVertexP4ui) a_glVertexP4ui(type, value); }
-INTERPOSE(glVertexP4ui)
-void glVertexP4uiv(GLenum type, const GLuint *value) WEAKGL;
-static void (*p_glVertexP4uiv)(GLenum type, const GLuint *value);
-static void (*a_glVertexP4uiv)(GLenum type, const GLuint *value);
-static void w_glVertexP4uiv(GLenum type, const GLuint *value) { if (mglshim_active && p_glVertexP4uiv) { p_glVertexP4uiv(type, value); return; } if (a_glVertexP4uiv) a_glVertexP4uiv(type, value); }
-INTERPOSE(glVertexP4uiv)
-void glVertexPointer(GLint size, GLenum type, GLsizei stride, const void *pointer) WEAKGL;
-static void (*p_glVertexPointer)(GLint size, GLenum type, GLsizei stride, const void *pointer);
-static void (*a_glVertexPointer)(GLint size, GLenum type, GLsizei stride, const void *pointer);
-static void w_glVertexPointer(GLint size, GLenum type, GLsizei stride, const void *pointer) { if (mglshim_active && p_glVertexPointer) { p_glVertexPointer(size, type, stride, pointer); return; } if (a_glVertexPointer) a_glVertexPointer(size, type, stride, pointer); }
-INTERPOSE(glVertexPointer)
 void glViewport(GLint x, GLint y, GLsizei width, GLsizei height) WEAKGL;
 static void (*p_glViewport)(GLint x, GLint y, GLsizei width, GLsizei height);
 static void (*a_glViewport)(GLint x, GLint y, GLsizei width, GLsizei height);
@@ -5176,98 +3301,13 @@ static void (*p_glWaitSync)(GLsync sync, GLbitfield flags, GLuint64 timeout);
 static void (*a_glWaitSync)(GLsync sync, GLbitfield flags, GLuint64 timeout);
 static void w_glWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) { if (mglshim_active && p_glWaitSync) { p_glWaitSync(sync, flags, timeout); return; } if (a_glWaitSync) a_glWaitSync(sync, flags, timeout); }
 INTERPOSE(glWaitSync)
-void glWindowPos2d(GLdouble x, GLdouble y) WEAKGL;
-static void (*p_glWindowPos2d)(GLdouble x, GLdouble y);
-static void (*a_glWindowPos2d)(GLdouble x, GLdouble y);
-static void w_glWindowPos2d(GLdouble x, GLdouble y) { if (mglshim_active && p_glWindowPos2d) { p_glWindowPos2d(x, y); return; } if (a_glWindowPos2d) a_glWindowPos2d(x, y); }
-INTERPOSE(glWindowPos2d)
-void glWindowPos2dv(const GLdouble *v) WEAKGL;
-static void (*p_glWindowPos2dv)(const GLdouble *v);
-static void (*a_glWindowPos2dv)(const GLdouble *v);
-static void w_glWindowPos2dv(const GLdouble *v) { if (mglshim_active && p_glWindowPos2dv) { p_glWindowPos2dv(v); return; } if (a_glWindowPos2dv) a_glWindowPos2dv(v); }
-INTERPOSE(glWindowPos2dv)
-void glWindowPos2f(GLfloat x, GLfloat y) WEAKGL;
-static void (*p_glWindowPos2f)(GLfloat x, GLfloat y);
-static void (*a_glWindowPos2f)(GLfloat x, GLfloat y);
-static void w_glWindowPos2f(GLfloat x, GLfloat y) { if (mglshim_active && p_glWindowPos2f) { p_glWindowPos2f(x, y); return; } if (a_glWindowPos2f) a_glWindowPos2f(x, y); }
-INTERPOSE(glWindowPos2f)
-void glWindowPos2fv(const GLfloat *v) WEAKGL;
-static void (*p_glWindowPos2fv)(const GLfloat *v);
-static void (*a_glWindowPos2fv)(const GLfloat *v);
-static void w_glWindowPos2fv(const GLfloat *v) { if (mglshim_active && p_glWindowPos2fv) { p_glWindowPos2fv(v); return; } if (a_glWindowPos2fv) a_glWindowPos2fv(v); }
-INTERPOSE(glWindowPos2fv)
-void glWindowPos2i(GLint x, GLint y) WEAKGL;
-static void (*p_glWindowPos2i)(GLint x, GLint y);
-static void (*a_glWindowPos2i)(GLint x, GLint y);
-static void w_glWindowPos2i(GLint x, GLint y) { if (mglshim_active && p_glWindowPos2i) { p_glWindowPos2i(x, y); return; } if (a_glWindowPos2i) a_glWindowPos2i(x, y); }
-INTERPOSE(glWindowPos2i)
-void glWindowPos2iv(const GLint *v) WEAKGL;
-static void (*p_glWindowPos2iv)(const GLint *v);
-static void (*a_glWindowPos2iv)(const GLint *v);
-static void w_glWindowPos2iv(const GLint *v) { if (mglshim_active && p_glWindowPos2iv) { p_glWindowPos2iv(v); return; } if (a_glWindowPos2iv) a_glWindowPos2iv(v); }
-INTERPOSE(glWindowPos2iv)
-void glWindowPos2s(GLshort x, GLshort y) WEAKGL;
-static void (*p_glWindowPos2s)(GLshort x, GLshort y);
-static void (*a_glWindowPos2s)(GLshort x, GLshort y);
-static void w_glWindowPos2s(GLshort x, GLshort y) { if (mglshim_active && p_glWindowPos2s) { p_glWindowPos2s(x, y); return; } if (a_glWindowPos2s) a_glWindowPos2s(x, y); }
-INTERPOSE(glWindowPos2s)
-void glWindowPos2sv(const GLshort *v) WEAKGL;
-static void (*p_glWindowPos2sv)(const GLshort *v);
-static void (*a_glWindowPos2sv)(const GLshort *v);
-static void w_glWindowPos2sv(const GLshort *v) { if (mglshim_active && p_glWindowPos2sv) { p_glWindowPos2sv(v); return; } if (a_glWindowPos2sv) a_glWindowPos2sv(v); }
-INTERPOSE(glWindowPos2sv)
-void glWindowPos3d(GLdouble x, GLdouble y, GLdouble z) WEAKGL;
-static void (*p_glWindowPos3d)(GLdouble x, GLdouble y, GLdouble z);
-static void (*a_glWindowPos3d)(GLdouble x, GLdouble y, GLdouble z);
-static void w_glWindowPos3d(GLdouble x, GLdouble y, GLdouble z) { if (mglshim_active && p_glWindowPos3d) { p_glWindowPos3d(x, y, z); return; } if (a_glWindowPos3d) a_glWindowPos3d(x, y, z); }
-INTERPOSE(glWindowPos3d)
-void glWindowPos3dv(const GLdouble *v) WEAKGL;
-static void (*p_glWindowPos3dv)(const GLdouble *v);
-static void (*a_glWindowPos3dv)(const GLdouble *v);
-static void w_glWindowPos3dv(const GLdouble *v) { if (mglshim_active && p_glWindowPos3dv) { p_glWindowPos3dv(v); return; } if (a_glWindowPos3dv) a_glWindowPos3dv(v); }
-INTERPOSE(glWindowPos3dv)
-void glWindowPos3f(GLfloat x, GLfloat y, GLfloat z) WEAKGL;
-static void (*p_glWindowPos3f)(GLfloat x, GLfloat y, GLfloat z);
-static void (*a_glWindowPos3f)(GLfloat x, GLfloat y, GLfloat z);
-static void w_glWindowPos3f(GLfloat x, GLfloat y, GLfloat z) { if (mglshim_active && p_glWindowPos3f) { p_glWindowPos3f(x, y, z); return; } if (a_glWindowPos3f) a_glWindowPos3f(x, y, z); }
-INTERPOSE(glWindowPos3f)
-void glWindowPos3fv(const GLfloat *v) WEAKGL;
-static void (*p_glWindowPos3fv)(const GLfloat *v);
-static void (*a_glWindowPos3fv)(const GLfloat *v);
-static void w_glWindowPos3fv(const GLfloat *v) { if (mglshim_active && p_glWindowPos3fv) { p_glWindowPos3fv(v); return; } if (a_glWindowPos3fv) a_glWindowPos3fv(v); }
-INTERPOSE(glWindowPos3fv)
-void glWindowPos3i(GLint x, GLint y, GLint z) WEAKGL;
-static void (*p_glWindowPos3i)(GLint x, GLint y, GLint z);
-static void (*a_glWindowPos3i)(GLint x, GLint y, GLint z);
-static void w_glWindowPos3i(GLint x, GLint y, GLint z) { if (mglshim_active && p_glWindowPos3i) { p_glWindowPos3i(x, y, z); return; } if (a_glWindowPos3i) a_glWindowPos3i(x, y, z); }
-INTERPOSE(glWindowPos3i)
-void glWindowPos3iv(const GLint *v) WEAKGL;
-static void (*p_glWindowPos3iv)(const GLint *v);
-static void (*a_glWindowPos3iv)(const GLint *v);
-static void w_glWindowPos3iv(const GLint *v) { if (mglshim_active && p_glWindowPos3iv) { p_glWindowPos3iv(v); return; } if (a_glWindowPos3iv) a_glWindowPos3iv(v); }
-INTERPOSE(glWindowPos3iv)
-void glWindowPos3s(GLshort x, GLshort y, GLshort z) WEAKGL;
-static void (*p_glWindowPos3s)(GLshort x, GLshort y, GLshort z);
-static void (*a_glWindowPos3s)(GLshort x, GLshort y, GLshort z);
-static void w_glWindowPos3s(GLshort x, GLshort y, GLshort z) { if (mglshim_active && p_glWindowPos3s) { p_glWindowPos3s(x, y, z); return; } if (a_glWindowPos3s) a_glWindowPos3s(x, y, z); }
-INTERPOSE(glWindowPos3s)
-void glWindowPos3sv(const GLshort *v) WEAKGL;
-static void (*p_glWindowPos3sv)(const GLshort *v);
-static void (*a_glWindowPos3sv)(const GLshort *v);
-static void w_glWindowPos3sv(const GLshort *v) { if (mglshim_active && p_glWindowPos3sv) { p_glWindowPos3sv(v); return; } if (a_glWindowPos3sv) a_glWindowPos3sv(v); }
-INTERPOSE(glWindowPos3sv)
 
 /* mgl = libmgl.dylib (impl do MGL); apple = libGL.dylib da Apple (fallback). Devolve quantas gl* o MGL tem. */
 int mglshim_gl_init(void *mgl, void *apple) {
     int n = 0;
-    *(void **)&p_glAccum = dlsym(mgl, "glAccum"); *(void **)&a_glAccum = apple ? dlsym(apple, "glAccum") : (void*)0; if (p_glAccum) n++;
     *(void **)&p_glActiveShaderProgram = dlsym(mgl, "glActiveShaderProgram"); *(void **)&a_glActiveShaderProgram = apple ? dlsym(apple, "glActiveShaderProgram") : (void*)0; if (p_glActiveShaderProgram) n++;
     *(void **)&p_glActiveTexture = dlsym(mgl, "glActiveTexture"); *(void **)&a_glActiveTexture = apple ? dlsym(apple, "glActiveTexture") : (void*)0; if (p_glActiveTexture) n++;
-    *(void **)&p_glAlphaFunc = dlsym(mgl, "glAlphaFunc"); *(void **)&a_glAlphaFunc = apple ? dlsym(apple, "glAlphaFunc") : (void*)0; if (p_glAlphaFunc) n++;
-    *(void **)&p_glAreTexturesResident = dlsym(mgl, "glAreTexturesResident"); *(void **)&a_glAreTexturesResident = apple ? dlsym(apple, "glAreTexturesResident") : (void*)0; if (p_glAreTexturesResident) n++;
-    *(void **)&p_glArrayElement = dlsym(mgl, "glArrayElement"); *(void **)&a_glArrayElement = apple ? dlsym(apple, "glArrayElement") : (void*)0; if (p_glArrayElement) n++;
     *(void **)&p_glAttachShader = dlsym(mgl, "glAttachShader"); *(void **)&a_glAttachShader = apple ? dlsym(apple, "glAttachShader") : (void*)0; if (p_glAttachShader) n++;
-    *(void **)&p_glBegin = dlsym(mgl, "glBegin"); *(void **)&a_glBegin = apple ? dlsym(apple, "glBegin") : (void*)0; if (p_glBegin) n++;
     *(void **)&p_glBeginConditionalRender = dlsym(mgl, "glBeginConditionalRender"); *(void **)&a_glBeginConditionalRender = apple ? dlsym(apple, "glBeginConditionalRender") : (void*)0; if (p_glBeginConditionalRender) n++;
     *(void **)&p_glBeginQuery = dlsym(mgl, "glBeginQuery"); *(void **)&a_glBeginQuery = apple ? dlsym(apple, "glBeginQuery") : (void*)0; if (p_glBeginQuery) n++;
     *(void **)&p_glBeginQueryIndexed = dlsym(mgl, "glBeginQueryIndexed"); *(void **)&a_glBeginQueryIndexed = apple ? dlsym(apple, "glBeginQueryIndexed") : (void*)0; if (p_glBeginQueryIndexed) n++;
@@ -5294,7 +3334,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glBindVertexArray = dlsym(mgl, "glBindVertexArray"); *(void **)&a_glBindVertexArray = apple ? dlsym(apple, "glBindVertexArray") : (void*)0; if (p_glBindVertexArray) n++;
     *(void **)&p_glBindVertexBuffer = dlsym(mgl, "glBindVertexBuffer"); *(void **)&a_glBindVertexBuffer = apple ? dlsym(apple, "glBindVertexBuffer") : (void*)0; if (p_glBindVertexBuffer) n++;
     *(void **)&p_glBindVertexBuffers = dlsym(mgl, "glBindVertexBuffers"); *(void **)&a_glBindVertexBuffers = apple ? dlsym(apple, "glBindVertexBuffers") : (void*)0; if (p_glBindVertexBuffers) n++;
-    *(void **)&p_glBitmap = dlsym(mgl, "glBitmap"); *(void **)&a_glBitmap = apple ? dlsym(apple, "glBitmap") : (void*)0; if (p_glBitmap) n++;
     *(void **)&p_glBlendColor = dlsym(mgl, "glBlendColor"); *(void **)&a_glBlendColor = apple ? dlsym(apple, "glBlendColor") : (void*)0; if (p_glBlendColor) n++;
     *(void **)&p_glBlendEquation = dlsym(mgl, "glBlendEquation"); *(void **)&a_glBlendEquation = apple ? dlsym(apple, "glBlendEquation") : (void*)0; if (p_glBlendEquation) n++;
     *(void **)&p_glBlendEquationSeparate = dlsym(mgl, "glBlendEquationSeparate"); *(void **)&a_glBlendEquationSeparate = apple ? dlsym(apple, "glBlendEquationSeparate") : (void*)0; if (p_glBlendEquationSeparate) n++;
@@ -5309,13 +3348,10 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glBufferData = dlsym(mgl, "glBufferData"); *(void **)&a_glBufferData = apple ? dlsym(apple, "glBufferData") : (void*)0; if (p_glBufferData) n++;
     *(void **)&p_glBufferStorage = dlsym(mgl, "glBufferStorage"); *(void **)&a_glBufferStorage = apple ? dlsym(apple, "glBufferStorage") : (void*)0; if (p_glBufferStorage) n++;
     *(void **)&p_glBufferSubData = dlsym(mgl, "glBufferSubData"); *(void **)&a_glBufferSubData = apple ? dlsym(apple, "glBufferSubData") : (void*)0; if (p_glBufferSubData) n++;
-    *(void **)&p_glCallList = dlsym(mgl, "glCallList"); *(void **)&a_glCallList = apple ? dlsym(apple, "glCallList") : (void*)0; if (p_glCallList) n++;
-    *(void **)&p_glCallLists = dlsym(mgl, "glCallLists"); *(void **)&a_glCallLists = apple ? dlsym(apple, "glCallLists") : (void*)0; if (p_glCallLists) n++;
     *(void **)&p_glCheckFramebufferStatus = dlsym(mgl, "glCheckFramebufferStatus"); *(void **)&a_glCheckFramebufferStatus = apple ? dlsym(apple, "glCheckFramebufferStatus") : (void*)0; if (p_glCheckFramebufferStatus) n++;
     *(void **)&p_glCheckNamedFramebufferStatus = dlsym(mgl, "glCheckNamedFramebufferStatus"); *(void **)&a_glCheckNamedFramebufferStatus = apple ? dlsym(apple, "glCheckNamedFramebufferStatus") : (void*)0; if (p_glCheckNamedFramebufferStatus) n++;
     *(void **)&p_glClampColor = dlsym(mgl, "glClampColor"); *(void **)&a_glClampColor = apple ? dlsym(apple, "glClampColor") : (void*)0; if (p_glClampColor) n++;
     *(void **)&p_glClear = dlsym(mgl, "glClear"); *(void **)&a_glClear = apple ? dlsym(apple, "glClear") : (void*)0; if (p_glClear) n++;
-    *(void **)&p_glClearAccum = dlsym(mgl, "glClearAccum"); *(void **)&a_glClearAccum = apple ? dlsym(apple, "glClearAccum") : (void*)0; if (p_glClearAccum) n++;
     *(void **)&p_glClearBufferData = dlsym(mgl, "glClearBufferData"); *(void **)&a_glClearBufferData = apple ? dlsym(apple, "glClearBufferData") : (void*)0; if (p_glClearBufferData) n++;
     *(void **)&p_glClearBufferSubData = dlsym(mgl, "glClearBufferSubData"); *(void **)&a_glClearBufferSubData = apple ? dlsym(apple, "glClearBufferSubData") : (void*)0; if (p_glClearBufferSubData) n++;
     *(void **)&p_glClearBufferfi = dlsym(mgl, "glClearBufferfi"); *(void **)&a_glClearBufferfi = apple ? dlsym(apple, "glClearBufferfi") : (void*)0; if (p_glClearBufferfi) n++;
@@ -5325,7 +3361,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glClearColor = dlsym(mgl, "glClearColor"); *(void **)&a_glClearColor = apple ? dlsym(apple, "glClearColor") : (void*)0; if (p_glClearColor) n++;
     *(void **)&p_glClearDepth = dlsym(mgl, "glClearDepth"); *(void **)&a_glClearDepth = apple ? dlsym(apple, "glClearDepth") : (void*)0; if (p_glClearDepth) n++;
     *(void **)&p_glClearDepthf = dlsym(mgl, "glClearDepthf"); *(void **)&a_glClearDepthf = apple ? dlsym(apple, "glClearDepthf") : (void*)0; if (p_glClearDepthf) n++;
-    *(void **)&p_glClearIndex = dlsym(mgl, "glClearIndex"); *(void **)&a_glClearIndex = apple ? dlsym(apple, "glClearIndex") : (void*)0; if (p_glClearIndex) n++;
     *(void **)&p_glClearNamedBufferData = dlsym(mgl, "glClearNamedBufferData"); *(void **)&a_glClearNamedBufferData = apple ? dlsym(apple, "glClearNamedBufferData") : (void*)0; if (p_glClearNamedBufferData) n++;
     *(void **)&p_glClearNamedBufferSubData = dlsym(mgl, "glClearNamedBufferSubData"); *(void **)&a_glClearNamedBufferSubData = apple ? dlsym(apple, "glClearNamedBufferSubData") : (void*)0; if (p_glClearNamedBufferSubData) n++;
     *(void **)&p_glClearNamedFramebufferfi = dlsym(mgl, "glClearNamedFramebufferfi"); *(void **)&a_glClearNamedFramebufferfi = apple ? dlsym(apple, "glClearNamedFramebufferfi") : (void*)0; if (p_glClearNamedFramebufferfi) n++;
@@ -5335,50 +3370,10 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glClearStencil = dlsym(mgl, "glClearStencil"); *(void **)&a_glClearStencil = apple ? dlsym(apple, "glClearStencil") : (void*)0; if (p_glClearStencil) n++;
     *(void **)&p_glClearTexImage = dlsym(mgl, "glClearTexImage"); *(void **)&a_glClearTexImage = apple ? dlsym(apple, "glClearTexImage") : (void*)0; if (p_glClearTexImage) n++;
     *(void **)&p_glClearTexSubImage = dlsym(mgl, "glClearTexSubImage"); *(void **)&a_glClearTexSubImage = apple ? dlsym(apple, "glClearTexSubImage") : (void*)0; if (p_glClearTexSubImage) n++;
-    *(void **)&p_glClientActiveTexture = dlsym(mgl, "glClientActiveTexture"); *(void **)&a_glClientActiveTexture = apple ? dlsym(apple, "glClientActiveTexture") : (void*)0; if (p_glClientActiveTexture) n++;
     *(void **)&p_glClientWaitSync = dlsym(mgl, "glClientWaitSync"); *(void **)&a_glClientWaitSync = apple ? dlsym(apple, "glClientWaitSync") : (void*)0; if (p_glClientWaitSync) n++;
     *(void **)&p_glClipControl = dlsym(mgl, "glClipControl"); *(void **)&a_glClipControl = apple ? dlsym(apple, "glClipControl") : (void*)0; if (p_glClipControl) n++;
-    *(void **)&p_glClipPlane = dlsym(mgl, "glClipPlane"); *(void **)&a_glClipPlane = apple ? dlsym(apple, "glClipPlane") : (void*)0; if (p_glClipPlane) n++;
-    *(void **)&p_glColor3b = dlsym(mgl, "glColor3b"); *(void **)&a_glColor3b = apple ? dlsym(apple, "glColor3b") : (void*)0; if (p_glColor3b) n++;
-    *(void **)&p_glColor3bv = dlsym(mgl, "glColor3bv"); *(void **)&a_glColor3bv = apple ? dlsym(apple, "glColor3bv") : (void*)0; if (p_glColor3bv) n++;
-    *(void **)&p_glColor3d = dlsym(mgl, "glColor3d"); *(void **)&a_glColor3d = apple ? dlsym(apple, "glColor3d") : (void*)0; if (p_glColor3d) n++;
-    *(void **)&p_glColor3dv = dlsym(mgl, "glColor3dv"); *(void **)&a_glColor3dv = apple ? dlsym(apple, "glColor3dv") : (void*)0; if (p_glColor3dv) n++;
-    *(void **)&p_glColor3f = dlsym(mgl, "glColor3f"); *(void **)&a_glColor3f = apple ? dlsym(apple, "glColor3f") : (void*)0; if (p_glColor3f) n++;
-    *(void **)&p_glColor3fv = dlsym(mgl, "glColor3fv"); *(void **)&a_glColor3fv = apple ? dlsym(apple, "glColor3fv") : (void*)0; if (p_glColor3fv) n++;
-    *(void **)&p_glColor3i = dlsym(mgl, "glColor3i"); *(void **)&a_glColor3i = apple ? dlsym(apple, "glColor3i") : (void*)0; if (p_glColor3i) n++;
-    *(void **)&p_glColor3iv = dlsym(mgl, "glColor3iv"); *(void **)&a_glColor3iv = apple ? dlsym(apple, "glColor3iv") : (void*)0; if (p_glColor3iv) n++;
-    *(void **)&p_glColor3s = dlsym(mgl, "glColor3s"); *(void **)&a_glColor3s = apple ? dlsym(apple, "glColor3s") : (void*)0; if (p_glColor3s) n++;
-    *(void **)&p_glColor3sv = dlsym(mgl, "glColor3sv"); *(void **)&a_glColor3sv = apple ? dlsym(apple, "glColor3sv") : (void*)0; if (p_glColor3sv) n++;
-    *(void **)&p_glColor3ub = dlsym(mgl, "glColor3ub"); *(void **)&a_glColor3ub = apple ? dlsym(apple, "glColor3ub") : (void*)0; if (p_glColor3ub) n++;
-    *(void **)&p_glColor3ubv = dlsym(mgl, "glColor3ubv"); *(void **)&a_glColor3ubv = apple ? dlsym(apple, "glColor3ubv") : (void*)0; if (p_glColor3ubv) n++;
-    *(void **)&p_glColor3ui = dlsym(mgl, "glColor3ui"); *(void **)&a_glColor3ui = apple ? dlsym(apple, "glColor3ui") : (void*)0; if (p_glColor3ui) n++;
-    *(void **)&p_glColor3uiv = dlsym(mgl, "glColor3uiv"); *(void **)&a_glColor3uiv = apple ? dlsym(apple, "glColor3uiv") : (void*)0; if (p_glColor3uiv) n++;
-    *(void **)&p_glColor3us = dlsym(mgl, "glColor3us"); *(void **)&a_glColor3us = apple ? dlsym(apple, "glColor3us") : (void*)0; if (p_glColor3us) n++;
-    *(void **)&p_glColor3usv = dlsym(mgl, "glColor3usv"); *(void **)&a_glColor3usv = apple ? dlsym(apple, "glColor3usv") : (void*)0; if (p_glColor3usv) n++;
-    *(void **)&p_glColor4b = dlsym(mgl, "glColor4b"); *(void **)&a_glColor4b = apple ? dlsym(apple, "glColor4b") : (void*)0; if (p_glColor4b) n++;
-    *(void **)&p_glColor4bv = dlsym(mgl, "glColor4bv"); *(void **)&a_glColor4bv = apple ? dlsym(apple, "glColor4bv") : (void*)0; if (p_glColor4bv) n++;
-    *(void **)&p_glColor4d = dlsym(mgl, "glColor4d"); *(void **)&a_glColor4d = apple ? dlsym(apple, "glColor4d") : (void*)0; if (p_glColor4d) n++;
-    *(void **)&p_glColor4dv = dlsym(mgl, "glColor4dv"); *(void **)&a_glColor4dv = apple ? dlsym(apple, "glColor4dv") : (void*)0; if (p_glColor4dv) n++;
-    *(void **)&p_glColor4f = dlsym(mgl, "glColor4f"); *(void **)&a_glColor4f = apple ? dlsym(apple, "glColor4f") : (void*)0; if (p_glColor4f) n++;
-    *(void **)&p_glColor4fv = dlsym(mgl, "glColor4fv"); *(void **)&a_glColor4fv = apple ? dlsym(apple, "glColor4fv") : (void*)0; if (p_glColor4fv) n++;
-    *(void **)&p_glColor4i = dlsym(mgl, "glColor4i"); *(void **)&a_glColor4i = apple ? dlsym(apple, "glColor4i") : (void*)0; if (p_glColor4i) n++;
-    *(void **)&p_glColor4iv = dlsym(mgl, "glColor4iv"); *(void **)&a_glColor4iv = apple ? dlsym(apple, "glColor4iv") : (void*)0; if (p_glColor4iv) n++;
-    *(void **)&p_glColor4s = dlsym(mgl, "glColor4s"); *(void **)&a_glColor4s = apple ? dlsym(apple, "glColor4s") : (void*)0; if (p_glColor4s) n++;
-    *(void **)&p_glColor4sv = dlsym(mgl, "glColor4sv"); *(void **)&a_glColor4sv = apple ? dlsym(apple, "glColor4sv") : (void*)0; if (p_glColor4sv) n++;
-    *(void **)&p_glColor4ub = dlsym(mgl, "glColor4ub"); *(void **)&a_glColor4ub = apple ? dlsym(apple, "glColor4ub") : (void*)0; if (p_glColor4ub) n++;
-    *(void **)&p_glColor4ubv = dlsym(mgl, "glColor4ubv"); *(void **)&a_glColor4ubv = apple ? dlsym(apple, "glColor4ubv") : (void*)0; if (p_glColor4ubv) n++;
-    *(void **)&p_glColor4ui = dlsym(mgl, "glColor4ui"); *(void **)&a_glColor4ui = apple ? dlsym(apple, "glColor4ui") : (void*)0; if (p_glColor4ui) n++;
-    *(void **)&p_glColor4uiv = dlsym(mgl, "glColor4uiv"); *(void **)&a_glColor4uiv = apple ? dlsym(apple, "glColor4uiv") : (void*)0; if (p_glColor4uiv) n++;
-    *(void **)&p_glColor4us = dlsym(mgl, "glColor4us"); *(void **)&a_glColor4us = apple ? dlsym(apple, "glColor4us") : (void*)0; if (p_glColor4us) n++;
-    *(void **)&p_glColor4usv = dlsym(mgl, "glColor4usv"); *(void **)&a_glColor4usv = apple ? dlsym(apple, "glColor4usv") : (void*)0; if (p_glColor4usv) n++;
     *(void **)&p_glColorMask = dlsym(mgl, "glColorMask"); *(void **)&a_glColorMask = apple ? dlsym(apple, "glColorMask") : (void*)0; if (p_glColorMask) n++;
     *(void **)&p_glColorMaski = dlsym(mgl, "glColorMaski"); *(void **)&a_glColorMaski = apple ? dlsym(apple, "glColorMaski") : (void*)0; if (p_glColorMaski) n++;
-    *(void **)&p_glColorMaterial = dlsym(mgl, "glColorMaterial"); *(void **)&a_glColorMaterial = apple ? dlsym(apple, "glColorMaterial") : (void*)0; if (p_glColorMaterial) n++;
-    *(void **)&p_glColorP3ui = dlsym(mgl, "glColorP3ui"); *(void **)&a_glColorP3ui = apple ? dlsym(apple, "glColorP3ui") : (void*)0; if (p_glColorP3ui) n++;
-    *(void **)&p_glColorP3uiv = dlsym(mgl, "glColorP3uiv"); *(void **)&a_glColorP3uiv = apple ? dlsym(apple, "glColorP3uiv") : (void*)0; if (p_glColorP3uiv) n++;
-    *(void **)&p_glColorP4ui = dlsym(mgl, "glColorP4ui"); *(void **)&a_glColorP4ui = apple ? dlsym(apple, "glColorP4ui") : (void*)0; if (p_glColorP4ui) n++;
-    *(void **)&p_glColorP4uiv = dlsym(mgl, "glColorP4uiv"); *(void **)&a_glColorP4uiv = apple ? dlsym(apple, "glColorP4uiv") : (void*)0; if (p_glColorP4uiv) n++;
-    *(void **)&p_glColorPointer = dlsym(mgl, "glColorPointer"); *(void **)&a_glColorPointer = apple ? dlsym(apple, "glColorPointer") : (void*)0; if (p_glColorPointer) n++;
     *(void **)&p_glCompileShader = dlsym(mgl, "glCompileShader"); *(void **)&a_glCompileShader = apple ? dlsym(apple, "glCompileShader") : (void*)0; if (p_glCompileShader) n++;
     *(void **)&p_glCompressedTexImage1D = dlsym(mgl, "glCompressedTexImage1D"); *(void **)&a_glCompressedTexImage1D = apple ? dlsym(apple, "glCompressedTexImage1D") : (void*)0; if (p_glCompressedTexImage1D) n++;
     *(void **)&p_glCompressedTexImage2D = dlsym(mgl, "glCompressedTexImage2D"); *(void **)&a_glCompressedTexImage2D = apple ? dlsym(apple, "glCompressedTexImage2D") : (void*)0; if (p_glCompressedTexImage2D) n++;
@@ -5392,7 +3387,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glCopyBufferSubData = dlsym(mgl, "glCopyBufferSubData"); *(void **)&a_glCopyBufferSubData = apple ? dlsym(apple, "glCopyBufferSubData") : (void*)0; if (p_glCopyBufferSubData) n++;
     *(void **)&p_glCopyImageSubData = dlsym(mgl, "glCopyImageSubData"); *(void **)&a_glCopyImageSubData = apple ? dlsym(apple, "glCopyImageSubData") : (void*)0; if (p_glCopyImageSubData) n++;
     *(void **)&p_glCopyNamedBufferSubData = dlsym(mgl, "glCopyNamedBufferSubData"); *(void **)&a_glCopyNamedBufferSubData = apple ? dlsym(apple, "glCopyNamedBufferSubData") : (void*)0; if (p_glCopyNamedBufferSubData) n++;
-    *(void **)&p_glCopyPixels = dlsym(mgl, "glCopyPixels"); *(void **)&a_glCopyPixels = apple ? dlsym(apple, "glCopyPixels") : (void*)0; if (p_glCopyPixels) n++;
     *(void **)&p_glCopyTexImage1D = dlsym(mgl, "glCopyTexImage1D"); *(void **)&a_glCopyTexImage1D = apple ? dlsym(apple, "glCopyTexImage1D") : (void*)0; if (p_glCopyTexImage1D) n++;
     *(void **)&p_glCopyTexImage2D = dlsym(mgl, "glCopyTexImage2D"); *(void **)&a_glCopyTexImage2D = apple ? dlsym(apple, "glCopyTexImage2D") : (void*)0; if (p_glCopyTexImage2D) n++;
     *(void **)&p_glCopyTexSubImage1D = dlsym(mgl, "glCopyTexSubImage1D"); *(void **)&a_glCopyTexSubImage1D = apple ? dlsym(apple, "glCopyTexSubImage1D") : (void*)0; if (p_glCopyTexSubImage1D) n++;
@@ -5419,7 +3413,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glDebugMessageInsert = dlsym(mgl, "glDebugMessageInsert"); *(void **)&a_glDebugMessageInsert = apple ? dlsym(apple, "glDebugMessageInsert") : (void*)0; if (p_glDebugMessageInsert) n++;
     *(void **)&p_glDeleteBuffers = dlsym(mgl, "glDeleteBuffers"); *(void **)&a_glDeleteBuffers = apple ? dlsym(apple, "glDeleteBuffers") : (void*)0; if (p_glDeleteBuffers) n++;
     *(void **)&p_glDeleteFramebuffers = dlsym(mgl, "glDeleteFramebuffers"); *(void **)&a_glDeleteFramebuffers = apple ? dlsym(apple, "glDeleteFramebuffers") : (void*)0; if (p_glDeleteFramebuffers) n++;
-    *(void **)&p_glDeleteLists = dlsym(mgl, "glDeleteLists"); *(void **)&a_glDeleteLists = apple ? dlsym(apple, "glDeleteLists") : (void*)0; if (p_glDeleteLists) n++;
     *(void **)&p_glDeleteProgram = dlsym(mgl, "glDeleteProgram"); *(void **)&a_glDeleteProgram = apple ? dlsym(apple, "glDeleteProgram") : (void*)0; if (p_glDeleteProgram) n++;
     *(void **)&p_glDeleteProgramPipelines = dlsym(mgl, "glDeleteProgramPipelines"); *(void **)&a_glDeleteProgramPipelines = apple ? dlsym(apple, "glDeleteProgramPipelines") : (void*)0; if (p_glDeleteProgramPipelines) n++;
     *(void **)&p_glDeleteQueries = dlsym(mgl, "glDeleteQueries"); *(void **)&a_glDeleteQueries = apple ? dlsym(apple, "glDeleteQueries") : (void*)0; if (p_glDeleteQueries) n++;
@@ -5438,7 +3431,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glDepthRangef = dlsym(mgl, "glDepthRangef"); *(void **)&a_glDepthRangef = apple ? dlsym(apple, "glDepthRangef") : (void*)0; if (p_glDepthRangef) n++;
     *(void **)&p_glDetachShader = dlsym(mgl, "glDetachShader"); *(void **)&a_glDetachShader = apple ? dlsym(apple, "glDetachShader") : (void*)0; if (p_glDetachShader) n++;
     *(void **)&p_glDisable = dlsym(mgl, "glDisable"); *(void **)&a_glDisable = apple ? dlsym(apple, "glDisable") : (void*)0; if (p_glDisable) n++;
-    *(void **)&p_glDisableClientState = dlsym(mgl, "glDisableClientState"); *(void **)&a_glDisableClientState = apple ? dlsym(apple, "glDisableClientState") : (void*)0; if (p_glDisableClientState) n++;
     *(void **)&p_glDisableVertexArrayAttrib = dlsym(mgl, "glDisableVertexArrayAttrib"); *(void **)&a_glDisableVertexArrayAttrib = apple ? dlsym(apple, "glDisableVertexArrayAttrib") : (void*)0; if (p_glDisableVertexArrayAttrib) n++;
     *(void **)&p_glDisableVertexAttribArray = dlsym(mgl, "glDisableVertexAttribArray"); *(void **)&a_glDisableVertexAttribArray = apple ? dlsym(apple, "glDisableVertexAttribArray") : (void*)0; if (p_glDisableVertexAttribArray) n++;
     *(void **)&p_glDisablei = dlsym(mgl, "glDisablei"); *(void **)&a_glDisablei = apple ? dlsym(apple, "glDisablei") : (void*)0; if (p_glDisablei) n++;
@@ -5457,54 +3449,25 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glDrawElementsInstancedBaseInstance = dlsym(mgl, "glDrawElementsInstancedBaseInstance"); *(void **)&a_glDrawElementsInstancedBaseInstance = apple ? dlsym(apple, "glDrawElementsInstancedBaseInstance") : (void*)0; if (p_glDrawElementsInstancedBaseInstance) n++;
     *(void **)&p_glDrawElementsInstancedBaseVertex = dlsym(mgl, "glDrawElementsInstancedBaseVertex"); *(void **)&a_glDrawElementsInstancedBaseVertex = apple ? dlsym(apple, "glDrawElementsInstancedBaseVertex") : (void*)0; if (p_glDrawElementsInstancedBaseVertex) n++;
     *(void **)&p_glDrawElementsInstancedBaseVertexBaseInstance = dlsym(mgl, "glDrawElementsInstancedBaseVertexBaseInstance"); *(void **)&a_glDrawElementsInstancedBaseVertexBaseInstance = apple ? dlsym(apple, "glDrawElementsInstancedBaseVertexBaseInstance") : (void*)0; if (p_glDrawElementsInstancedBaseVertexBaseInstance) n++;
-    *(void **)&p_glDrawPixels = dlsym(mgl, "glDrawPixels"); *(void **)&a_glDrawPixels = apple ? dlsym(apple, "glDrawPixels") : (void*)0; if (p_glDrawPixels) n++;
     *(void **)&p_glDrawRangeElements = dlsym(mgl, "glDrawRangeElements"); *(void **)&a_glDrawRangeElements = apple ? dlsym(apple, "glDrawRangeElements") : (void*)0; if (p_glDrawRangeElements) n++;
     *(void **)&p_glDrawRangeElementsBaseVertex = dlsym(mgl, "glDrawRangeElementsBaseVertex"); *(void **)&a_glDrawRangeElementsBaseVertex = apple ? dlsym(apple, "glDrawRangeElementsBaseVertex") : (void*)0; if (p_glDrawRangeElementsBaseVertex) n++;
     *(void **)&p_glDrawTransformFeedback = dlsym(mgl, "glDrawTransformFeedback"); *(void **)&a_glDrawTransformFeedback = apple ? dlsym(apple, "glDrawTransformFeedback") : (void*)0; if (p_glDrawTransformFeedback) n++;
     *(void **)&p_glDrawTransformFeedbackInstanced = dlsym(mgl, "glDrawTransformFeedbackInstanced"); *(void **)&a_glDrawTransformFeedbackInstanced = apple ? dlsym(apple, "glDrawTransformFeedbackInstanced") : (void*)0; if (p_glDrawTransformFeedbackInstanced) n++;
     *(void **)&p_glDrawTransformFeedbackStream = dlsym(mgl, "glDrawTransformFeedbackStream"); *(void **)&a_glDrawTransformFeedbackStream = apple ? dlsym(apple, "glDrawTransformFeedbackStream") : (void*)0; if (p_glDrawTransformFeedbackStream) n++;
     *(void **)&p_glDrawTransformFeedbackStreamInstanced = dlsym(mgl, "glDrawTransformFeedbackStreamInstanced"); *(void **)&a_glDrawTransformFeedbackStreamInstanced = apple ? dlsym(apple, "glDrawTransformFeedbackStreamInstanced") : (void*)0; if (p_glDrawTransformFeedbackStreamInstanced) n++;
-    *(void **)&p_glEdgeFlag = dlsym(mgl, "glEdgeFlag"); *(void **)&a_glEdgeFlag = apple ? dlsym(apple, "glEdgeFlag") : (void*)0; if (p_glEdgeFlag) n++;
-    *(void **)&p_glEdgeFlagPointer = dlsym(mgl, "glEdgeFlagPointer"); *(void **)&a_glEdgeFlagPointer = apple ? dlsym(apple, "glEdgeFlagPointer") : (void*)0; if (p_glEdgeFlagPointer) n++;
-    *(void **)&p_glEdgeFlagv = dlsym(mgl, "glEdgeFlagv"); *(void **)&a_glEdgeFlagv = apple ? dlsym(apple, "glEdgeFlagv") : (void*)0; if (p_glEdgeFlagv) n++;
     *(void **)&p_glEnable = dlsym(mgl, "glEnable"); *(void **)&a_glEnable = apple ? dlsym(apple, "glEnable") : (void*)0; if (p_glEnable) n++;
-    *(void **)&p_glEnableClientState = dlsym(mgl, "glEnableClientState"); *(void **)&a_glEnableClientState = apple ? dlsym(apple, "glEnableClientState") : (void*)0; if (p_glEnableClientState) n++;
     *(void **)&p_glEnableVertexArrayAttrib = dlsym(mgl, "glEnableVertexArrayAttrib"); *(void **)&a_glEnableVertexArrayAttrib = apple ? dlsym(apple, "glEnableVertexArrayAttrib") : (void*)0; if (p_glEnableVertexArrayAttrib) n++;
     *(void **)&p_glEnableVertexAttribArray = dlsym(mgl, "glEnableVertexAttribArray"); *(void **)&a_glEnableVertexAttribArray = apple ? dlsym(apple, "glEnableVertexAttribArray") : (void*)0; if (p_glEnableVertexAttribArray) n++;
     *(void **)&p_glEnablei = dlsym(mgl, "glEnablei"); *(void **)&a_glEnablei = apple ? dlsym(apple, "glEnablei") : (void*)0; if (p_glEnablei) n++;
-    *(void **)&p_glEnd = dlsym(mgl, "glEnd"); *(void **)&a_glEnd = apple ? dlsym(apple, "glEnd") : (void*)0; if (p_glEnd) n++;
     *(void **)&p_glEndConditionalRender = dlsym(mgl, "glEndConditionalRender"); *(void **)&a_glEndConditionalRender = apple ? dlsym(apple, "glEndConditionalRender") : (void*)0; if (p_glEndConditionalRender) n++;
-    *(void **)&p_glEndList = dlsym(mgl, "glEndList"); *(void **)&a_glEndList = apple ? dlsym(apple, "glEndList") : (void*)0; if (p_glEndList) n++;
     *(void **)&p_glEndQuery = dlsym(mgl, "glEndQuery"); *(void **)&a_glEndQuery = apple ? dlsym(apple, "glEndQuery") : (void*)0; if (p_glEndQuery) n++;
     *(void **)&p_glEndQueryIndexed = dlsym(mgl, "glEndQueryIndexed"); *(void **)&a_glEndQueryIndexed = apple ? dlsym(apple, "glEndQueryIndexed") : (void*)0; if (p_glEndQueryIndexed) n++;
     *(void **)&p_glEndTransformFeedback = dlsym(mgl, "glEndTransformFeedback"); *(void **)&a_glEndTransformFeedback = apple ? dlsym(apple, "glEndTransformFeedback") : (void*)0; if (p_glEndTransformFeedback) n++;
-    *(void **)&p_glEvalCoord1d = dlsym(mgl, "glEvalCoord1d"); *(void **)&a_glEvalCoord1d = apple ? dlsym(apple, "glEvalCoord1d") : (void*)0; if (p_glEvalCoord1d) n++;
-    *(void **)&p_glEvalCoord1dv = dlsym(mgl, "glEvalCoord1dv"); *(void **)&a_glEvalCoord1dv = apple ? dlsym(apple, "glEvalCoord1dv") : (void*)0; if (p_glEvalCoord1dv) n++;
-    *(void **)&p_glEvalCoord1f = dlsym(mgl, "glEvalCoord1f"); *(void **)&a_glEvalCoord1f = apple ? dlsym(apple, "glEvalCoord1f") : (void*)0; if (p_glEvalCoord1f) n++;
-    *(void **)&p_glEvalCoord1fv = dlsym(mgl, "glEvalCoord1fv"); *(void **)&a_glEvalCoord1fv = apple ? dlsym(apple, "glEvalCoord1fv") : (void*)0; if (p_glEvalCoord1fv) n++;
-    *(void **)&p_glEvalCoord2d = dlsym(mgl, "glEvalCoord2d"); *(void **)&a_glEvalCoord2d = apple ? dlsym(apple, "glEvalCoord2d") : (void*)0; if (p_glEvalCoord2d) n++;
-    *(void **)&p_glEvalCoord2dv = dlsym(mgl, "glEvalCoord2dv"); *(void **)&a_glEvalCoord2dv = apple ? dlsym(apple, "glEvalCoord2dv") : (void*)0; if (p_glEvalCoord2dv) n++;
-    *(void **)&p_glEvalCoord2f = dlsym(mgl, "glEvalCoord2f"); *(void **)&a_glEvalCoord2f = apple ? dlsym(apple, "glEvalCoord2f") : (void*)0; if (p_glEvalCoord2f) n++;
-    *(void **)&p_glEvalCoord2fv = dlsym(mgl, "glEvalCoord2fv"); *(void **)&a_glEvalCoord2fv = apple ? dlsym(apple, "glEvalCoord2fv") : (void*)0; if (p_glEvalCoord2fv) n++;
-    *(void **)&p_glEvalMesh1 = dlsym(mgl, "glEvalMesh1"); *(void **)&a_glEvalMesh1 = apple ? dlsym(apple, "glEvalMesh1") : (void*)0; if (p_glEvalMesh1) n++;
-    *(void **)&p_glEvalMesh2 = dlsym(mgl, "glEvalMesh2"); *(void **)&a_glEvalMesh2 = apple ? dlsym(apple, "glEvalMesh2") : (void*)0; if (p_glEvalMesh2) n++;
-    *(void **)&p_glEvalPoint1 = dlsym(mgl, "glEvalPoint1"); *(void **)&a_glEvalPoint1 = apple ? dlsym(apple, "glEvalPoint1") : (void*)0; if (p_glEvalPoint1) n++;
-    *(void **)&p_glEvalPoint2 = dlsym(mgl, "glEvalPoint2"); *(void **)&a_glEvalPoint2 = apple ? dlsym(apple, "glEvalPoint2") : (void*)0; if (p_glEvalPoint2) n++;
-    *(void **)&p_glFeedbackBuffer = dlsym(mgl, "glFeedbackBuffer"); *(void **)&a_glFeedbackBuffer = apple ? dlsym(apple, "glFeedbackBuffer") : (void*)0; if (p_glFeedbackBuffer) n++;
     *(void **)&p_glFenceSync = dlsym(mgl, "glFenceSync"); *(void **)&a_glFenceSync = apple ? dlsym(apple, "glFenceSync") : (void*)0; if (p_glFenceSync) n++;
     *(void **)&p_glFinish = dlsym(mgl, "glFinish"); *(void **)&a_glFinish = apple ? dlsym(apple, "glFinish") : (void*)0; if (p_glFinish) n++;
     *(void **)&p_glFlush = dlsym(mgl, "glFlush"); *(void **)&a_glFlush = apple ? dlsym(apple, "glFlush") : (void*)0; if (p_glFlush) n++;
     *(void **)&p_glFlushMappedBufferRange = dlsym(mgl, "glFlushMappedBufferRange"); *(void **)&a_glFlushMappedBufferRange = apple ? dlsym(apple, "glFlushMappedBufferRange") : (void*)0; if (p_glFlushMappedBufferRange) n++;
     *(void **)&p_glFlushMappedNamedBufferRange = dlsym(mgl, "glFlushMappedNamedBufferRange"); *(void **)&a_glFlushMappedNamedBufferRange = apple ? dlsym(apple, "glFlushMappedNamedBufferRange") : (void*)0; if (p_glFlushMappedNamedBufferRange) n++;
-    *(void **)&p_glFogCoordPointer = dlsym(mgl, "glFogCoordPointer"); *(void **)&a_glFogCoordPointer = apple ? dlsym(apple, "glFogCoordPointer") : (void*)0; if (p_glFogCoordPointer) n++;
-    *(void **)&p_glFogCoordd = dlsym(mgl, "glFogCoordd"); *(void **)&a_glFogCoordd = apple ? dlsym(apple, "glFogCoordd") : (void*)0; if (p_glFogCoordd) n++;
-    *(void **)&p_glFogCoorddv = dlsym(mgl, "glFogCoorddv"); *(void **)&a_glFogCoorddv = apple ? dlsym(apple, "glFogCoorddv") : (void*)0; if (p_glFogCoorddv) n++;
-    *(void **)&p_glFogCoordf = dlsym(mgl, "glFogCoordf"); *(void **)&a_glFogCoordf = apple ? dlsym(apple, "glFogCoordf") : (void*)0; if (p_glFogCoordf) n++;
-    *(void **)&p_glFogCoordfv = dlsym(mgl, "glFogCoordfv"); *(void **)&a_glFogCoordfv = apple ? dlsym(apple, "glFogCoordfv") : (void*)0; if (p_glFogCoordfv) n++;
-    *(void **)&p_glFogf = dlsym(mgl, "glFogf"); *(void **)&a_glFogf = apple ? dlsym(apple, "glFogf") : (void*)0; if (p_glFogf) n++;
-    *(void **)&p_glFogfv = dlsym(mgl, "glFogfv"); *(void **)&a_glFogfv = apple ? dlsym(apple, "glFogfv") : (void*)0; if (p_glFogfv) n++;
-    *(void **)&p_glFogi = dlsym(mgl, "glFogi"); *(void **)&a_glFogi = apple ? dlsym(apple, "glFogi") : (void*)0; if (p_glFogi) n++;
-    *(void **)&p_glFogiv = dlsym(mgl, "glFogiv"); *(void **)&a_glFogiv = apple ? dlsym(apple, "glFogiv") : (void*)0; if (p_glFogiv) n++;
     *(void **)&p_glFramebufferParameteri = dlsym(mgl, "glFramebufferParameteri"); *(void **)&a_glFramebufferParameteri = apple ? dlsym(apple, "glFramebufferParameteri") : (void*)0; if (p_glFramebufferParameteri) n++;
     *(void **)&p_glFramebufferRenderbuffer = dlsym(mgl, "glFramebufferRenderbuffer"); *(void **)&a_glFramebufferRenderbuffer = apple ? dlsym(apple, "glFramebufferRenderbuffer") : (void*)0; if (p_glFramebufferRenderbuffer) n++;
     *(void **)&p_glFramebufferTexture = dlsym(mgl, "glFramebufferTexture"); *(void **)&a_glFramebufferTexture = apple ? dlsym(apple, "glFramebufferTexture") : (void*)0; if (p_glFramebufferTexture) n++;
@@ -5513,10 +3476,8 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glFramebufferTexture3D = dlsym(mgl, "glFramebufferTexture3D"); *(void **)&a_glFramebufferTexture3D = apple ? dlsym(apple, "glFramebufferTexture3D") : (void*)0; if (p_glFramebufferTexture3D) n++;
     *(void **)&p_glFramebufferTextureLayer = dlsym(mgl, "glFramebufferTextureLayer"); *(void **)&a_glFramebufferTextureLayer = apple ? dlsym(apple, "glFramebufferTextureLayer") : (void*)0; if (p_glFramebufferTextureLayer) n++;
     *(void **)&p_glFrontFace = dlsym(mgl, "glFrontFace"); *(void **)&a_glFrontFace = apple ? dlsym(apple, "glFrontFace") : (void*)0; if (p_glFrontFace) n++;
-    *(void **)&p_glFrustum = dlsym(mgl, "glFrustum"); *(void **)&a_glFrustum = apple ? dlsym(apple, "glFrustum") : (void*)0; if (p_glFrustum) n++;
     *(void **)&p_glGenBuffers = dlsym(mgl, "glGenBuffers"); *(void **)&a_glGenBuffers = apple ? dlsym(apple, "glGenBuffers") : (void*)0; if (p_glGenBuffers) n++;
     *(void **)&p_glGenFramebuffers = dlsym(mgl, "glGenFramebuffers"); *(void **)&a_glGenFramebuffers = apple ? dlsym(apple, "glGenFramebuffers") : (void*)0; if (p_glGenFramebuffers) n++;
-    *(void **)&p_glGenLists = dlsym(mgl, "glGenLists"); *(void **)&a_glGenLists = apple ? dlsym(apple, "glGenLists") : (void*)0; if (p_glGenLists) n++;
     *(void **)&p_glGenProgramPipelines = dlsym(mgl, "glGenProgramPipelines"); *(void **)&a_glGenProgramPipelines = apple ? dlsym(apple, "glGenProgramPipelines") : (void*)0; if (p_glGenProgramPipelines) n++;
     *(void **)&p_glGenQueries = dlsym(mgl, "glGenQueries"); *(void **)&a_glGenQueries = apple ? dlsym(apple, "glGenQueries") : (void*)0; if (p_glGenQueries) n++;
     *(void **)&p_glGenRenderbuffers = dlsym(mgl, "glGenRenderbuffers"); *(void **)&a_glGenRenderbuffers = apple ? dlsym(apple, "glGenRenderbuffers") : (void*)0; if (p_glGenRenderbuffers) n++;
@@ -5544,7 +3505,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glGetBufferParameteriv = dlsym(mgl, "glGetBufferParameteriv"); *(void **)&a_glGetBufferParameteriv = apple ? dlsym(apple, "glGetBufferParameteriv") : (void*)0; if (p_glGetBufferParameteriv) n++;
     *(void **)&p_glGetBufferPointerv = dlsym(mgl, "glGetBufferPointerv"); *(void **)&a_glGetBufferPointerv = apple ? dlsym(apple, "glGetBufferPointerv") : (void*)0; if (p_glGetBufferPointerv) n++;
     *(void **)&p_glGetBufferSubData = dlsym(mgl, "glGetBufferSubData"); *(void **)&a_glGetBufferSubData = apple ? dlsym(apple, "glGetBufferSubData") : (void*)0; if (p_glGetBufferSubData) n++;
-    *(void **)&p_glGetClipPlane = dlsym(mgl, "glGetClipPlane"); *(void **)&a_glGetClipPlane = apple ? dlsym(apple, "glGetClipPlane") : (void*)0; if (p_glGetClipPlane) n++;
     *(void **)&p_glGetCompressedTexImage = dlsym(mgl, "glGetCompressedTexImage"); *(void **)&a_glGetCompressedTexImage = apple ? dlsym(apple, "glGetCompressedTexImage") : (void*)0; if (p_glGetCompressedTexImage) n++;
     *(void **)&p_glGetCompressedTextureImage = dlsym(mgl, "glGetCompressedTextureImage"); *(void **)&a_glGetCompressedTextureImage = apple ? dlsym(apple, "glGetCompressedTextureImage") : (void*)0; if (p_glGetCompressedTextureImage) n++;
     *(void **)&p_glGetCompressedTextureSubImage = dlsym(mgl, "glGetCompressedTextureSubImage"); *(void **)&a_glGetCompressedTextureSubImage = apple ? dlsym(apple, "glGetCompressedTextureSubImage") : (void*)0; if (p_glGetCompressedTextureSubImage) n++;
@@ -5565,13 +3525,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glGetIntegerv = dlsym(mgl, "glGetIntegerv"); *(void **)&a_glGetIntegerv = apple ? dlsym(apple, "glGetIntegerv") : (void*)0; if (p_glGetIntegerv) n++;
     *(void **)&p_glGetInternalformati64v = dlsym(mgl, "glGetInternalformati64v"); *(void **)&a_glGetInternalformati64v = apple ? dlsym(apple, "glGetInternalformati64v") : (void*)0; if (p_glGetInternalformati64v) n++;
     *(void **)&p_glGetInternalformativ = dlsym(mgl, "glGetInternalformativ"); *(void **)&a_glGetInternalformativ = apple ? dlsym(apple, "glGetInternalformativ") : (void*)0; if (p_glGetInternalformativ) n++;
-    *(void **)&p_glGetLightfv = dlsym(mgl, "glGetLightfv"); *(void **)&a_glGetLightfv = apple ? dlsym(apple, "glGetLightfv") : (void*)0; if (p_glGetLightfv) n++;
-    *(void **)&p_glGetLightiv = dlsym(mgl, "glGetLightiv"); *(void **)&a_glGetLightiv = apple ? dlsym(apple, "glGetLightiv") : (void*)0; if (p_glGetLightiv) n++;
-    *(void **)&p_glGetMapdv = dlsym(mgl, "glGetMapdv"); *(void **)&a_glGetMapdv = apple ? dlsym(apple, "glGetMapdv") : (void*)0; if (p_glGetMapdv) n++;
-    *(void **)&p_glGetMapfv = dlsym(mgl, "glGetMapfv"); *(void **)&a_glGetMapfv = apple ? dlsym(apple, "glGetMapfv") : (void*)0; if (p_glGetMapfv) n++;
-    *(void **)&p_glGetMapiv = dlsym(mgl, "glGetMapiv"); *(void **)&a_glGetMapiv = apple ? dlsym(apple, "glGetMapiv") : (void*)0; if (p_glGetMapiv) n++;
-    *(void **)&p_glGetMaterialfv = dlsym(mgl, "glGetMaterialfv"); *(void **)&a_glGetMaterialfv = apple ? dlsym(apple, "glGetMaterialfv") : (void*)0; if (p_glGetMaterialfv) n++;
-    *(void **)&p_glGetMaterialiv = dlsym(mgl, "glGetMaterialiv"); *(void **)&a_glGetMaterialiv = apple ? dlsym(apple, "glGetMaterialiv") : (void*)0; if (p_glGetMaterialiv) n++;
     *(void **)&p_glGetMultisamplefv = dlsym(mgl, "glGetMultisamplefv"); *(void **)&a_glGetMultisamplefv = apple ? dlsym(apple, "glGetMultisamplefv") : (void*)0; if (p_glGetMultisamplefv) n++;
     *(void **)&p_glGetNamedBufferParameteri64v = dlsym(mgl, "glGetNamedBufferParameteri64v"); *(void **)&a_glGetNamedBufferParameteri64v = apple ? dlsym(apple, "glGetNamedBufferParameteri64v") : (void*)0; if (p_glGetNamedBufferParameteri64v) n++;
     *(void **)&p_glGetNamedBufferParameteriv = dlsym(mgl, "glGetNamedBufferParameteriv"); *(void **)&a_glGetNamedBufferParameteriv = apple ? dlsym(apple, "glGetNamedBufferParameteriv") : (void*)0; if (p_glGetNamedBufferParameteriv) n++;
@@ -5582,11 +3535,7 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glGetNamedRenderbufferParameteriv = dlsym(mgl, "glGetNamedRenderbufferParameteriv"); *(void **)&a_glGetNamedRenderbufferParameteriv = apple ? dlsym(apple, "glGetNamedRenderbufferParameteriv") : (void*)0; if (p_glGetNamedRenderbufferParameteriv) n++;
     *(void **)&p_glGetObjectLabel = dlsym(mgl, "glGetObjectLabel"); *(void **)&a_glGetObjectLabel = apple ? dlsym(apple, "glGetObjectLabel") : (void*)0; if (p_glGetObjectLabel) n++;
     *(void **)&p_glGetObjectPtrLabel = dlsym(mgl, "glGetObjectPtrLabel"); *(void **)&a_glGetObjectPtrLabel = apple ? dlsym(apple, "glGetObjectPtrLabel") : (void*)0; if (p_glGetObjectPtrLabel) n++;
-    *(void **)&p_glGetPixelMapfv = dlsym(mgl, "glGetPixelMapfv"); *(void **)&a_glGetPixelMapfv = apple ? dlsym(apple, "glGetPixelMapfv") : (void*)0; if (p_glGetPixelMapfv) n++;
-    *(void **)&p_glGetPixelMapuiv = dlsym(mgl, "glGetPixelMapuiv"); *(void **)&a_glGetPixelMapuiv = apple ? dlsym(apple, "glGetPixelMapuiv") : (void*)0; if (p_glGetPixelMapuiv) n++;
-    *(void **)&p_glGetPixelMapusv = dlsym(mgl, "glGetPixelMapusv"); *(void **)&a_glGetPixelMapusv = apple ? dlsym(apple, "glGetPixelMapusv") : (void*)0; if (p_glGetPixelMapusv) n++;
     *(void **)&p_glGetPointerv = dlsym(mgl, "glGetPointerv"); *(void **)&a_glGetPointerv = apple ? dlsym(apple, "glGetPointerv") : (void*)0; if (p_glGetPointerv) n++;
-    *(void **)&p_glGetPolygonStipple = dlsym(mgl, "glGetPolygonStipple"); *(void **)&a_glGetPolygonStipple = apple ? dlsym(apple, "glGetPolygonStipple") : (void*)0; if (p_glGetPolygonStipple) n++;
     *(void **)&p_glGetProgramBinary = dlsym(mgl, "glGetProgramBinary"); *(void **)&a_glGetProgramBinary = apple ? dlsym(apple, "glGetProgramBinary") : (void*)0; if (p_glGetProgramBinary) n++;
     *(void **)&p_glGetProgramInfoLog = dlsym(mgl, "glGetProgramInfoLog"); *(void **)&a_glGetProgramInfoLog = apple ? dlsym(apple, "glGetProgramInfoLog") : (void*)0; if (p_glGetProgramInfoLog) n++;
     *(void **)&p_glGetProgramInterfaceiv = dlsym(mgl, "glGetProgramInterfaceiv"); *(void **)&a_glGetProgramInterfaceiv = apple ? dlsym(apple, "glGetProgramInterfaceiv") : (void*)0; if (p_glGetProgramInterfaceiv) n++;
@@ -5623,11 +3572,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glGetSubroutineIndex = dlsym(mgl, "glGetSubroutineIndex"); *(void **)&a_glGetSubroutineIndex = apple ? dlsym(apple, "glGetSubroutineIndex") : (void*)0; if (p_glGetSubroutineIndex) n++;
     *(void **)&p_glGetSubroutineUniformLocation = dlsym(mgl, "glGetSubroutineUniformLocation"); *(void **)&a_glGetSubroutineUniformLocation = apple ? dlsym(apple, "glGetSubroutineUniformLocation") : (void*)0; if (p_glGetSubroutineUniformLocation) n++;
     *(void **)&p_glGetSynciv = dlsym(mgl, "glGetSynciv"); *(void **)&a_glGetSynciv = apple ? dlsym(apple, "glGetSynciv") : (void*)0; if (p_glGetSynciv) n++;
-    *(void **)&p_glGetTexEnvfv = dlsym(mgl, "glGetTexEnvfv"); *(void **)&a_glGetTexEnvfv = apple ? dlsym(apple, "glGetTexEnvfv") : (void*)0; if (p_glGetTexEnvfv) n++;
-    *(void **)&p_glGetTexEnviv = dlsym(mgl, "glGetTexEnviv"); *(void **)&a_glGetTexEnviv = apple ? dlsym(apple, "glGetTexEnviv") : (void*)0; if (p_glGetTexEnviv) n++;
-    *(void **)&p_glGetTexGendv = dlsym(mgl, "glGetTexGendv"); *(void **)&a_glGetTexGendv = apple ? dlsym(apple, "glGetTexGendv") : (void*)0; if (p_glGetTexGendv) n++;
-    *(void **)&p_glGetTexGenfv = dlsym(mgl, "glGetTexGenfv"); *(void **)&a_glGetTexGenfv = apple ? dlsym(apple, "glGetTexGenfv") : (void*)0; if (p_glGetTexGenfv) n++;
-    *(void **)&p_glGetTexGeniv = dlsym(mgl, "glGetTexGeniv"); *(void **)&a_glGetTexGeniv = apple ? dlsym(apple, "glGetTexGeniv") : (void*)0; if (p_glGetTexGeniv) n++;
     *(void **)&p_glGetTexImage = dlsym(mgl, "glGetTexImage"); *(void **)&a_glGetTexImage = apple ? dlsym(apple, "glGetTexImage") : (void*)0; if (p_glGetTexImage) n++;
     *(void **)&p_glGetTexLevelParameterfv = dlsym(mgl, "glGetTexLevelParameterfv"); *(void **)&a_glGetTexLevelParameterfv = apple ? dlsym(apple, "glGetTexLevelParameterfv") : (void*)0; if (p_glGetTexLevelParameterfv) n++;
     *(void **)&p_glGetTexLevelParameteriv = dlsym(mgl, "glGetTexLevelParameteriv"); *(void **)&a_glGetTexLevelParameteriv = apple ? dlsym(apple, "glGetTexLevelParameteriv") : (void*)0; if (p_glGetTexLevelParameteriv) n++;
@@ -5665,39 +3609,13 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glGetVertexAttribdv = dlsym(mgl, "glGetVertexAttribdv"); *(void **)&a_glGetVertexAttribdv = apple ? dlsym(apple, "glGetVertexAttribdv") : (void*)0; if (p_glGetVertexAttribdv) n++;
     *(void **)&p_glGetVertexAttribfv = dlsym(mgl, "glGetVertexAttribfv"); *(void **)&a_glGetVertexAttribfv = apple ? dlsym(apple, "glGetVertexAttribfv") : (void*)0; if (p_glGetVertexAttribfv) n++;
     *(void **)&p_glGetVertexAttribiv = dlsym(mgl, "glGetVertexAttribiv"); *(void **)&a_glGetVertexAttribiv = apple ? dlsym(apple, "glGetVertexAttribiv") : (void*)0; if (p_glGetVertexAttribiv) n++;
-    *(void **)&p_glGetnColorTable = dlsym(mgl, "glGetnColorTable"); *(void **)&a_glGetnColorTable = apple ? dlsym(apple, "glGetnColorTable") : (void*)0; if (p_glGetnColorTable) n++;
     *(void **)&p_glGetnCompressedTexImage = dlsym(mgl, "glGetnCompressedTexImage"); *(void **)&a_glGetnCompressedTexImage = apple ? dlsym(apple, "glGetnCompressedTexImage") : (void*)0; if (p_glGetnCompressedTexImage) n++;
-    *(void **)&p_glGetnConvolutionFilter = dlsym(mgl, "glGetnConvolutionFilter"); *(void **)&a_glGetnConvolutionFilter = apple ? dlsym(apple, "glGetnConvolutionFilter") : (void*)0; if (p_glGetnConvolutionFilter) n++;
-    *(void **)&p_glGetnHistogram = dlsym(mgl, "glGetnHistogram"); *(void **)&a_glGetnHistogram = apple ? dlsym(apple, "glGetnHistogram") : (void*)0; if (p_glGetnHistogram) n++;
-    *(void **)&p_glGetnMapdv = dlsym(mgl, "glGetnMapdv"); *(void **)&a_glGetnMapdv = apple ? dlsym(apple, "glGetnMapdv") : (void*)0; if (p_glGetnMapdv) n++;
-    *(void **)&p_glGetnMapfv = dlsym(mgl, "glGetnMapfv"); *(void **)&a_glGetnMapfv = apple ? dlsym(apple, "glGetnMapfv") : (void*)0; if (p_glGetnMapfv) n++;
-    *(void **)&p_glGetnMapiv = dlsym(mgl, "glGetnMapiv"); *(void **)&a_glGetnMapiv = apple ? dlsym(apple, "glGetnMapiv") : (void*)0; if (p_glGetnMapiv) n++;
-    *(void **)&p_glGetnMinmax = dlsym(mgl, "glGetnMinmax"); *(void **)&a_glGetnMinmax = apple ? dlsym(apple, "glGetnMinmax") : (void*)0; if (p_glGetnMinmax) n++;
-    *(void **)&p_glGetnPixelMapfv = dlsym(mgl, "glGetnPixelMapfv"); *(void **)&a_glGetnPixelMapfv = apple ? dlsym(apple, "glGetnPixelMapfv") : (void*)0; if (p_glGetnPixelMapfv) n++;
-    *(void **)&p_glGetnPixelMapuiv = dlsym(mgl, "glGetnPixelMapuiv"); *(void **)&a_glGetnPixelMapuiv = apple ? dlsym(apple, "glGetnPixelMapuiv") : (void*)0; if (p_glGetnPixelMapuiv) n++;
-    *(void **)&p_glGetnPixelMapusv = dlsym(mgl, "glGetnPixelMapusv"); *(void **)&a_glGetnPixelMapusv = apple ? dlsym(apple, "glGetnPixelMapusv") : (void*)0; if (p_glGetnPixelMapusv) n++;
-    *(void **)&p_glGetnPolygonStipple = dlsym(mgl, "glGetnPolygonStipple"); *(void **)&a_glGetnPolygonStipple = apple ? dlsym(apple, "glGetnPolygonStipple") : (void*)0; if (p_glGetnPolygonStipple) n++;
-    *(void **)&p_glGetnSeparableFilter = dlsym(mgl, "glGetnSeparableFilter"); *(void **)&a_glGetnSeparableFilter = apple ? dlsym(apple, "glGetnSeparableFilter") : (void*)0; if (p_glGetnSeparableFilter) n++;
     *(void **)&p_glGetnTexImage = dlsym(mgl, "glGetnTexImage"); *(void **)&a_glGetnTexImage = apple ? dlsym(apple, "glGetnTexImage") : (void*)0; if (p_glGetnTexImage) n++;
     *(void **)&p_glGetnUniformdv = dlsym(mgl, "glGetnUniformdv"); *(void **)&a_glGetnUniformdv = apple ? dlsym(apple, "glGetnUniformdv") : (void*)0; if (p_glGetnUniformdv) n++;
     *(void **)&p_glGetnUniformfv = dlsym(mgl, "glGetnUniformfv"); *(void **)&a_glGetnUniformfv = apple ? dlsym(apple, "glGetnUniformfv") : (void*)0; if (p_glGetnUniformfv) n++;
     *(void **)&p_glGetnUniformiv = dlsym(mgl, "glGetnUniformiv"); *(void **)&a_glGetnUniformiv = apple ? dlsym(apple, "glGetnUniformiv") : (void*)0; if (p_glGetnUniformiv) n++;
     *(void **)&p_glGetnUniformuiv = dlsym(mgl, "glGetnUniformuiv"); *(void **)&a_glGetnUniformuiv = apple ? dlsym(apple, "glGetnUniformuiv") : (void*)0; if (p_glGetnUniformuiv) n++;
     *(void **)&p_glHint = dlsym(mgl, "glHint"); *(void **)&a_glHint = apple ? dlsym(apple, "glHint") : (void*)0; if (p_glHint) n++;
-    *(void **)&p_glIndexMask = dlsym(mgl, "glIndexMask"); *(void **)&a_glIndexMask = apple ? dlsym(apple, "glIndexMask") : (void*)0; if (p_glIndexMask) n++;
-    *(void **)&p_glIndexPointer = dlsym(mgl, "glIndexPointer"); *(void **)&a_glIndexPointer = apple ? dlsym(apple, "glIndexPointer") : (void*)0; if (p_glIndexPointer) n++;
-    *(void **)&p_glIndexd = dlsym(mgl, "glIndexd"); *(void **)&a_glIndexd = apple ? dlsym(apple, "glIndexd") : (void*)0; if (p_glIndexd) n++;
-    *(void **)&p_glIndexdv = dlsym(mgl, "glIndexdv"); *(void **)&a_glIndexdv = apple ? dlsym(apple, "glIndexdv") : (void*)0; if (p_glIndexdv) n++;
-    *(void **)&p_glIndexf = dlsym(mgl, "glIndexf"); *(void **)&a_glIndexf = apple ? dlsym(apple, "glIndexf") : (void*)0; if (p_glIndexf) n++;
-    *(void **)&p_glIndexfv = dlsym(mgl, "glIndexfv"); *(void **)&a_glIndexfv = apple ? dlsym(apple, "glIndexfv") : (void*)0; if (p_glIndexfv) n++;
-    *(void **)&p_glIndexi = dlsym(mgl, "glIndexi"); *(void **)&a_glIndexi = apple ? dlsym(apple, "glIndexi") : (void*)0; if (p_glIndexi) n++;
-    *(void **)&p_glIndexiv = dlsym(mgl, "glIndexiv"); *(void **)&a_glIndexiv = apple ? dlsym(apple, "glIndexiv") : (void*)0; if (p_glIndexiv) n++;
-    *(void **)&p_glIndexs = dlsym(mgl, "glIndexs"); *(void **)&a_glIndexs = apple ? dlsym(apple, "glIndexs") : (void*)0; if (p_glIndexs) n++;
-    *(void **)&p_glIndexsv = dlsym(mgl, "glIndexsv"); *(void **)&a_glIndexsv = apple ? dlsym(apple, "glIndexsv") : (void*)0; if (p_glIndexsv) n++;
-    *(void **)&p_glIndexub = dlsym(mgl, "glIndexub"); *(void **)&a_glIndexub = apple ? dlsym(apple, "glIndexub") : (void*)0; if (p_glIndexub) n++;
-    *(void **)&p_glIndexubv = dlsym(mgl, "glIndexubv"); *(void **)&a_glIndexubv = apple ? dlsym(apple, "glIndexubv") : (void*)0; if (p_glIndexubv) n++;
-    *(void **)&p_glInitNames = dlsym(mgl, "glInitNames"); *(void **)&a_glInitNames = apple ? dlsym(apple, "glInitNames") : (void*)0; if (p_glInitNames) n++;
-    *(void **)&p_glInterleavedArrays = dlsym(mgl, "glInterleavedArrays"); *(void **)&a_glInterleavedArrays = apple ? dlsym(apple, "glInterleavedArrays") : (void*)0; if (p_glInterleavedArrays) n++;
     *(void **)&p_glInvalidateBufferData = dlsym(mgl, "glInvalidateBufferData"); *(void **)&a_glInvalidateBufferData = apple ? dlsym(apple, "glInvalidateBufferData") : (void*)0; if (p_glInvalidateBufferData) n++;
     *(void **)&p_glInvalidateBufferSubData = dlsym(mgl, "glInvalidateBufferSubData"); *(void **)&a_glInvalidateBufferSubData = apple ? dlsym(apple, "glInvalidateBufferSubData") : (void*)0; if (p_glInvalidateBufferSubData) n++;
     *(void **)&p_glInvalidateFramebuffer = dlsym(mgl, "glInvalidateFramebuffer"); *(void **)&a_glInvalidateFramebuffer = apple ? dlsym(apple, "glInvalidateFramebuffer") : (void*)0; if (p_glInvalidateFramebuffer) n++;
@@ -5710,7 +3628,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glIsEnabled = dlsym(mgl, "glIsEnabled"); *(void **)&a_glIsEnabled = apple ? dlsym(apple, "glIsEnabled") : (void*)0; if (p_glIsEnabled) n++;
     *(void **)&p_glIsEnabledi = dlsym(mgl, "glIsEnabledi"); *(void **)&a_glIsEnabledi = apple ? dlsym(apple, "glIsEnabledi") : (void*)0; if (p_glIsEnabledi) n++;
     *(void **)&p_glIsFramebuffer = dlsym(mgl, "glIsFramebuffer"); *(void **)&a_glIsFramebuffer = apple ? dlsym(apple, "glIsFramebuffer") : (void*)0; if (p_glIsFramebuffer) n++;
-    *(void **)&p_glIsList = dlsym(mgl, "glIsList"); *(void **)&a_glIsList = apple ? dlsym(apple, "glIsList") : (void*)0; if (p_glIsList) n++;
     *(void **)&p_glIsProgram = dlsym(mgl, "glIsProgram"); *(void **)&a_glIsProgram = apple ? dlsym(apple, "glIsProgram") : (void*)0; if (p_glIsProgram) n++;
     *(void **)&p_glIsProgramPipeline = dlsym(mgl, "glIsProgramPipeline"); *(void **)&a_glIsProgramPipeline = apple ? dlsym(apple, "glIsProgramPipeline") : (void*)0; if (p_glIsProgramPipeline) n++;
     *(void **)&p_glIsQuery = dlsym(mgl, "glIsQuery"); *(void **)&a_glIsQuery = apple ? dlsym(apple, "glIsQuery") : (void*)0; if (p_glIsQuery) n++;
@@ -5721,49 +3638,16 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glIsTexture = dlsym(mgl, "glIsTexture"); *(void **)&a_glIsTexture = apple ? dlsym(apple, "glIsTexture") : (void*)0; if (p_glIsTexture) n++;
     *(void **)&p_glIsTransformFeedback = dlsym(mgl, "glIsTransformFeedback"); *(void **)&a_glIsTransformFeedback = apple ? dlsym(apple, "glIsTransformFeedback") : (void*)0; if (p_glIsTransformFeedback) n++;
     *(void **)&p_glIsVertexArray = dlsym(mgl, "glIsVertexArray"); *(void **)&a_glIsVertexArray = apple ? dlsym(apple, "glIsVertexArray") : (void*)0; if (p_glIsVertexArray) n++;
-    *(void **)&p_glLightModelf = dlsym(mgl, "glLightModelf"); *(void **)&a_glLightModelf = apple ? dlsym(apple, "glLightModelf") : (void*)0; if (p_glLightModelf) n++;
-    *(void **)&p_glLightModelfv = dlsym(mgl, "glLightModelfv"); *(void **)&a_glLightModelfv = apple ? dlsym(apple, "glLightModelfv") : (void*)0; if (p_glLightModelfv) n++;
-    *(void **)&p_glLightModeli = dlsym(mgl, "glLightModeli"); *(void **)&a_glLightModeli = apple ? dlsym(apple, "glLightModeli") : (void*)0; if (p_glLightModeli) n++;
-    *(void **)&p_glLightModeliv = dlsym(mgl, "glLightModeliv"); *(void **)&a_glLightModeliv = apple ? dlsym(apple, "glLightModeliv") : (void*)0; if (p_glLightModeliv) n++;
-    *(void **)&p_glLightf = dlsym(mgl, "glLightf"); *(void **)&a_glLightf = apple ? dlsym(apple, "glLightf") : (void*)0; if (p_glLightf) n++;
-    *(void **)&p_glLightfv = dlsym(mgl, "glLightfv"); *(void **)&a_glLightfv = apple ? dlsym(apple, "glLightfv") : (void*)0; if (p_glLightfv) n++;
-    *(void **)&p_glLighti = dlsym(mgl, "glLighti"); *(void **)&a_glLighti = apple ? dlsym(apple, "glLighti") : (void*)0; if (p_glLighti) n++;
-    *(void **)&p_glLightiv = dlsym(mgl, "glLightiv"); *(void **)&a_glLightiv = apple ? dlsym(apple, "glLightiv") : (void*)0; if (p_glLightiv) n++;
-    *(void **)&p_glLineStipple = dlsym(mgl, "glLineStipple"); *(void **)&a_glLineStipple = apple ? dlsym(apple, "glLineStipple") : (void*)0; if (p_glLineStipple) n++;
     *(void **)&p_glLineWidth = dlsym(mgl, "glLineWidth"); *(void **)&a_glLineWidth = apple ? dlsym(apple, "glLineWidth") : (void*)0; if (p_glLineWidth) n++;
     *(void **)&p_glLinkProgram = dlsym(mgl, "glLinkProgram"); *(void **)&a_glLinkProgram = apple ? dlsym(apple, "glLinkProgram") : (void*)0; if (p_glLinkProgram) n++;
-    *(void **)&p_glListBase = dlsym(mgl, "glListBase"); *(void **)&a_glListBase = apple ? dlsym(apple, "glListBase") : (void*)0; if (p_glListBase) n++;
-    *(void **)&p_glLoadIdentity = dlsym(mgl, "glLoadIdentity"); *(void **)&a_glLoadIdentity = apple ? dlsym(apple, "glLoadIdentity") : (void*)0; if (p_glLoadIdentity) n++;
-    *(void **)&p_glLoadMatrixd = dlsym(mgl, "glLoadMatrixd"); *(void **)&a_glLoadMatrixd = apple ? dlsym(apple, "glLoadMatrixd") : (void*)0; if (p_glLoadMatrixd) n++;
-    *(void **)&p_glLoadMatrixf = dlsym(mgl, "glLoadMatrixf"); *(void **)&a_glLoadMatrixf = apple ? dlsym(apple, "glLoadMatrixf") : (void*)0; if (p_glLoadMatrixf) n++;
-    *(void **)&p_glLoadName = dlsym(mgl, "glLoadName"); *(void **)&a_glLoadName = apple ? dlsym(apple, "glLoadName") : (void*)0; if (p_glLoadName) n++;
-    *(void **)&p_glLoadTransposeMatrixd = dlsym(mgl, "glLoadTransposeMatrixd"); *(void **)&a_glLoadTransposeMatrixd = apple ? dlsym(apple, "glLoadTransposeMatrixd") : (void*)0; if (p_glLoadTransposeMatrixd) n++;
-    *(void **)&p_glLoadTransposeMatrixf = dlsym(mgl, "glLoadTransposeMatrixf"); *(void **)&a_glLoadTransposeMatrixf = apple ? dlsym(apple, "glLoadTransposeMatrixf") : (void*)0; if (p_glLoadTransposeMatrixf) n++;
     *(void **)&p_glLogicOp = dlsym(mgl, "glLogicOp"); *(void **)&a_glLogicOp = apple ? dlsym(apple, "glLogicOp") : (void*)0; if (p_glLogicOp) n++;
-    *(void **)&p_glMap1d = dlsym(mgl, "glMap1d"); *(void **)&a_glMap1d = apple ? dlsym(apple, "glMap1d") : (void*)0; if (p_glMap1d) n++;
-    *(void **)&p_glMap1f = dlsym(mgl, "glMap1f"); *(void **)&a_glMap1f = apple ? dlsym(apple, "glMap1f") : (void*)0; if (p_glMap1f) n++;
-    *(void **)&p_glMap2d = dlsym(mgl, "glMap2d"); *(void **)&a_glMap2d = apple ? dlsym(apple, "glMap2d") : (void*)0; if (p_glMap2d) n++;
-    *(void **)&p_glMap2f = dlsym(mgl, "glMap2f"); *(void **)&a_glMap2f = apple ? dlsym(apple, "glMap2f") : (void*)0; if (p_glMap2f) n++;
     *(void **)&p_glMapBuffer = dlsym(mgl, "glMapBuffer"); *(void **)&a_glMapBuffer = apple ? dlsym(apple, "glMapBuffer") : (void*)0; if (p_glMapBuffer) n++;
     *(void **)&p_glMapBufferRange = dlsym(mgl, "glMapBufferRange"); *(void **)&a_glMapBufferRange = apple ? dlsym(apple, "glMapBufferRange") : (void*)0; if (p_glMapBufferRange) n++;
-    *(void **)&p_glMapGrid1d = dlsym(mgl, "glMapGrid1d"); *(void **)&a_glMapGrid1d = apple ? dlsym(apple, "glMapGrid1d") : (void*)0; if (p_glMapGrid1d) n++;
-    *(void **)&p_glMapGrid1f = dlsym(mgl, "glMapGrid1f"); *(void **)&a_glMapGrid1f = apple ? dlsym(apple, "glMapGrid1f") : (void*)0; if (p_glMapGrid1f) n++;
-    *(void **)&p_glMapGrid2d = dlsym(mgl, "glMapGrid2d"); *(void **)&a_glMapGrid2d = apple ? dlsym(apple, "glMapGrid2d") : (void*)0; if (p_glMapGrid2d) n++;
-    *(void **)&p_glMapGrid2f = dlsym(mgl, "glMapGrid2f"); *(void **)&a_glMapGrid2f = apple ? dlsym(apple, "glMapGrid2f") : (void*)0; if (p_glMapGrid2f) n++;
     *(void **)&p_glMapNamedBuffer = dlsym(mgl, "glMapNamedBuffer"); *(void **)&a_glMapNamedBuffer = apple ? dlsym(apple, "glMapNamedBuffer") : (void*)0; if (p_glMapNamedBuffer) n++;
     *(void **)&p_glMapNamedBufferRange = dlsym(mgl, "glMapNamedBufferRange"); *(void **)&a_glMapNamedBufferRange = apple ? dlsym(apple, "glMapNamedBufferRange") : (void*)0; if (p_glMapNamedBufferRange) n++;
-    *(void **)&p_glMaterialf = dlsym(mgl, "glMaterialf"); *(void **)&a_glMaterialf = apple ? dlsym(apple, "glMaterialf") : (void*)0; if (p_glMaterialf) n++;
-    *(void **)&p_glMaterialfv = dlsym(mgl, "glMaterialfv"); *(void **)&a_glMaterialfv = apple ? dlsym(apple, "glMaterialfv") : (void*)0; if (p_glMaterialfv) n++;
-    *(void **)&p_glMateriali = dlsym(mgl, "glMateriali"); *(void **)&a_glMateriali = apple ? dlsym(apple, "glMateriali") : (void*)0; if (p_glMateriali) n++;
-    *(void **)&p_glMaterialiv = dlsym(mgl, "glMaterialiv"); *(void **)&a_glMaterialiv = apple ? dlsym(apple, "glMaterialiv") : (void*)0; if (p_glMaterialiv) n++;
-    *(void **)&p_glMatrixMode = dlsym(mgl, "glMatrixMode"); *(void **)&a_glMatrixMode = apple ? dlsym(apple, "glMatrixMode") : (void*)0; if (p_glMatrixMode) n++;
     *(void **)&p_glMemoryBarrier = dlsym(mgl, "glMemoryBarrier"); *(void **)&a_glMemoryBarrier = apple ? dlsym(apple, "glMemoryBarrier") : (void*)0; if (p_glMemoryBarrier) n++;
     *(void **)&p_glMemoryBarrierByRegion = dlsym(mgl, "glMemoryBarrierByRegion"); *(void **)&a_glMemoryBarrierByRegion = apple ? dlsym(apple, "glMemoryBarrierByRegion") : (void*)0; if (p_glMemoryBarrierByRegion) n++;
     *(void **)&p_glMinSampleShading = dlsym(mgl, "glMinSampleShading"); *(void **)&a_glMinSampleShading = apple ? dlsym(apple, "glMinSampleShading") : (void*)0; if (p_glMinSampleShading) n++;
-    *(void **)&p_glMultMatrixd = dlsym(mgl, "glMultMatrixd"); *(void **)&a_glMultMatrixd = apple ? dlsym(apple, "glMultMatrixd") : (void*)0; if (p_glMultMatrixd) n++;
-    *(void **)&p_glMultMatrixf = dlsym(mgl, "glMultMatrixf"); *(void **)&a_glMultMatrixf = apple ? dlsym(apple, "glMultMatrixf") : (void*)0; if (p_glMultMatrixf) n++;
-    *(void **)&p_glMultTransposeMatrixd = dlsym(mgl, "glMultTransposeMatrixd"); *(void **)&a_glMultTransposeMatrixd = apple ? dlsym(apple, "glMultTransposeMatrixd") : (void*)0; if (p_glMultTransposeMatrixd) n++;
-    *(void **)&p_glMultTransposeMatrixf = dlsym(mgl, "glMultTransposeMatrixf"); *(void **)&a_glMultTransposeMatrixf = apple ? dlsym(apple, "glMultTransposeMatrixf") : (void*)0; if (p_glMultTransposeMatrixf) n++;
     *(void **)&p_glMultiDrawArrays = dlsym(mgl, "glMultiDrawArrays"); *(void **)&a_glMultiDrawArrays = apple ? dlsym(apple, "glMultiDrawArrays") : (void*)0; if (p_glMultiDrawArrays) n++;
     *(void **)&p_glMultiDrawArraysIndirect = dlsym(mgl, "glMultiDrawArraysIndirect"); *(void **)&a_glMultiDrawArraysIndirect = apple ? dlsym(apple, "glMultiDrawArraysIndirect") : (void*)0; if (p_glMultiDrawArraysIndirect) n++;
     *(void **)&p_glMultiDrawArraysIndirectCount = dlsym(mgl, "glMultiDrawArraysIndirectCount"); *(void **)&a_glMultiDrawArraysIndirectCount = apple ? dlsym(apple, "glMultiDrawArraysIndirectCount") : (void*)0; if (p_glMultiDrawArraysIndirectCount) n++;
@@ -5771,46 +3655,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glMultiDrawElementsBaseVertex = dlsym(mgl, "glMultiDrawElementsBaseVertex"); *(void **)&a_glMultiDrawElementsBaseVertex = apple ? dlsym(apple, "glMultiDrawElementsBaseVertex") : (void*)0; if (p_glMultiDrawElementsBaseVertex) n++;
     *(void **)&p_glMultiDrawElementsIndirect = dlsym(mgl, "glMultiDrawElementsIndirect"); *(void **)&a_glMultiDrawElementsIndirect = apple ? dlsym(apple, "glMultiDrawElementsIndirect") : (void*)0; if (p_glMultiDrawElementsIndirect) n++;
     *(void **)&p_glMultiDrawElementsIndirectCount = dlsym(mgl, "glMultiDrawElementsIndirectCount"); *(void **)&a_glMultiDrawElementsIndirectCount = apple ? dlsym(apple, "glMultiDrawElementsIndirectCount") : (void*)0; if (p_glMultiDrawElementsIndirectCount) n++;
-    *(void **)&p_glMultiTexCoord1d = dlsym(mgl, "glMultiTexCoord1d"); *(void **)&a_glMultiTexCoord1d = apple ? dlsym(apple, "glMultiTexCoord1d") : (void*)0; if (p_glMultiTexCoord1d) n++;
-    *(void **)&p_glMultiTexCoord1dv = dlsym(mgl, "glMultiTexCoord1dv"); *(void **)&a_glMultiTexCoord1dv = apple ? dlsym(apple, "glMultiTexCoord1dv") : (void*)0; if (p_glMultiTexCoord1dv) n++;
-    *(void **)&p_glMultiTexCoord1f = dlsym(mgl, "glMultiTexCoord1f"); *(void **)&a_glMultiTexCoord1f = apple ? dlsym(apple, "glMultiTexCoord1f") : (void*)0; if (p_glMultiTexCoord1f) n++;
-    *(void **)&p_glMultiTexCoord1fv = dlsym(mgl, "glMultiTexCoord1fv"); *(void **)&a_glMultiTexCoord1fv = apple ? dlsym(apple, "glMultiTexCoord1fv") : (void*)0; if (p_glMultiTexCoord1fv) n++;
-    *(void **)&p_glMultiTexCoord1i = dlsym(mgl, "glMultiTexCoord1i"); *(void **)&a_glMultiTexCoord1i = apple ? dlsym(apple, "glMultiTexCoord1i") : (void*)0; if (p_glMultiTexCoord1i) n++;
-    *(void **)&p_glMultiTexCoord1iv = dlsym(mgl, "glMultiTexCoord1iv"); *(void **)&a_glMultiTexCoord1iv = apple ? dlsym(apple, "glMultiTexCoord1iv") : (void*)0; if (p_glMultiTexCoord1iv) n++;
-    *(void **)&p_glMultiTexCoord1s = dlsym(mgl, "glMultiTexCoord1s"); *(void **)&a_glMultiTexCoord1s = apple ? dlsym(apple, "glMultiTexCoord1s") : (void*)0; if (p_glMultiTexCoord1s) n++;
-    *(void **)&p_glMultiTexCoord1sv = dlsym(mgl, "glMultiTexCoord1sv"); *(void **)&a_glMultiTexCoord1sv = apple ? dlsym(apple, "glMultiTexCoord1sv") : (void*)0; if (p_glMultiTexCoord1sv) n++;
-    *(void **)&p_glMultiTexCoord2d = dlsym(mgl, "glMultiTexCoord2d"); *(void **)&a_glMultiTexCoord2d = apple ? dlsym(apple, "glMultiTexCoord2d") : (void*)0; if (p_glMultiTexCoord2d) n++;
-    *(void **)&p_glMultiTexCoord2dv = dlsym(mgl, "glMultiTexCoord2dv"); *(void **)&a_glMultiTexCoord2dv = apple ? dlsym(apple, "glMultiTexCoord2dv") : (void*)0; if (p_glMultiTexCoord2dv) n++;
-    *(void **)&p_glMultiTexCoord2f = dlsym(mgl, "glMultiTexCoord2f"); *(void **)&a_glMultiTexCoord2f = apple ? dlsym(apple, "glMultiTexCoord2f") : (void*)0; if (p_glMultiTexCoord2f) n++;
-    *(void **)&p_glMultiTexCoord2fv = dlsym(mgl, "glMultiTexCoord2fv"); *(void **)&a_glMultiTexCoord2fv = apple ? dlsym(apple, "glMultiTexCoord2fv") : (void*)0; if (p_glMultiTexCoord2fv) n++;
-    *(void **)&p_glMultiTexCoord2i = dlsym(mgl, "glMultiTexCoord2i"); *(void **)&a_glMultiTexCoord2i = apple ? dlsym(apple, "glMultiTexCoord2i") : (void*)0; if (p_glMultiTexCoord2i) n++;
-    *(void **)&p_glMultiTexCoord2iv = dlsym(mgl, "glMultiTexCoord2iv"); *(void **)&a_glMultiTexCoord2iv = apple ? dlsym(apple, "glMultiTexCoord2iv") : (void*)0; if (p_glMultiTexCoord2iv) n++;
-    *(void **)&p_glMultiTexCoord2s = dlsym(mgl, "glMultiTexCoord2s"); *(void **)&a_glMultiTexCoord2s = apple ? dlsym(apple, "glMultiTexCoord2s") : (void*)0; if (p_glMultiTexCoord2s) n++;
-    *(void **)&p_glMultiTexCoord2sv = dlsym(mgl, "glMultiTexCoord2sv"); *(void **)&a_glMultiTexCoord2sv = apple ? dlsym(apple, "glMultiTexCoord2sv") : (void*)0; if (p_glMultiTexCoord2sv) n++;
-    *(void **)&p_glMultiTexCoord3d = dlsym(mgl, "glMultiTexCoord3d"); *(void **)&a_glMultiTexCoord3d = apple ? dlsym(apple, "glMultiTexCoord3d") : (void*)0; if (p_glMultiTexCoord3d) n++;
-    *(void **)&p_glMultiTexCoord3dv = dlsym(mgl, "glMultiTexCoord3dv"); *(void **)&a_glMultiTexCoord3dv = apple ? dlsym(apple, "glMultiTexCoord3dv") : (void*)0; if (p_glMultiTexCoord3dv) n++;
-    *(void **)&p_glMultiTexCoord3f = dlsym(mgl, "glMultiTexCoord3f"); *(void **)&a_glMultiTexCoord3f = apple ? dlsym(apple, "glMultiTexCoord3f") : (void*)0; if (p_glMultiTexCoord3f) n++;
-    *(void **)&p_glMultiTexCoord3fv = dlsym(mgl, "glMultiTexCoord3fv"); *(void **)&a_glMultiTexCoord3fv = apple ? dlsym(apple, "glMultiTexCoord3fv") : (void*)0; if (p_glMultiTexCoord3fv) n++;
-    *(void **)&p_glMultiTexCoord3i = dlsym(mgl, "glMultiTexCoord3i"); *(void **)&a_glMultiTexCoord3i = apple ? dlsym(apple, "glMultiTexCoord3i") : (void*)0; if (p_glMultiTexCoord3i) n++;
-    *(void **)&p_glMultiTexCoord3iv = dlsym(mgl, "glMultiTexCoord3iv"); *(void **)&a_glMultiTexCoord3iv = apple ? dlsym(apple, "glMultiTexCoord3iv") : (void*)0; if (p_glMultiTexCoord3iv) n++;
-    *(void **)&p_glMultiTexCoord3s = dlsym(mgl, "glMultiTexCoord3s"); *(void **)&a_glMultiTexCoord3s = apple ? dlsym(apple, "glMultiTexCoord3s") : (void*)0; if (p_glMultiTexCoord3s) n++;
-    *(void **)&p_glMultiTexCoord3sv = dlsym(mgl, "glMultiTexCoord3sv"); *(void **)&a_glMultiTexCoord3sv = apple ? dlsym(apple, "glMultiTexCoord3sv") : (void*)0; if (p_glMultiTexCoord3sv) n++;
-    *(void **)&p_glMultiTexCoord4d = dlsym(mgl, "glMultiTexCoord4d"); *(void **)&a_glMultiTexCoord4d = apple ? dlsym(apple, "glMultiTexCoord4d") : (void*)0; if (p_glMultiTexCoord4d) n++;
-    *(void **)&p_glMultiTexCoord4dv = dlsym(mgl, "glMultiTexCoord4dv"); *(void **)&a_glMultiTexCoord4dv = apple ? dlsym(apple, "glMultiTexCoord4dv") : (void*)0; if (p_glMultiTexCoord4dv) n++;
-    *(void **)&p_glMultiTexCoord4f = dlsym(mgl, "glMultiTexCoord4f"); *(void **)&a_glMultiTexCoord4f = apple ? dlsym(apple, "glMultiTexCoord4f") : (void*)0; if (p_glMultiTexCoord4f) n++;
-    *(void **)&p_glMultiTexCoord4fv = dlsym(mgl, "glMultiTexCoord4fv"); *(void **)&a_glMultiTexCoord4fv = apple ? dlsym(apple, "glMultiTexCoord4fv") : (void*)0; if (p_glMultiTexCoord4fv) n++;
-    *(void **)&p_glMultiTexCoord4i = dlsym(mgl, "glMultiTexCoord4i"); *(void **)&a_glMultiTexCoord4i = apple ? dlsym(apple, "glMultiTexCoord4i") : (void*)0; if (p_glMultiTexCoord4i) n++;
-    *(void **)&p_glMultiTexCoord4iv = dlsym(mgl, "glMultiTexCoord4iv"); *(void **)&a_glMultiTexCoord4iv = apple ? dlsym(apple, "glMultiTexCoord4iv") : (void*)0; if (p_glMultiTexCoord4iv) n++;
-    *(void **)&p_glMultiTexCoord4s = dlsym(mgl, "glMultiTexCoord4s"); *(void **)&a_glMultiTexCoord4s = apple ? dlsym(apple, "glMultiTexCoord4s") : (void*)0; if (p_glMultiTexCoord4s) n++;
-    *(void **)&p_glMultiTexCoord4sv = dlsym(mgl, "glMultiTexCoord4sv"); *(void **)&a_glMultiTexCoord4sv = apple ? dlsym(apple, "glMultiTexCoord4sv") : (void*)0; if (p_glMultiTexCoord4sv) n++;
-    *(void **)&p_glMultiTexCoordP1ui = dlsym(mgl, "glMultiTexCoordP1ui"); *(void **)&a_glMultiTexCoordP1ui = apple ? dlsym(apple, "glMultiTexCoordP1ui") : (void*)0; if (p_glMultiTexCoordP1ui) n++;
-    *(void **)&p_glMultiTexCoordP1uiv = dlsym(mgl, "glMultiTexCoordP1uiv"); *(void **)&a_glMultiTexCoordP1uiv = apple ? dlsym(apple, "glMultiTexCoordP1uiv") : (void*)0; if (p_glMultiTexCoordP1uiv) n++;
-    *(void **)&p_glMultiTexCoordP2ui = dlsym(mgl, "glMultiTexCoordP2ui"); *(void **)&a_glMultiTexCoordP2ui = apple ? dlsym(apple, "glMultiTexCoordP2ui") : (void*)0; if (p_glMultiTexCoordP2ui) n++;
-    *(void **)&p_glMultiTexCoordP2uiv = dlsym(mgl, "glMultiTexCoordP2uiv"); *(void **)&a_glMultiTexCoordP2uiv = apple ? dlsym(apple, "glMultiTexCoordP2uiv") : (void*)0; if (p_glMultiTexCoordP2uiv) n++;
-    *(void **)&p_glMultiTexCoordP3ui = dlsym(mgl, "glMultiTexCoordP3ui"); *(void **)&a_glMultiTexCoordP3ui = apple ? dlsym(apple, "glMultiTexCoordP3ui") : (void*)0; if (p_glMultiTexCoordP3ui) n++;
-    *(void **)&p_glMultiTexCoordP3uiv = dlsym(mgl, "glMultiTexCoordP3uiv"); *(void **)&a_glMultiTexCoordP3uiv = apple ? dlsym(apple, "glMultiTexCoordP3uiv") : (void*)0; if (p_glMultiTexCoordP3uiv) n++;
-    *(void **)&p_glMultiTexCoordP4ui = dlsym(mgl, "glMultiTexCoordP4ui"); *(void **)&a_glMultiTexCoordP4ui = apple ? dlsym(apple, "glMultiTexCoordP4ui") : (void*)0; if (p_glMultiTexCoordP4ui) n++;
-    *(void **)&p_glMultiTexCoordP4uiv = dlsym(mgl, "glMultiTexCoordP4uiv"); *(void **)&a_glMultiTexCoordP4uiv = apple ? dlsym(apple, "glMultiTexCoordP4uiv") : (void*)0; if (p_glMultiTexCoordP4uiv) n++;
     *(void **)&p_glNamedBufferData = dlsym(mgl, "glNamedBufferData"); *(void **)&a_glNamedBufferData = apple ? dlsym(apple, "glNamedBufferData") : (void*)0; if (p_glNamedBufferData) n++;
     *(void **)&p_glNamedBufferStorage = dlsym(mgl, "glNamedBufferStorage"); *(void **)&a_glNamedBufferStorage = apple ? dlsym(apple, "glNamedBufferStorage") : (void*)0; if (p_glNamedBufferStorage) n++;
     *(void **)&p_glNamedBufferSubData = dlsym(mgl, "glNamedBufferSubData"); *(void **)&a_glNamedBufferSubData = apple ? dlsym(apple, "glNamedBufferSubData") : (void*)0; if (p_glNamedBufferSubData) n++;
@@ -5823,35 +3667,13 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glNamedFramebufferTextureLayer = dlsym(mgl, "glNamedFramebufferTextureLayer"); *(void **)&a_glNamedFramebufferTextureLayer = apple ? dlsym(apple, "glNamedFramebufferTextureLayer") : (void*)0; if (p_glNamedFramebufferTextureLayer) n++;
     *(void **)&p_glNamedRenderbufferStorage = dlsym(mgl, "glNamedRenderbufferStorage"); *(void **)&a_glNamedRenderbufferStorage = apple ? dlsym(apple, "glNamedRenderbufferStorage") : (void*)0; if (p_glNamedRenderbufferStorage) n++;
     *(void **)&p_glNamedRenderbufferStorageMultisample = dlsym(mgl, "glNamedRenderbufferStorageMultisample"); *(void **)&a_glNamedRenderbufferStorageMultisample = apple ? dlsym(apple, "glNamedRenderbufferStorageMultisample") : (void*)0; if (p_glNamedRenderbufferStorageMultisample) n++;
-    *(void **)&p_glNewList = dlsym(mgl, "glNewList"); *(void **)&a_glNewList = apple ? dlsym(apple, "glNewList") : (void*)0; if (p_glNewList) n++;
-    *(void **)&p_glNormal3b = dlsym(mgl, "glNormal3b"); *(void **)&a_glNormal3b = apple ? dlsym(apple, "glNormal3b") : (void*)0; if (p_glNormal3b) n++;
-    *(void **)&p_glNormal3bv = dlsym(mgl, "glNormal3bv"); *(void **)&a_glNormal3bv = apple ? dlsym(apple, "glNormal3bv") : (void*)0; if (p_glNormal3bv) n++;
-    *(void **)&p_glNormal3d = dlsym(mgl, "glNormal3d"); *(void **)&a_glNormal3d = apple ? dlsym(apple, "glNormal3d") : (void*)0; if (p_glNormal3d) n++;
-    *(void **)&p_glNormal3dv = dlsym(mgl, "glNormal3dv"); *(void **)&a_glNormal3dv = apple ? dlsym(apple, "glNormal3dv") : (void*)0; if (p_glNormal3dv) n++;
-    *(void **)&p_glNormal3f = dlsym(mgl, "glNormal3f"); *(void **)&a_glNormal3f = apple ? dlsym(apple, "glNormal3f") : (void*)0; if (p_glNormal3f) n++;
-    *(void **)&p_glNormal3fv = dlsym(mgl, "glNormal3fv"); *(void **)&a_glNormal3fv = apple ? dlsym(apple, "glNormal3fv") : (void*)0; if (p_glNormal3fv) n++;
-    *(void **)&p_glNormal3i = dlsym(mgl, "glNormal3i"); *(void **)&a_glNormal3i = apple ? dlsym(apple, "glNormal3i") : (void*)0; if (p_glNormal3i) n++;
-    *(void **)&p_glNormal3iv = dlsym(mgl, "glNormal3iv"); *(void **)&a_glNormal3iv = apple ? dlsym(apple, "glNormal3iv") : (void*)0; if (p_glNormal3iv) n++;
-    *(void **)&p_glNormal3s = dlsym(mgl, "glNormal3s"); *(void **)&a_glNormal3s = apple ? dlsym(apple, "glNormal3s") : (void*)0; if (p_glNormal3s) n++;
-    *(void **)&p_glNormal3sv = dlsym(mgl, "glNormal3sv"); *(void **)&a_glNormal3sv = apple ? dlsym(apple, "glNormal3sv") : (void*)0; if (p_glNormal3sv) n++;
-    *(void **)&p_glNormalP3ui = dlsym(mgl, "glNormalP3ui"); *(void **)&a_glNormalP3ui = apple ? dlsym(apple, "glNormalP3ui") : (void*)0; if (p_glNormalP3ui) n++;
-    *(void **)&p_glNormalP3uiv = dlsym(mgl, "glNormalP3uiv"); *(void **)&a_glNormalP3uiv = apple ? dlsym(apple, "glNormalP3uiv") : (void*)0; if (p_glNormalP3uiv) n++;
-    *(void **)&p_glNormalPointer = dlsym(mgl, "glNormalPointer"); *(void **)&a_glNormalPointer = apple ? dlsym(apple, "glNormalPointer") : (void*)0; if (p_glNormalPointer) n++;
     *(void **)&p_glObjectLabel = dlsym(mgl, "glObjectLabel"); *(void **)&a_glObjectLabel = apple ? dlsym(apple, "glObjectLabel") : (void*)0; if (p_glObjectLabel) n++;
     *(void **)&p_glObjectPtrLabel = dlsym(mgl, "glObjectPtrLabel"); *(void **)&a_glObjectPtrLabel = apple ? dlsym(apple, "glObjectPtrLabel") : (void*)0; if (p_glObjectPtrLabel) n++;
-    *(void **)&p_glOrtho = dlsym(mgl, "glOrtho"); *(void **)&a_glOrtho = apple ? dlsym(apple, "glOrtho") : (void*)0; if (p_glOrtho) n++;
-    *(void **)&p_glPassThrough = dlsym(mgl, "glPassThrough"); *(void **)&a_glPassThrough = apple ? dlsym(apple, "glPassThrough") : (void*)0; if (p_glPassThrough) n++;
     *(void **)&p_glPatchParameterfv = dlsym(mgl, "glPatchParameterfv"); *(void **)&a_glPatchParameterfv = apple ? dlsym(apple, "glPatchParameterfv") : (void*)0; if (p_glPatchParameterfv) n++;
     *(void **)&p_glPatchParameteri = dlsym(mgl, "glPatchParameteri"); *(void **)&a_glPatchParameteri = apple ? dlsym(apple, "glPatchParameteri") : (void*)0; if (p_glPatchParameteri) n++;
     *(void **)&p_glPauseTransformFeedback = dlsym(mgl, "glPauseTransformFeedback"); *(void **)&a_glPauseTransformFeedback = apple ? dlsym(apple, "glPauseTransformFeedback") : (void*)0; if (p_glPauseTransformFeedback) n++;
-    *(void **)&p_glPixelMapfv = dlsym(mgl, "glPixelMapfv"); *(void **)&a_glPixelMapfv = apple ? dlsym(apple, "glPixelMapfv") : (void*)0; if (p_glPixelMapfv) n++;
-    *(void **)&p_glPixelMapuiv = dlsym(mgl, "glPixelMapuiv"); *(void **)&a_glPixelMapuiv = apple ? dlsym(apple, "glPixelMapuiv") : (void*)0; if (p_glPixelMapuiv) n++;
-    *(void **)&p_glPixelMapusv = dlsym(mgl, "glPixelMapusv"); *(void **)&a_glPixelMapusv = apple ? dlsym(apple, "glPixelMapusv") : (void*)0; if (p_glPixelMapusv) n++;
     *(void **)&p_glPixelStoref = dlsym(mgl, "glPixelStoref"); *(void **)&a_glPixelStoref = apple ? dlsym(apple, "glPixelStoref") : (void*)0; if (p_glPixelStoref) n++;
     *(void **)&p_glPixelStorei = dlsym(mgl, "glPixelStorei"); *(void **)&a_glPixelStorei = apple ? dlsym(apple, "glPixelStorei") : (void*)0; if (p_glPixelStorei) n++;
-    *(void **)&p_glPixelTransferf = dlsym(mgl, "glPixelTransferf"); *(void **)&a_glPixelTransferf = apple ? dlsym(apple, "glPixelTransferf") : (void*)0; if (p_glPixelTransferf) n++;
-    *(void **)&p_glPixelTransferi = dlsym(mgl, "glPixelTransferi"); *(void **)&a_glPixelTransferi = apple ? dlsym(apple, "glPixelTransferi") : (void*)0; if (p_glPixelTransferi) n++;
-    *(void **)&p_glPixelZoom = dlsym(mgl, "glPixelZoom"); *(void **)&a_glPixelZoom = apple ? dlsym(apple, "glPixelZoom") : (void*)0; if (p_glPixelZoom) n++;
     *(void **)&p_glPointParameterf = dlsym(mgl, "glPointParameterf"); *(void **)&a_glPointParameterf = apple ? dlsym(apple, "glPointParameterf") : (void*)0; if (p_glPointParameterf) n++;
     *(void **)&p_glPointParameterfv = dlsym(mgl, "glPointParameterfv"); *(void **)&a_glPointParameterfv = apple ? dlsym(apple, "glPointParameterfv") : (void*)0; if (p_glPointParameterfv) n++;
     *(void **)&p_glPointParameteri = dlsym(mgl, "glPointParameteri"); *(void **)&a_glPointParameteri = apple ? dlsym(apple, "glPointParameteri") : (void*)0; if (p_glPointParameteri) n++;
@@ -5860,14 +3682,8 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glPolygonMode = dlsym(mgl, "glPolygonMode"); *(void **)&a_glPolygonMode = apple ? dlsym(apple, "glPolygonMode") : (void*)0; if (p_glPolygonMode) n++;
     *(void **)&p_glPolygonOffset = dlsym(mgl, "glPolygonOffset"); *(void **)&a_glPolygonOffset = apple ? dlsym(apple, "glPolygonOffset") : (void*)0; if (p_glPolygonOffset) n++;
     *(void **)&p_glPolygonOffsetClamp = dlsym(mgl, "glPolygonOffsetClamp"); *(void **)&a_glPolygonOffsetClamp = apple ? dlsym(apple, "glPolygonOffsetClamp") : (void*)0; if (p_glPolygonOffsetClamp) n++;
-    *(void **)&p_glPolygonStipple = dlsym(mgl, "glPolygonStipple"); *(void **)&a_glPolygonStipple = apple ? dlsym(apple, "glPolygonStipple") : (void*)0; if (p_glPolygonStipple) n++;
-    *(void **)&p_glPopAttrib = dlsym(mgl, "glPopAttrib"); *(void **)&a_glPopAttrib = apple ? dlsym(apple, "glPopAttrib") : (void*)0; if (p_glPopAttrib) n++;
-    *(void **)&p_glPopClientAttrib = dlsym(mgl, "glPopClientAttrib"); *(void **)&a_glPopClientAttrib = apple ? dlsym(apple, "glPopClientAttrib") : (void*)0; if (p_glPopClientAttrib) n++;
     *(void **)&p_glPopDebugGroup = dlsym(mgl, "glPopDebugGroup"); *(void **)&a_glPopDebugGroup = apple ? dlsym(apple, "glPopDebugGroup") : (void*)0; if (p_glPopDebugGroup) n++;
-    *(void **)&p_glPopMatrix = dlsym(mgl, "glPopMatrix"); *(void **)&a_glPopMatrix = apple ? dlsym(apple, "glPopMatrix") : (void*)0; if (p_glPopMatrix) n++;
-    *(void **)&p_glPopName = dlsym(mgl, "glPopName"); *(void **)&a_glPopName = apple ? dlsym(apple, "glPopName") : (void*)0; if (p_glPopName) n++;
     *(void **)&p_glPrimitiveRestartIndex = dlsym(mgl, "glPrimitiveRestartIndex"); *(void **)&a_glPrimitiveRestartIndex = apple ? dlsym(apple, "glPrimitiveRestartIndex") : (void*)0; if (p_glPrimitiveRestartIndex) n++;
-    *(void **)&p_glPrioritizeTextures = dlsym(mgl, "glPrioritizeTextures"); *(void **)&a_glPrioritizeTextures = apple ? dlsym(apple, "glPrioritizeTextures") : (void*)0; if (p_glPrioritizeTextures) n++;
     *(void **)&p_glProgramBinary = dlsym(mgl, "glProgramBinary"); *(void **)&a_glProgramBinary = apple ? dlsym(apple, "glProgramBinary") : (void*)0; if (p_glProgramBinary) n++;
     *(void **)&p_glProgramParameteri = dlsym(mgl, "glProgramParameteri"); *(void **)&a_glProgramParameteri = apple ? dlsym(apple, "glProgramParameteri") : (void*)0; if (p_glProgramParameteri) n++;
     *(void **)&p_glProgramUniform1d = dlsym(mgl, "glProgramUniform1d"); *(void **)&a_glProgramUniform1d = apple ? dlsym(apple, "glProgramUniform1d") : (void*)0; if (p_glProgramUniform1d) n++;
@@ -5921,54 +3737,15 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glProgramUniformMatrix4x3dv = dlsym(mgl, "glProgramUniformMatrix4x3dv"); *(void **)&a_glProgramUniformMatrix4x3dv = apple ? dlsym(apple, "glProgramUniformMatrix4x3dv") : (void*)0; if (p_glProgramUniformMatrix4x3dv) n++;
     *(void **)&p_glProgramUniformMatrix4x3fv = dlsym(mgl, "glProgramUniformMatrix4x3fv"); *(void **)&a_glProgramUniformMatrix4x3fv = apple ? dlsym(apple, "glProgramUniformMatrix4x3fv") : (void*)0; if (p_glProgramUniformMatrix4x3fv) n++;
     *(void **)&p_glProvokingVertex = dlsym(mgl, "glProvokingVertex"); *(void **)&a_glProvokingVertex = apple ? dlsym(apple, "glProvokingVertex") : (void*)0; if (p_glProvokingVertex) n++;
-    *(void **)&p_glPushAttrib = dlsym(mgl, "glPushAttrib"); *(void **)&a_glPushAttrib = apple ? dlsym(apple, "glPushAttrib") : (void*)0; if (p_glPushAttrib) n++;
-    *(void **)&p_glPushClientAttrib = dlsym(mgl, "glPushClientAttrib"); *(void **)&a_glPushClientAttrib = apple ? dlsym(apple, "glPushClientAttrib") : (void*)0; if (p_glPushClientAttrib) n++;
     *(void **)&p_glPushDebugGroup = dlsym(mgl, "glPushDebugGroup"); *(void **)&a_glPushDebugGroup = apple ? dlsym(apple, "glPushDebugGroup") : (void*)0; if (p_glPushDebugGroup) n++;
-    *(void **)&p_glPushMatrix = dlsym(mgl, "glPushMatrix"); *(void **)&a_glPushMatrix = apple ? dlsym(apple, "glPushMatrix") : (void*)0; if (p_glPushMatrix) n++;
-    *(void **)&p_glPushName = dlsym(mgl, "glPushName"); *(void **)&a_glPushName = apple ? dlsym(apple, "glPushName") : (void*)0; if (p_glPushName) n++;
     *(void **)&p_glQueryCounter = dlsym(mgl, "glQueryCounter"); *(void **)&a_glQueryCounter = apple ? dlsym(apple, "glQueryCounter") : (void*)0; if (p_glQueryCounter) n++;
-    *(void **)&p_glRasterPos2d = dlsym(mgl, "glRasterPos2d"); *(void **)&a_glRasterPos2d = apple ? dlsym(apple, "glRasterPos2d") : (void*)0; if (p_glRasterPos2d) n++;
-    *(void **)&p_glRasterPos2dv = dlsym(mgl, "glRasterPos2dv"); *(void **)&a_glRasterPos2dv = apple ? dlsym(apple, "glRasterPos2dv") : (void*)0; if (p_glRasterPos2dv) n++;
-    *(void **)&p_glRasterPos2f = dlsym(mgl, "glRasterPos2f"); *(void **)&a_glRasterPos2f = apple ? dlsym(apple, "glRasterPos2f") : (void*)0; if (p_glRasterPos2f) n++;
-    *(void **)&p_glRasterPos2fv = dlsym(mgl, "glRasterPos2fv"); *(void **)&a_glRasterPos2fv = apple ? dlsym(apple, "glRasterPos2fv") : (void*)0; if (p_glRasterPos2fv) n++;
-    *(void **)&p_glRasterPos2i = dlsym(mgl, "glRasterPos2i"); *(void **)&a_glRasterPos2i = apple ? dlsym(apple, "glRasterPos2i") : (void*)0; if (p_glRasterPos2i) n++;
-    *(void **)&p_glRasterPos2iv = dlsym(mgl, "glRasterPos2iv"); *(void **)&a_glRasterPos2iv = apple ? dlsym(apple, "glRasterPos2iv") : (void*)0; if (p_glRasterPos2iv) n++;
-    *(void **)&p_glRasterPos2s = dlsym(mgl, "glRasterPos2s"); *(void **)&a_glRasterPos2s = apple ? dlsym(apple, "glRasterPos2s") : (void*)0; if (p_glRasterPos2s) n++;
-    *(void **)&p_glRasterPos2sv = dlsym(mgl, "glRasterPos2sv"); *(void **)&a_glRasterPos2sv = apple ? dlsym(apple, "glRasterPos2sv") : (void*)0; if (p_glRasterPos2sv) n++;
-    *(void **)&p_glRasterPos3d = dlsym(mgl, "glRasterPos3d"); *(void **)&a_glRasterPos3d = apple ? dlsym(apple, "glRasterPos3d") : (void*)0; if (p_glRasterPos3d) n++;
-    *(void **)&p_glRasterPos3dv = dlsym(mgl, "glRasterPos3dv"); *(void **)&a_glRasterPos3dv = apple ? dlsym(apple, "glRasterPos3dv") : (void*)0; if (p_glRasterPos3dv) n++;
-    *(void **)&p_glRasterPos3f = dlsym(mgl, "glRasterPos3f"); *(void **)&a_glRasterPos3f = apple ? dlsym(apple, "glRasterPos3f") : (void*)0; if (p_glRasterPos3f) n++;
-    *(void **)&p_glRasterPos3fv = dlsym(mgl, "glRasterPos3fv"); *(void **)&a_glRasterPos3fv = apple ? dlsym(apple, "glRasterPos3fv") : (void*)0; if (p_glRasterPos3fv) n++;
-    *(void **)&p_glRasterPos3i = dlsym(mgl, "glRasterPos3i"); *(void **)&a_glRasterPos3i = apple ? dlsym(apple, "glRasterPos3i") : (void*)0; if (p_glRasterPos3i) n++;
-    *(void **)&p_glRasterPos3iv = dlsym(mgl, "glRasterPos3iv"); *(void **)&a_glRasterPos3iv = apple ? dlsym(apple, "glRasterPos3iv") : (void*)0; if (p_glRasterPos3iv) n++;
-    *(void **)&p_glRasterPos3s = dlsym(mgl, "glRasterPos3s"); *(void **)&a_glRasterPos3s = apple ? dlsym(apple, "glRasterPos3s") : (void*)0; if (p_glRasterPos3s) n++;
-    *(void **)&p_glRasterPos3sv = dlsym(mgl, "glRasterPos3sv"); *(void **)&a_glRasterPos3sv = apple ? dlsym(apple, "glRasterPos3sv") : (void*)0; if (p_glRasterPos3sv) n++;
-    *(void **)&p_glRasterPos4d = dlsym(mgl, "glRasterPos4d"); *(void **)&a_glRasterPos4d = apple ? dlsym(apple, "glRasterPos4d") : (void*)0; if (p_glRasterPos4d) n++;
-    *(void **)&p_glRasterPos4dv = dlsym(mgl, "glRasterPos4dv"); *(void **)&a_glRasterPos4dv = apple ? dlsym(apple, "glRasterPos4dv") : (void*)0; if (p_glRasterPos4dv) n++;
-    *(void **)&p_glRasterPos4f = dlsym(mgl, "glRasterPos4f"); *(void **)&a_glRasterPos4f = apple ? dlsym(apple, "glRasterPos4f") : (void*)0; if (p_glRasterPos4f) n++;
-    *(void **)&p_glRasterPos4fv = dlsym(mgl, "glRasterPos4fv"); *(void **)&a_glRasterPos4fv = apple ? dlsym(apple, "glRasterPos4fv") : (void*)0; if (p_glRasterPos4fv) n++;
-    *(void **)&p_glRasterPos4i = dlsym(mgl, "glRasterPos4i"); *(void **)&a_glRasterPos4i = apple ? dlsym(apple, "glRasterPos4i") : (void*)0; if (p_glRasterPos4i) n++;
-    *(void **)&p_glRasterPos4iv = dlsym(mgl, "glRasterPos4iv"); *(void **)&a_glRasterPos4iv = apple ? dlsym(apple, "glRasterPos4iv") : (void*)0; if (p_glRasterPos4iv) n++;
-    *(void **)&p_glRasterPos4s = dlsym(mgl, "glRasterPos4s"); *(void **)&a_glRasterPos4s = apple ? dlsym(apple, "glRasterPos4s") : (void*)0; if (p_glRasterPos4s) n++;
-    *(void **)&p_glRasterPos4sv = dlsym(mgl, "glRasterPos4sv"); *(void **)&a_glRasterPos4sv = apple ? dlsym(apple, "glRasterPos4sv") : (void*)0; if (p_glRasterPos4sv) n++;
     *(void **)&p_glReadBuffer = dlsym(mgl, "glReadBuffer"); *(void **)&a_glReadBuffer = apple ? dlsym(apple, "glReadBuffer") : (void*)0; if (p_glReadBuffer) n++;
     *(void **)&p_glReadPixels = dlsym(mgl, "glReadPixels"); *(void **)&a_glReadPixels = apple ? dlsym(apple, "glReadPixels") : (void*)0; if (p_glReadPixels) n++;
     *(void **)&p_glReadnPixels = dlsym(mgl, "glReadnPixels"); *(void **)&a_glReadnPixels = apple ? dlsym(apple, "glReadnPixels") : (void*)0; if (p_glReadnPixels) n++;
-    *(void **)&p_glRectd = dlsym(mgl, "glRectd"); *(void **)&a_glRectd = apple ? dlsym(apple, "glRectd") : (void*)0; if (p_glRectd) n++;
-    *(void **)&p_glRectdv = dlsym(mgl, "glRectdv"); *(void **)&a_glRectdv = apple ? dlsym(apple, "glRectdv") : (void*)0; if (p_glRectdv) n++;
-    *(void **)&p_glRectf = dlsym(mgl, "glRectf"); *(void **)&a_glRectf = apple ? dlsym(apple, "glRectf") : (void*)0; if (p_glRectf) n++;
-    *(void **)&p_glRectfv = dlsym(mgl, "glRectfv"); *(void **)&a_glRectfv = apple ? dlsym(apple, "glRectfv") : (void*)0; if (p_glRectfv) n++;
-    *(void **)&p_glRecti = dlsym(mgl, "glRecti"); *(void **)&a_glRecti = apple ? dlsym(apple, "glRecti") : (void*)0; if (p_glRecti) n++;
-    *(void **)&p_glRectiv = dlsym(mgl, "glRectiv"); *(void **)&a_glRectiv = apple ? dlsym(apple, "glRectiv") : (void*)0; if (p_glRectiv) n++;
-    *(void **)&p_glRects = dlsym(mgl, "glRects"); *(void **)&a_glRects = apple ? dlsym(apple, "glRects") : (void*)0; if (p_glRects) n++;
-    *(void **)&p_glRectsv = dlsym(mgl, "glRectsv"); *(void **)&a_glRectsv = apple ? dlsym(apple, "glRectsv") : (void*)0; if (p_glRectsv) n++;
     *(void **)&p_glReleaseShaderCompiler = dlsym(mgl, "glReleaseShaderCompiler"); *(void **)&a_glReleaseShaderCompiler = apple ? dlsym(apple, "glReleaseShaderCompiler") : (void*)0; if (p_glReleaseShaderCompiler) n++;
-    *(void **)&p_glRenderMode = dlsym(mgl, "glRenderMode"); *(void **)&a_glRenderMode = apple ? dlsym(apple, "glRenderMode") : (void*)0; if (p_glRenderMode) n++;
     *(void **)&p_glRenderbufferStorage = dlsym(mgl, "glRenderbufferStorage"); *(void **)&a_glRenderbufferStorage = apple ? dlsym(apple, "glRenderbufferStorage") : (void*)0; if (p_glRenderbufferStorage) n++;
     *(void **)&p_glRenderbufferStorageMultisample = dlsym(mgl, "glRenderbufferStorageMultisample"); *(void **)&a_glRenderbufferStorageMultisample = apple ? dlsym(apple, "glRenderbufferStorageMultisample") : (void*)0; if (p_glRenderbufferStorageMultisample) n++;
     *(void **)&p_glResumeTransformFeedback = dlsym(mgl, "glResumeTransformFeedback"); *(void **)&a_glResumeTransformFeedback = apple ? dlsym(apple, "glResumeTransformFeedback") : (void*)0; if (p_glResumeTransformFeedback) n++;
-    *(void **)&p_glRotated = dlsym(mgl, "glRotated"); *(void **)&a_glRotated = apple ? dlsym(apple, "glRotated") : (void*)0; if (p_glRotated) n++;
-    *(void **)&p_glRotatef = dlsym(mgl, "glRotatef"); *(void **)&a_glRotatef = apple ? dlsym(apple, "glRotatef") : (void*)0; if (p_glRotatef) n++;
     *(void **)&p_glSampleCoverage = dlsym(mgl, "glSampleCoverage"); *(void **)&a_glSampleCoverage = apple ? dlsym(apple, "glSampleCoverage") : (void*)0; if (p_glSampleCoverage) n++;
     *(void **)&p_glSampleMaski = dlsym(mgl, "glSampleMaski"); *(void **)&a_glSampleMaski = apple ? dlsym(apple, "glSampleMaski") : (void*)0; if (p_glSampleMaski) n++;
     *(void **)&p_glSamplerParameterIiv = dlsym(mgl, "glSamplerParameterIiv"); *(void **)&a_glSamplerParameterIiv = apple ? dlsym(apple, "glSamplerParameterIiv") : (void*)0; if (p_glSamplerParameterIiv) n++;
@@ -5977,33 +3754,10 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glSamplerParameterfv = dlsym(mgl, "glSamplerParameterfv"); *(void **)&a_glSamplerParameterfv = apple ? dlsym(apple, "glSamplerParameterfv") : (void*)0; if (p_glSamplerParameterfv) n++;
     *(void **)&p_glSamplerParameteri = dlsym(mgl, "glSamplerParameteri"); *(void **)&a_glSamplerParameteri = apple ? dlsym(apple, "glSamplerParameteri") : (void*)0; if (p_glSamplerParameteri) n++;
     *(void **)&p_glSamplerParameteriv = dlsym(mgl, "glSamplerParameteriv"); *(void **)&a_glSamplerParameteriv = apple ? dlsym(apple, "glSamplerParameteriv") : (void*)0; if (p_glSamplerParameteriv) n++;
-    *(void **)&p_glScaled = dlsym(mgl, "glScaled"); *(void **)&a_glScaled = apple ? dlsym(apple, "glScaled") : (void*)0; if (p_glScaled) n++;
-    *(void **)&p_glScalef = dlsym(mgl, "glScalef"); *(void **)&a_glScalef = apple ? dlsym(apple, "glScalef") : (void*)0; if (p_glScalef) n++;
     *(void **)&p_glScissor = dlsym(mgl, "glScissor"); *(void **)&a_glScissor = apple ? dlsym(apple, "glScissor") : (void*)0; if (p_glScissor) n++;
     *(void **)&p_glScissorArrayv = dlsym(mgl, "glScissorArrayv"); *(void **)&a_glScissorArrayv = apple ? dlsym(apple, "glScissorArrayv") : (void*)0; if (p_glScissorArrayv) n++;
     *(void **)&p_glScissorIndexed = dlsym(mgl, "glScissorIndexed"); *(void **)&a_glScissorIndexed = apple ? dlsym(apple, "glScissorIndexed") : (void*)0; if (p_glScissorIndexed) n++;
     *(void **)&p_glScissorIndexedv = dlsym(mgl, "glScissorIndexedv"); *(void **)&a_glScissorIndexedv = apple ? dlsym(apple, "glScissorIndexedv") : (void*)0; if (p_glScissorIndexedv) n++;
-    *(void **)&p_glSecondaryColor3b = dlsym(mgl, "glSecondaryColor3b"); *(void **)&a_glSecondaryColor3b = apple ? dlsym(apple, "glSecondaryColor3b") : (void*)0; if (p_glSecondaryColor3b) n++;
-    *(void **)&p_glSecondaryColor3bv = dlsym(mgl, "glSecondaryColor3bv"); *(void **)&a_glSecondaryColor3bv = apple ? dlsym(apple, "glSecondaryColor3bv") : (void*)0; if (p_glSecondaryColor3bv) n++;
-    *(void **)&p_glSecondaryColor3d = dlsym(mgl, "glSecondaryColor3d"); *(void **)&a_glSecondaryColor3d = apple ? dlsym(apple, "glSecondaryColor3d") : (void*)0; if (p_glSecondaryColor3d) n++;
-    *(void **)&p_glSecondaryColor3dv = dlsym(mgl, "glSecondaryColor3dv"); *(void **)&a_glSecondaryColor3dv = apple ? dlsym(apple, "glSecondaryColor3dv") : (void*)0; if (p_glSecondaryColor3dv) n++;
-    *(void **)&p_glSecondaryColor3f = dlsym(mgl, "glSecondaryColor3f"); *(void **)&a_glSecondaryColor3f = apple ? dlsym(apple, "glSecondaryColor3f") : (void*)0; if (p_glSecondaryColor3f) n++;
-    *(void **)&p_glSecondaryColor3fv = dlsym(mgl, "glSecondaryColor3fv"); *(void **)&a_glSecondaryColor3fv = apple ? dlsym(apple, "glSecondaryColor3fv") : (void*)0; if (p_glSecondaryColor3fv) n++;
-    *(void **)&p_glSecondaryColor3i = dlsym(mgl, "glSecondaryColor3i"); *(void **)&a_glSecondaryColor3i = apple ? dlsym(apple, "glSecondaryColor3i") : (void*)0; if (p_glSecondaryColor3i) n++;
-    *(void **)&p_glSecondaryColor3iv = dlsym(mgl, "glSecondaryColor3iv"); *(void **)&a_glSecondaryColor3iv = apple ? dlsym(apple, "glSecondaryColor3iv") : (void*)0; if (p_glSecondaryColor3iv) n++;
-    *(void **)&p_glSecondaryColor3s = dlsym(mgl, "glSecondaryColor3s"); *(void **)&a_glSecondaryColor3s = apple ? dlsym(apple, "glSecondaryColor3s") : (void*)0; if (p_glSecondaryColor3s) n++;
-    *(void **)&p_glSecondaryColor3sv = dlsym(mgl, "glSecondaryColor3sv"); *(void **)&a_glSecondaryColor3sv = apple ? dlsym(apple, "glSecondaryColor3sv") : (void*)0; if (p_glSecondaryColor3sv) n++;
-    *(void **)&p_glSecondaryColor3ub = dlsym(mgl, "glSecondaryColor3ub"); *(void **)&a_glSecondaryColor3ub = apple ? dlsym(apple, "glSecondaryColor3ub") : (void*)0; if (p_glSecondaryColor3ub) n++;
-    *(void **)&p_glSecondaryColor3ubv = dlsym(mgl, "glSecondaryColor3ubv"); *(void **)&a_glSecondaryColor3ubv = apple ? dlsym(apple, "glSecondaryColor3ubv") : (void*)0; if (p_glSecondaryColor3ubv) n++;
-    *(void **)&p_glSecondaryColor3ui = dlsym(mgl, "glSecondaryColor3ui"); *(void **)&a_glSecondaryColor3ui = apple ? dlsym(apple, "glSecondaryColor3ui") : (void*)0; if (p_glSecondaryColor3ui) n++;
-    *(void **)&p_glSecondaryColor3uiv = dlsym(mgl, "glSecondaryColor3uiv"); *(void **)&a_glSecondaryColor3uiv = apple ? dlsym(apple, "glSecondaryColor3uiv") : (void*)0; if (p_glSecondaryColor3uiv) n++;
-    *(void **)&p_glSecondaryColor3us = dlsym(mgl, "glSecondaryColor3us"); *(void **)&a_glSecondaryColor3us = apple ? dlsym(apple, "glSecondaryColor3us") : (void*)0; if (p_glSecondaryColor3us) n++;
-    *(void **)&p_glSecondaryColor3usv = dlsym(mgl, "glSecondaryColor3usv"); *(void **)&a_glSecondaryColor3usv = apple ? dlsym(apple, "glSecondaryColor3usv") : (void*)0; if (p_glSecondaryColor3usv) n++;
-    *(void **)&p_glSecondaryColorP3ui = dlsym(mgl, "glSecondaryColorP3ui"); *(void **)&a_glSecondaryColorP3ui = apple ? dlsym(apple, "glSecondaryColorP3ui") : (void*)0; if (p_glSecondaryColorP3ui) n++;
-    *(void **)&p_glSecondaryColorP3uiv = dlsym(mgl, "glSecondaryColorP3uiv"); *(void **)&a_glSecondaryColorP3uiv = apple ? dlsym(apple, "glSecondaryColorP3uiv") : (void*)0; if (p_glSecondaryColorP3uiv) n++;
-    *(void **)&p_glSecondaryColorPointer = dlsym(mgl, "glSecondaryColorPointer"); *(void **)&a_glSecondaryColorPointer = apple ? dlsym(apple, "glSecondaryColorPointer") : (void*)0; if (p_glSecondaryColorPointer) n++;
-    *(void **)&p_glSelectBuffer = dlsym(mgl, "glSelectBuffer"); *(void **)&a_glSelectBuffer = apple ? dlsym(apple, "glSelectBuffer") : (void*)0; if (p_glSelectBuffer) n++;
-    *(void **)&p_glShadeModel = dlsym(mgl, "glShadeModel"); *(void **)&a_glShadeModel = apple ? dlsym(apple, "glShadeModel") : (void*)0; if (p_glShadeModel) n++;
     *(void **)&p_glShaderBinary = dlsym(mgl, "glShaderBinary"); *(void **)&a_glShaderBinary = apple ? dlsym(apple, "glShaderBinary") : (void*)0; if (p_glShaderBinary) n++;
     *(void **)&p_glShaderSource = dlsym(mgl, "glShaderSource"); *(void **)&a_glShaderSource = apple ? dlsym(apple, "glShaderSource") : (void*)0; if (p_glShaderSource) n++;
     *(void **)&p_glShaderStorageBlockBinding = dlsym(mgl, "glShaderStorageBlockBinding"); *(void **)&a_glShaderStorageBlockBinding = apple ? dlsym(apple, "glShaderStorageBlockBinding") : (void*)0; if (p_glShaderStorageBlockBinding) n++;
@@ -6016,57 +3770,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glStencilOpSeparate = dlsym(mgl, "glStencilOpSeparate"); *(void **)&a_glStencilOpSeparate = apple ? dlsym(apple, "glStencilOpSeparate") : (void*)0; if (p_glStencilOpSeparate) n++;
     *(void **)&p_glTexBuffer = dlsym(mgl, "glTexBuffer"); *(void **)&a_glTexBuffer = apple ? dlsym(apple, "glTexBuffer") : (void*)0; if (p_glTexBuffer) n++;
     *(void **)&p_glTexBufferRange = dlsym(mgl, "glTexBufferRange"); *(void **)&a_glTexBufferRange = apple ? dlsym(apple, "glTexBufferRange") : (void*)0; if (p_glTexBufferRange) n++;
-    *(void **)&p_glTexCoord1d = dlsym(mgl, "glTexCoord1d"); *(void **)&a_glTexCoord1d = apple ? dlsym(apple, "glTexCoord1d") : (void*)0; if (p_glTexCoord1d) n++;
-    *(void **)&p_glTexCoord1dv = dlsym(mgl, "glTexCoord1dv"); *(void **)&a_glTexCoord1dv = apple ? dlsym(apple, "glTexCoord1dv") : (void*)0; if (p_glTexCoord1dv) n++;
-    *(void **)&p_glTexCoord1f = dlsym(mgl, "glTexCoord1f"); *(void **)&a_glTexCoord1f = apple ? dlsym(apple, "glTexCoord1f") : (void*)0; if (p_glTexCoord1f) n++;
-    *(void **)&p_glTexCoord1fv = dlsym(mgl, "glTexCoord1fv"); *(void **)&a_glTexCoord1fv = apple ? dlsym(apple, "glTexCoord1fv") : (void*)0; if (p_glTexCoord1fv) n++;
-    *(void **)&p_glTexCoord1i = dlsym(mgl, "glTexCoord1i"); *(void **)&a_glTexCoord1i = apple ? dlsym(apple, "glTexCoord1i") : (void*)0; if (p_glTexCoord1i) n++;
-    *(void **)&p_glTexCoord1iv = dlsym(mgl, "glTexCoord1iv"); *(void **)&a_glTexCoord1iv = apple ? dlsym(apple, "glTexCoord1iv") : (void*)0; if (p_glTexCoord1iv) n++;
-    *(void **)&p_glTexCoord1s = dlsym(mgl, "glTexCoord1s"); *(void **)&a_glTexCoord1s = apple ? dlsym(apple, "glTexCoord1s") : (void*)0; if (p_glTexCoord1s) n++;
-    *(void **)&p_glTexCoord1sv = dlsym(mgl, "glTexCoord1sv"); *(void **)&a_glTexCoord1sv = apple ? dlsym(apple, "glTexCoord1sv") : (void*)0; if (p_glTexCoord1sv) n++;
-    *(void **)&p_glTexCoord2d = dlsym(mgl, "glTexCoord2d"); *(void **)&a_glTexCoord2d = apple ? dlsym(apple, "glTexCoord2d") : (void*)0; if (p_glTexCoord2d) n++;
-    *(void **)&p_glTexCoord2dv = dlsym(mgl, "glTexCoord2dv"); *(void **)&a_glTexCoord2dv = apple ? dlsym(apple, "glTexCoord2dv") : (void*)0; if (p_glTexCoord2dv) n++;
-    *(void **)&p_glTexCoord2f = dlsym(mgl, "glTexCoord2f"); *(void **)&a_glTexCoord2f = apple ? dlsym(apple, "glTexCoord2f") : (void*)0; if (p_glTexCoord2f) n++;
-    *(void **)&p_glTexCoord2fv = dlsym(mgl, "glTexCoord2fv"); *(void **)&a_glTexCoord2fv = apple ? dlsym(apple, "glTexCoord2fv") : (void*)0; if (p_glTexCoord2fv) n++;
-    *(void **)&p_glTexCoord2i = dlsym(mgl, "glTexCoord2i"); *(void **)&a_glTexCoord2i = apple ? dlsym(apple, "glTexCoord2i") : (void*)0; if (p_glTexCoord2i) n++;
-    *(void **)&p_glTexCoord2iv = dlsym(mgl, "glTexCoord2iv"); *(void **)&a_glTexCoord2iv = apple ? dlsym(apple, "glTexCoord2iv") : (void*)0; if (p_glTexCoord2iv) n++;
-    *(void **)&p_glTexCoord2s = dlsym(mgl, "glTexCoord2s"); *(void **)&a_glTexCoord2s = apple ? dlsym(apple, "glTexCoord2s") : (void*)0; if (p_glTexCoord2s) n++;
-    *(void **)&p_glTexCoord2sv = dlsym(mgl, "glTexCoord2sv"); *(void **)&a_glTexCoord2sv = apple ? dlsym(apple, "glTexCoord2sv") : (void*)0; if (p_glTexCoord2sv) n++;
-    *(void **)&p_glTexCoord3d = dlsym(mgl, "glTexCoord3d"); *(void **)&a_glTexCoord3d = apple ? dlsym(apple, "glTexCoord3d") : (void*)0; if (p_glTexCoord3d) n++;
-    *(void **)&p_glTexCoord3dv = dlsym(mgl, "glTexCoord3dv"); *(void **)&a_glTexCoord3dv = apple ? dlsym(apple, "glTexCoord3dv") : (void*)0; if (p_glTexCoord3dv) n++;
-    *(void **)&p_glTexCoord3f = dlsym(mgl, "glTexCoord3f"); *(void **)&a_glTexCoord3f = apple ? dlsym(apple, "glTexCoord3f") : (void*)0; if (p_glTexCoord3f) n++;
-    *(void **)&p_glTexCoord3fv = dlsym(mgl, "glTexCoord3fv"); *(void **)&a_glTexCoord3fv = apple ? dlsym(apple, "glTexCoord3fv") : (void*)0; if (p_glTexCoord3fv) n++;
-    *(void **)&p_glTexCoord3i = dlsym(mgl, "glTexCoord3i"); *(void **)&a_glTexCoord3i = apple ? dlsym(apple, "glTexCoord3i") : (void*)0; if (p_glTexCoord3i) n++;
-    *(void **)&p_glTexCoord3iv = dlsym(mgl, "glTexCoord3iv"); *(void **)&a_glTexCoord3iv = apple ? dlsym(apple, "glTexCoord3iv") : (void*)0; if (p_glTexCoord3iv) n++;
-    *(void **)&p_glTexCoord3s = dlsym(mgl, "glTexCoord3s"); *(void **)&a_glTexCoord3s = apple ? dlsym(apple, "glTexCoord3s") : (void*)0; if (p_glTexCoord3s) n++;
-    *(void **)&p_glTexCoord3sv = dlsym(mgl, "glTexCoord3sv"); *(void **)&a_glTexCoord3sv = apple ? dlsym(apple, "glTexCoord3sv") : (void*)0; if (p_glTexCoord3sv) n++;
-    *(void **)&p_glTexCoord4d = dlsym(mgl, "glTexCoord4d"); *(void **)&a_glTexCoord4d = apple ? dlsym(apple, "glTexCoord4d") : (void*)0; if (p_glTexCoord4d) n++;
-    *(void **)&p_glTexCoord4dv = dlsym(mgl, "glTexCoord4dv"); *(void **)&a_glTexCoord4dv = apple ? dlsym(apple, "glTexCoord4dv") : (void*)0; if (p_glTexCoord4dv) n++;
-    *(void **)&p_glTexCoord4f = dlsym(mgl, "glTexCoord4f"); *(void **)&a_glTexCoord4f = apple ? dlsym(apple, "glTexCoord4f") : (void*)0; if (p_glTexCoord4f) n++;
-    *(void **)&p_glTexCoord4fv = dlsym(mgl, "glTexCoord4fv"); *(void **)&a_glTexCoord4fv = apple ? dlsym(apple, "glTexCoord4fv") : (void*)0; if (p_glTexCoord4fv) n++;
-    *(void **)&p_glTexCoord4i = dlsym(mgl, "glTexCoord4i"); *(void **)&a_glTexCoord4i = apple ? dlsym(apple, "glTexCoord4i") : (void*)0; if (p_glTexCoord4i) n++;
-    *(void **)&p_glTexCoord4iv = dlsym(mgl, "glTexCoord4iv"); *(void **)&a_glTexCoord4iv = apple ? dlsym(apple, "glTexCoord4iv") : (void*)0; if (p_glTexCoord4iv) n++;
-    *(void **)&p_glTexCoord4s = dlsym(mgl, "glTexCoord4s"); *(void **)&a_glTexCoord4s = apple ? dlsym(apple, "glTexCoord4s") : (void*)0; if (p_glTexCoord4s) n++;
-    *(void **)&p_glTexCoord4sv = dlsym(mgl, "glTexCoord4sv"); *(void **)&a_glTexCoord4sv = apple ? dlsym(apple, "glTexCoord4sv") : (void*)0; if (p_glTexCoord4sv) n++;
-    *(void **)&p_glTexCoordP1ui = dlsym(mgl, "glTexCoordP1ui"); *(void **)&a_glTexCoordP1ui = apple ? dlsym(apple, "glTexCoordP1ui") : (void*)0; if (p_glTexCoordP1ui) n++;
-    *(void **)&p_glTexCoordP1uiv = dlsym(mgl, "glTexCoordP1uiv"); *(void **)&a_glTexCoordP1uiv = apple ? dlsym(apple, "glTexCoordP1uiv") : (void*)0; if (p_glTexCoordP1uiv) n++;
-    *(void **)&p_glTexCoordP2ui = dlsym(mgl, "glTexCoordP2ui"); *(void **)&a_glTexCoordP2ui = apple ? dlsym(apple, "glTexCoordP2ui") : (void*)0; if (p_glTexCoordP2ui) n++;
-    *(void **)&p_glTexCoordP2uiv = dlsym(mgl, "glTexCoordP2uiv"); *(void **)&a_glTexCoordP2uiv = apple ? dlsym(apple, "glTexCoordP2uiv") : (void*)0; if (p_glTexCoordP2uiv) n++;
-    *(void **)&p_glTexCoordP3ui = dlsym(mgl, "glTexCoordP3ui"); *(void **)&a_glTexCoordP3ui = apple ? dlsym(apple, "glTexCoordP3ui") : (void*)0; if (p_glTexCoordP3ui) n++;
-    *(void **)&p_glTexCoordP3uiv = dlsym(mgl, "glTexCoordP3uiv"); *(void **)&a_glTexCoordP3uiv = apple ? dlsym(apple, "glTexCoordP3uiv") : (void*)0; if (p_glTexCoordP3uiv) n++;
-    *(void **)&p_glTexCoordP4ui = dlsym(mgl, "glTexCoordP4ui"); *(void **)&a_glTexCoordP4ui = apple ? dlsym(apple, "glTexCoordP4ui") : (void*)0; if (p_glTexCoordP4ui) n++;
-    *(void **)&p_glTexCoordP4uiv = dlsym(mgl, "glTexCoordP4uiv"); *(void **)&a_glTexCoordP4uiv = apple ? dlsym(apple, "glTexCoordP4uiv") : (void*)0; if (p_glTexCoordP4uiv) n++;
-    *(void **)&p_glTexCoordPointer = dlsym(mgl, "glTexCoordPointer"); *(void **)&a_glTexCoordPointer = apple ? dlsym(apple, "glTexCoordPointer") : (void*)0; if (p_glTexCoordPointer) n++;
-    *(void **)&p_glTexEnvf = dlsym(mgl, "glTexEnvf"); *(void **)&a_glTexEnvf = apple ? dlsym(apple, "glTexEnvf") : (void*)0; if (p_glTexEnvf) n++;
-    *(void **)&p_glTexEnvfv = dlsym(mgl, "glTexEnvfv"); *(void **)&a_glTexEnvfv = apple ? dlsym(apple, "glTexEnvfv") : (void*)0; if (p_glTexEnvfv) n++;
-    *(void **)&p_glTexEnvi = dlsym(mgl, "glTexEnvi"); *(void **)&a_glTexEnvi = apple ? dlsym(apple, "glTexEnvi") : (void*)0; if (p_glTexEnvi) n++;
-    *(void **)&p_glTexEnviv = dlsym(mgl, "glTexEnviv"); *(void **)&a_glTexEnviv = apple ? dlsym(apple, "glTexEnviv") : (void*)0; if (p_glTexEnviv) n++;
-    *(void **)&p_glTexGend = dlsym(mgl, "glTexGend"); *(void **)&a_glTexGend = apple ? dlsym(apple, "glTexGend") : (void*)0; if (p_glTexGend) n++;
-    *(void **)&p_glTexGendv = dlsym(mgl, "glTexGendv"); *(void **)&a_glTexGendv = apple ? dlsym(apple, "glTexGendv") : (void*)0; if (p_glTexGendv) n++;
-    *(void **)&p_glTexGenf = dlsym(mgl, "glTexGenf"); *(void **)&a_glTexGenf = apple ? dlsym(apple, "glTexGenf") : (void*)0; if (p_glTexGenf) n++;
-    *(void **)&p_glTexGenfv = dlsym(mgl, "glTexGenfv"); *(void **)&a_glTexGenfv = apple ? dlsym(apple, "glTexGenfv") : (void*)0; if (p_glTexGenfv) n++;
-    *(void **)&p_glTexGeni = dlsym(mgl, "glTexGeni"); *(void **)&a_glTexGeni = apple ? dlsym(apple, "glTexGeni") : (void*)0; if (p_glTexGeni) n++;
-    *(void **)&p_glTexGeniv = dlsym(mgl, "glTexGeniv"); *(void **)&a_glTexGeniv = apple ? dlsym(apple, "glTexGeniv") : (void*)0; if (p_glTexGeniv) n++;
     *(void **)&p_glTexImage1D = dlsym(mgl, "glTexImage1D"); *(void **)&a_glTexImage1D = apple ? dlsym(apple, "glTexImage1D") : (void*)0; if (p_glTexImage1D) n++;
     *(void **)&p_glTexImage2D = dlsym(mgl, "glTexImage2D"); *(void **)&a_glTexImage2D = apple ? dlsym(apple, "glTexImage2D") : (void*)0; if (p_glTexImage2D) n++;
     *(void **)&p_glTexImage2DMultisample = dlsym(mgl, "glTexImage2DMultisample"); *(void **)&a_glTexImage2DMultisample = apple ? dlsym(apple, "glTexImage2DMultisample") : (void*)0; if (p_glTexImage2DMultisample) n++;
@@ -6107,8 +3810,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glTransformFeedbackBufferBase = dlsym(mgl, "glTransformFeedbackBufferBase"); *(void **)&a_glTransformFeedbackBufferBase = apple ? dlsym(apple, "glTransformFeedbackBufferBase") : (void*)0; if (p_glTransformFeedbackBufferBase) n++;
     *(void **)&p_glTransformFeedbackBufferRange = dlsym(mgl, "glTransformFeedbackBufferRange"); *(void **)&a_glTransformFeedbackBufferRange = apple ? dlsym(apple, "glTransformFeedbackBufferRange") : (void*)0; if (p_glTransformFeedbackBufferRange) n++;
     *(void **)&p_glTransformFeedbackVaryings = dlsym(mgl, "glTransformFeedbackVaryings"); *(void **)&a_glTransformFeedbackVaryings = apple ? dlsym(apple, "glTransformFeedbackVaryings") : (void*)0; if (p_glTransformFeedbackVaryings) n++;
-    *(void **)&p_glTranslated = dlsym(mgl, "glTranslated"); *(void **)&a_glTranslated = apple ? dlsym(apple, "glTranslated") : (void*)0; if (p_glTranslated) n++;
-    *(void **)&p_glTranslatef = dlsym(mgl, "glTranslatef"); *(void **)&a_glTranslatef = apple ? dlsym(apple, "glTranslatef") : (void*)0; if (p_glTranslatef) n++;
     *(void **)&p_glUniform1d = dlsym(mgl, "glUniform1d"); *(void **)&a_glUniform1d = apple ? dlsym(apple, "glUniform1d") : (void*)0; if (p_glUniform1d) n++;
     *(void **)&p_glUniform1dv = dlsym(mgl, "glUniform1dv"); *(void **)&a_glUniform1dv = apple ? dlsym(apple, "glUniform1dv") : (void*)0; if (p_glUniform1dv) n++;
     *(void **)&p_glUniform1f = dlsym(mgl, "glUniform1f"); *(void **)&a_glUniform1f = apple ? dlsym(apple, "glUniform1f") : (void*)0; if (p_glUniform1f) n++;
@@ -6167,30 +3868,6 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glUseProgramStages = dlsym(mgl, "glUseProgramStages"); *(void **)&a_glUseProgramStages = apple ? dlsym(apple, "glUseProgramStages") : (void*)0; if (p_glUseProgramStages) n++;
     *(void **)&p_glValidateProgram = dlsym(mgl, "glValidateProgram"); *(void **)&a_glValidateProgram = apple ? dlsym(apple, "glValidateProgram") : (void*)0; if (p_glValidateProgram) n++;
     *(void **)&p_glValidateProgramPipeline = dlsym(mgl, "glValidateProgramPipeline"); *(void **)&a_glValidateProgramPipeline = apple ? dlsym(apple, "glValidateProgramPipeline") : (void*)0; if (p_glValidateProgramPipeline) n++;
-    *(void **)&p_glVertex2d = dlsym(mgl, "glVertex2d"); *(void **)&a_glVertex2d = apple ? dlsym(apple, "glVertex2d") : (void*)0; if (p_glVertex2d) n++;
-    *(void **)&p_glVertex2dv = dlsym(mgl, "glVertex2dv"); *(void **)&a_glVertex2dv = apple ? dlsym(apple, "glVertex2dv") : (void*)0; if (p_glVertex2dv) n++;
-    *(void **)&p_glVertex2f = dlsym(mgl, "glVertex2f"); *(void **)&a_glVertex2f = apple ? dlsym(apple, "glVertex2f") : (void*)0; if (p_glVertex2f) n++;
-    *(void **)&p_glVertex2fv = dlsym(mgl, "glVertex2fv"); *(void **)&a_glVertex2fv = apple ? dlsym(apple, "glVertex2fv") : (void*)0; if (p_glVertex2fv) n++;
-    *(void **)&p_glVertex2i = dlsym(mgl, "glVertex2i"); *(void **)&a_glVertex2i = apple ? dlsym(apple, "glVertex2i") : (void*)0; if (p_glVertex2i) n++;
-    *(void **)&p_glVertex2iv = dlsym(mgl, "glVertex2iv"); *(void **)&a_glVertex2iv = apple ? dlsym(apple, "glVertex2iv") : (void*)0; if (p_glVertex2iv) n++;
-    *(void **)&p_glVertex2s = dlsym(mgl, "glVertex2s"); *(void **)&a_glVertex2s = apple ? dlsym(apple, "glVertex2s") : (void*)0; if (p_glVertex2s) n++;
-    *(void **)&p_glVertex2sv = dlsym(mgl, "glVertex2sv"); *(void **)&a_glVertex2sv = apple ? dlsym(apple, "glVertex2sv") : (void*)0; if (p_glVertex2sv) n++;
-    *(void **)&p_glVertex3d = dlsym(mgl, "glVertex3d"); *(void **)&a_glVertex3d = apple ? dlsym(apple, "glVertex3d") : (void*)0; if (p_glVertex3d) n++;
-    *(void **)&p_glVertex3dv = dlsym(mgl, "glVertex3dv"); *(void **)&a_glVertex3dv = apple ? dlsym(apple, "glVertex3dv") : (void*)0; if (p_glVertex3dv) n++;
-    *(void **)&p_glVertex3f = dlsym(mgl, "glVertex3f"); *(void **)&a_glVertex3f = apple ? dlsym(apple, "glVertex3f") : (void*)0; if (p_glVertex3f) n++;
-    *(void **)&p_glVertex3fv = dlsym(mgl, "glVertex3fv"); *(void **)&a_glVertex3fv = apple ? dlsym(apple, "glVertex3fv") : (void*)0; if (p_glVertex3fv) n++;
-    *(void **)&p_glVertex3i = dlsym(mgl, "glVertex3i"); *(void **)&a_glVertex3i = apple ? dlsym(apple, "glVertex3i") : (void*)0; if (p_glVertex3i) n++;
-    *(void **)&p_glVertex3iv = dlsym(mgl, "glVertex3iv"); *(void **)&a_glVertex3iv = apple ? dlsym(apple, "glVertex3iv") : (void*)0; if (p_glVertex3iv) n++;
-    *(void **)&p_glVertex3s = dlsym(mgl, "glVertex3s"); *(void **)&a_glVertex3s = apple ? dlsym(apple, "glVertex3s") : (void*)0; if (p_glVertex3s) n++;
-    *(void **)&p_glVertex3sv = dlsym(mgl, "glVertex3sv"); *(void **)&a_glVertex3sv = apple ? dlsym(apple, "glVertex3sv") : (void*)0; if (p_glVertex3sv) n++;
-    *(void **)&p_glVertex4d = dlsym(mgl, "glVertex4d"); *(void **)&a_glVertex4d = apple ? dlsym(apple, "glVertex4d") : (void*)0; if (p_glVertex4d) n++;
-    *(void **)&p_glVertex4dv = dlsym(mgl, "glVertex4dv"); *(void **)&a_glVertex4dv = apple ? dlsym(apple, "glVertex4dv") : (void*)0; if (p_glVertex4dv) n++;
-    *(void **)&p_glVertex4f = dlsym(mgl, "glVertex4f"); *(void **)&a_glVertex4f = apple ? dlsym(apple, "glVertex4f") : (void*)0; if (p_glVertex4f) n++;
-    *(void **)&p_glVertex4fv = dlsym(mgl, "glVertex4fv"); *(void **)&a_glVertex4fv = apple ? dlsym(apple, "glVertex4fv") : (void*)0; if (p_glVertex4fv) n++;
-    *(void **)&p_glVertex4i = dlsym(mgl, "glVertex4i"); *(void **)&a_glVertex4i = apple ? dlsym(apple, "glVertex4i") : (void*)0; if (p_glVertex4i) n++;
-    *(void **)&p_glVertex4iv = dlsym(mgl, "glVertex4iv"); *(void **)&a_glVertex4iv = apple ? dlsym(apple, "glVertex4iv") : (void*)0; if (p_glVertex4iv) n++;
-    *(void **)&p_glVertex4s = dlsym(mgl, "glVertex4s"); *(void **)&a_glVertex4s = apple ? dlsym(apple, "glVertex4s") : (void*)0; if (p_glVertex4s) n++;
-    *(void **)&p_glVertex4sv = dlsym(mgl, "glVertex4sv"); *(void **)&a_glVertex4sv = apple ? dlsym(apple, "glVertex4sv") : (void*)0; if (p_glVertex4sv) n++;
     *(void **)&p_glVertexArrayAttribBinding = dlsym(mgl, "glVertexArrayAttribBinding"); *(void **)&a_glVertexArrayAttribBinding = apple ? dlsym(apple, "glVertexArrayAttribBinding") : (void*)0; if (p_glVertexArrayAttribBinding) n++;
     *(void **)&p_glVertexArrayAttribFormat = dlsym(mgl, "glVertexArrayAttribFormat"); *(void **)&a_glVertexArrayAttribFormat = apple ? dlsym(apple, "glVertexArrayAttribFormat") : (void*)0; if (p_glVertexArrayAttribFormat) n++;
     *(void **)&p_glVertexArrayAttribIFormat = dlsym(mgl, "glVertexArrayAttribIFormat"); *(void **)&a_glVertexArrayAttribIFormat = apple ? dlsym(apple, "glVertexArrayAttribIFormat") : (void*)0; if (p_glVertexArrayAttribIFormat) n++;
@@ -6280,33 +3957,10 @@ int mglshim_gl_init(void *mgl, void *apple) {
     *(void **)&p_glVertexAttribP4uiv = dlsym(mgl, "glVertexAttribP4uiv"); *(void **)&a_glVertexAttribP4uiv = apple ? dlsym(apple, "glVertexAttribP4uiv") : (void*)0; if (p_glVertexAttribP4uiv) n++;
     *(void **)&p_glVertexAttribPointer = dlsym(mgl, "glVertexAttribPointer"); *(void **)&a_glVertexAttribPointer = apple ? dlsym(apple, "glVertexAttribPointer") : (void*)0; if (p_glVertexAttribPointer) n++;
     *(void **)&p_glVertexBindingDivisor = dlsym(mgl, "glVertexBindingDivisor"); *(void **)&a_glVertexBindingDivisor = apple ? dlsym(apple, "glVertexBindingDivisor") : (void*)0; if (p_glVertexBindingDivisor) n++;
-    *(void **)&p_glVertexP2ui = dlsym(mgl, "glVertexP2ui"); *(void **)&a_glVertexP2ui = apple ? dlsym(apple, "glVertexP2ui") : (void*)0; if (p_glVertexP2ui) n++;
-    *(void **)&p_glVertexP2uiv = dlsym(mgl, "glVertexP2uiv"); *(void **)&a_glVertexP2uiv = apple ? dlsym(apple, "glVertexP2uiv") : (void*)0; if (p_glVertexP2uiv) n++;
-    *(void **)&p_glVertexP3ui = dlsym(mgl, "glVertexP3ui"); *(void **)&a_glVertexP3ui = apple ? dlsym(apple, "glVertexP3ui") : (void*)0; if (p_glVertexP3ui) n++;
-    *(void **)&p_glVertexP3uiv = dlsym(mgl, "glVertexP3uiv"); *(void **)&a_glVertexP3uiv = apple ? dlsym(apple, "glVertexP3uiv") : (void*)0; if (p_glVertexP3uiv) n++;
-    *(void **)&p_glVertexP4ui = dlsym(mgl, "glVertexP4ui"); *(void **)&a_glVertexP4ui = apple ? dlsym(apple, "glVertexP4ui") : (void*)0; if (p_glVertexP4ui) n++;
-    *(void **)&p_glVertexP4uiv = dlsym(mgl, "glVertexP4uiv"); *(void **)&a_glVertexP4uiv = apple ? dlsym(apple, "glVertexP4uiv") : (void*)0; if (p_glVertexP4uiv) n++;
-    *(void **)&p_glVertexPointer = dlsym(mgl, "glVertexPointer"); *(void **)&a_glVertexPointer = apple ? dlsym(apple, "glVertexPointer") : (void*)0; if (p_glVertexPointer) n++;
     *(void **)&p_glViewport = dlsym(mgl, "glViewport"); *(void **)&a_glViewport = apple ? dlsym(apple, "glViewport") : (void*)0; if (p_glViewport) n++;
     *(void **)&p_glViewportArrayv = dlsym(mgl, "glViewportArrayv"); *(void **)&a_glViewportArrayv = apple ? dlsym(apple, "glViewportArrayv") : (void*)0; if (p_glViewportArrayv) n++;
     *(void **)&p_glViewportIndexedf = dlsym(mgl, "glViewportIndexedf"); *(void **)&a_glViewportIndexedf = apple ? dlsym(apple, "glViewportIndexedf") : (void*)0; if (p_glViewportIndexedf) n++;
     *(void **)&p_glViewportIndexedfv = dlsym(mgl, "glViewportIndexedfv"); *(void **)&a_glViewportIndexedfv = apple ? dlsym(apple, "glViewportIndexedfv") : (void*)0; if (p_glViewportIndexedfv) n++;
     *(void **)&p_glWaitSync = dlsym(mgl, "glWaitSync"); *(void **)&a_glWaitSync = apple ? dlsym(apple, "glWaitSync") : (void*)0; if (p_glWaitSync) n++;
-    *(void **)&p_glWindowPos2d = dlsym(mgl, "glWindowPos2d"); *(void **)&a_glWindowPos2d = apple ? dlsym(apple, "glWindowPos2d") : (void*)0; if (p_glWindowPos2d) n++;
-    *(void **)&p_glWindowPos2dv = dlsym(mgl, "glWindowPos2dv"); *(void **)&a_glWindowPos2dv = apple ? dlsym(apple, "glWindowPos2dv") : (void*)0; if (p_glWindowPos2dv) n++;
-    *(void **)&p_glWindowPos2f = dlsym(mgl, "glWindowPos2f"); *(void **)&a_glWindowPos2f = apple ? dlsym(apple, "glWindowPos2f") : (void*)0; if (p_glWindowPos2f) n++;
-    *(void **)&p_glWindowPos2fv = dlsym(mgl, "glWindowPos2fv"); *(void **)&a_glWindowPos2fv = apple ? dlsym(apple, "glWindowPos2fv") : (void*)0; if (p_glWindowPos2fv) n++;
-    *(void **)&p_glWindowPos2i = dlsym(mgl, "glWindowPos2i"); *(void **)&a_glWindowPos2i = apple ? dlsym(apple, "glWindowPos2i") : (void*)0; if (p_glWindowPos2i) n++;
-    *(void **)&p_glWindowPos2iv = dlsym(mgl, "glWindowPos2iv"); *(void **)&a_glWindowPos2iv = apple ? dlsym(apple, "glWindowPos2iv") : (void*)0; if (p_glWindowPos2iv) n++;
-    *(void **)&p_glWindowPos2s = dlsym(mgl, "glWindowPos2s"); *(void **)&a_glWindowPos2s = apple ? dlsym(apple, "glWindowPos2s") : (void*)0; if (p_glWindowPos2s) n++;
-    *(void **)&p_glWindowPos2sv = dlsym(mgl, "glWindowPos2sv"); *(void **)&a_glWindowPos2sv = apple ? dlsym(apple, "glWindowPos2sv") : (void*)0; if (p_glWindowPos2sv) n++;
-    *(void **)&p_glWindowPos3d = dlsym(mgl, "glWindowPos3d"); *(void **)&a_glWindowPos3d = apple ? dlsym(apple, "glWindowPos3d") : (void*)0; if (p_glWindowPos3d) n++;
-    *(void **)&p_glWindowPos3dv = dlsym(mgl, "glWindowPos3dv"); *(void **)&a_glWindowPos3dv = apple ? dlsym(apple, "glWindowPos3dv") : (void*)0; if (p_glWindowPos3dv) n++;
-    *(void **)&p_glWindowPos3f = dlsym(mgl, "glWindowPos3f"); *(void **)&a_glWindowPos3f = apple ? dlsym(apple, "glWindowPos3f") : (void*)0; if (p_glWindowPos3f) n++;
-    *(void **)&p_glWindowPos3fv = dlsym(mgl, "glWindowPos3fv"); *(void **)&a_glWindowPos3fv = apple ? dlsym(apple, "glWindowPos3fv") : (void*)0; if (p_glWindowPos3fv) n++;
-    *(void **)&p_glWindowPos3i = dlsym(mgl, "glWindowPos3i"); *(void **)&a_glWindowPos3i = apple ? dlsym(apple, "glWindowPos3i") : (void*)0; if (p_glWindowPos3i) n++;
-    *(void **)&p_glWindowPos3iv = dlsym(mgl, "glWindowPos3iv"); *(void **)&a_glWindowPos3iv = apple ? dlsym(apple, "glWindowPos3iv") : (void*)0; if (p_glWindowPos3iv) n++;
-    *(void **)&p_glWindowPos3s = dlsym(mgl, "glWindowPos3s"); *(void **)&a_glWindowPos3s = apple ? dlsym(apple, "glWindowPos3s") : (void*)0; if (p_glWindowPos3s) n++;
-    *(void **)&p_glWindowPos3sv = dlsym(mgl, "glWindowPos3sv"); *(void **)&a_glWindowPos3sv = apple ? dlsym(apple, "glWindowPos3sv") : (void*)0; if (p_glWindowPos3sv) n++;
     return n;
 }

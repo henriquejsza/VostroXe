@@ -14,6 +14,7 @@ import re, sys, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GLCORE = os.path.join(HERE, "..", "MGL", "MGL", "src", "gl_core.c")
+GLCOREARB = os.path.join(HERE, "..", "MGL", "MGL", "include", "GL", "glcorearb.h")
 OUT = os.path.join(HERE, "mgl_gl_interpose.c")
 
 TYPE_WORDS = {"void","const","unsigned","signed","int","char","short","long","float","double","struct"}
@@ -23,16 +24,16 @@ def arg_name(param, i):
     if not ids:
         return f"a{i}"
     name = ids[-1]
-    if name in TYPE_WORDS:        # parâmetro sem nome (não deve ocorrer em definições)
+    if name in TYPE_WORDS:        # parâmetro sem nome (não deve ocorrer)
         return f"a{i}"
     return name
 
-def parse(path):
+def implemented_names(path):
+    # nomes das gl* que o MGL REALMENTE implementa (definições de coluna 0 seguidas de "{")
     with open(path, encoding="utf-8", errors="replace") as f:
         lines = f.readlines()
-    # assinatura de definição: linha de coluna 0 "RET glXxx(params)" seguida de linha que começa com "{"
     sig = re.compile(r"^([A-Za-z_].*?)\b(gl[A-Z]\w*)\s*\((.*)\)\s*$")
-    funcs = {}
+    names = set()
     for idx, line in enumerate(lines):
         m = sig.match(line.rstrip("\n"))
         if not m:
@@ -41,13 +42,26 @@ def parse(path):
         for j in range(idx+1, min(idx+3, len(lines))):
             if lines[j].strip():
                 nxt = lines[j].strip(); break
-        if not nxt.startswith("{"):
-            continue
-        ret = m.group(1).strip()
-        name = m.group(2)
-        params = m.group(3).strip()
-        funcs[name] = (ret, params)   # dedupe: última definição vence
-    return funcs
+        if nxt.startswith("{"):
+            names.add(m.group(2))
+    return names
+
+def glcorearb_protos(path):
+    # assinaturas AUTORITATIVAS do Khronos: "GLAPI <ret> APIENTRY glFoo (<params>);"
+    protos = {}
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            m = re.match(r"^GLAPI\s+(.+?)\s*APIENTRY\s+(gl[A-Z]\w*)\s*\((.*)\);\s*$", line.strip())
+            if m:
+                protos[m.group(2)] = (m.group(1).strip(), m.group(3).strip())
+    return protos
+
+def parse():
+    impl = implemented_names(GLCORE)
+    protos = glcorearb_protos(GLCOREARB)
+    funcs = {n: protos[n] for n in sorted(impl) if n in protos}
+    missing = sorted(impl - set(protos))   # implementadas pelo MGL mas sem protótipo Khronos (nomes internos): ignoradas
+    return funcs, len(impl), missing
 
 def split_params(params):
     p = params.strip()
@@ -104,8 +118,10 @@ def gen(funcs):
     return "\n".join(out)
 
 if __name__ == "__main__":
-    funcs = parse(GLCORE)
+    funcs, n_impl, missing = parse()
     src = gen(funcs)
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(src)
-    print(f"{len(funcs)} funções gl* -> {os.path.relpath(OUT)}")
+    print(f"{n_impl} gl* implementadas no MGL; {len(funcs)} com protótipo Khronos -> {os.path.relpath(OUT)}")
+    if missing:
+        print(f"  {len(missing)} sem protótipo Khronos (ignoradas): {', '.join(missing[:12])}{' ...' if len(missing)>12 else ''}")
