@@ -60,7 +60,9 @@ def gen(funcs):
     out = []
     w = out.append
     w("/* GERADO por src/MGLShim/gen-interpose.py — não edite à mão. */")
-    w("/* Redireciona todas as gl* do app para o MGL via DYLD interpose. */")
+    w("/* Redireciona as gl* do app para o MGL via DYLD interpose, COM PORTÃO: só desvia enquanto o contexto */")
+    w("/* MGL do app está corrente (mglshim_active). Fora disso repassa para a gl* real da Apple (a_*), para não */")
+    w("/* capturar as chamadas GL internas do AppKit durante a criação do contexto. */")
     w("#include <GL/glcorearb.h>")
     w("#include <dlfcn.h>")
     w("")
@@ -73,6 +75,8 @@ def gen(funcs):
     w("#define INTERPOSE(fn)")
     w("#endif")
     w("")
+    w("int mglshim_active = 0;   /* 1 enquanto o contexto MGL do app está corrente (definido em mglshim.m) */")
+    w("")
     names = sorted(funcs.keys())
     for name in names:
         ret, params = funcs[name]
@@ -81,17 +85,19 @@ def gen(funcs):
         args = ", ".join(arg_name(p, i) for i, p in enumerate(plist))
         is_void = (re.sub(r"\s+", " ", ret).strip() == "void")
         w(f"{ret} {name}({decl_params}) WEAKGL;")
-        w(f"static {ret} (*p_{name})({decl_params});")
+        w(f"static {ret} (*p_{name})({decl_params});")   # impl do MGL
+        w(f"static {ret} (*a_{name})({decl_params});")   # impl da Apple (fallback)
         if is_void:
-            w(f"static {ret} w_{name}({decl_params}) {{ if (p_{name}) p_{name}({args}); }}")
+            w(f"static {ret} w_{name}({decl_params}) {{ if (mglshim_active && p_{name}) {{ p_{name}({args}); return; }} if (a_{name}) a_{name}({args}); }}")
         else:
-            w(f"static {ret} w_{name}({decl_params}) {{ if (!p_{name}) return ({ret})0; return p_{name}({args}); }}")
+            w(f"static {ret} w_{name}({decl_params}) {{ if (mglshim_active && p_{name}) return p_{name}({args}); if (a_{name}) return a_{name}({args}); return ({ret})0; }}")
         w(f"INTERPOSE({name})")
     w("")
-    w("int mglshim_gl_init(void *h) {")
+    w("/* mgl = libmgl.dylib (impl do MGL); apple = libGL.dylib da Apple (fallback). Devolve quantas gl* o MGL tem. */")
+    w("int mglshim_gl_init(void *mgl, void *apple) {")
     w("    int n = 0;")
     for name in names:
-        w(f'    *(void **)&p_{name} = dlsym(h, "{name}"); if (p_{name}) n++;')
+        w(f'    *(void **)&p_{name} = dlsym(mgl, "{name}"); *(void **)&a_{name} = apple ? dlsym(apple, "{name}") : (void*)0; if (p_{name}) n++;')
     w("    return n;")
     w("}")
     w("")
