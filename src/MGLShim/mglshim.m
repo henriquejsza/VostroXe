@@ -40,8 +40,8 @@
 #endif
 
 /* definidos em mgl_gl_interpose.c (gerado) */
-extern int mglshim_active;                          /* 1 = desvia gl* para o MGL; 0 = repassa para a Apple */
-extern int mglshim_gl_init(void *mgl, void *apple); /* resolve os ponteiros; devolve quantas gl* o MGL tem */
+extern int mglshim_active;                 /* 1 = desvia gl* para o MGL; 0 = repassa para a Apple (RTLD_NEXT) */
+extern int mglshim_gl_init(void *mgl);     /* resolve os ponteiros; devolve quantas gl* o MGL tem */
 
 static void mglshim_log(const char *fmt, ...) {
     va_list ap; va_start(ap, fmt);
@@ -151,11 +151,10 @@ static void mglshim_install(void){
     if (!p_createGLMContext || !p_MGLsetCurrentContext || !p_MGLswapBuffers)
         mglshim_log("ERRO: faltou createGLMContext/MGLsetCurrentContext/MGLswapBuffers na libmgl");
 
-    /* libGL da Apple: fallback das gl* enquanto o contexto MGL não está corrente (ex.: AppKit criando o NSOpenGLContext) */
-    void *appleGL = dlopen("/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib", RTLD_LAZY | RTLD_LOCAL);
-    if (!appleGL) mglshim_log("AVISO: não abri a libGL da Apple (fallback): %s", dlerror());
-    int n = mglshim_gl_init(gMGL, appleGL);
-    mglshim_log("gl* resolvidas na libmgl: %d (fallback Apple %s)", n, appleGL ? "ok" : "ausente");
+    /* a_* (fallback para a Apple quando o contexto MGL não está corrente) é resolvido via RTLD_NEXT dentro do
+       gerado — não precisa abrir a libGL aqui. */
+    int n = mglshim_gl_init(gMGL);
+    mglshim_log("gl* resolvidas na libmgl: %d", n);
 
     @autoreleasepool {
         Class pf  = objc_getClass("NSOpenGLPixelFormat");

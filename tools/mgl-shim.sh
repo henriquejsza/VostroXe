@@ -133,8 +133,26 @@ OBJC
     echo "   última etapa alcançada: $(echo "$SHIMOUT" | grep '^etapa' | tail -1 || echo '(nenhuma)')"
     cr=$(ls -t ~/Library/Logs/DiagnosticReports/glprobe*.ips(N) ~/Library/Logs/DiagnosticReports/glprobe*.crash(N) 2>/dev/null | head -1)
     if [[ -n $cr ]]; then
-      cp "$cr" "${LOG:h}/crash-sonda.${cr:e}"
-      echo "   relatório de crash copiado para o pendrive: crash-sonda.${cr:e} (me mande junto)"
+      echo "   topo da pilha que falhou (cole isto no chat):"
+      python3 - "$cr" <<'PY' 2>/dev/null || echo "     (não parseei o $cr; me mande o arquivo)"
+import sys,json
+raw=open(sys.argv[1],encoding="utf-8",errors="replace").read()
+body=json.loads(raw[raw.index("\n")+1:])
+ex=body.get("exception",{}); print("     exception:",ex.get("type"),ex.get("signal"))
+imgs=body.get("usedImages",[])
+def nm(i):
+    try:
+        p=imgs[i].get("name") or imgs[i].get("path","?"); return p.split("/")[-1]
+    except: return "?"
+ft=body.get("faultingThread"); th=body.get("threads",[]); last=None; rep=0
+if ft is not None and ft<len(th):
+    for f in th[ft].get("frames",[])[:14]:
+        line=nm(f.get("imageIndex"))+"  "+str(f.get("symbol",""))
+        if line==last: rep+=1; continue
+        if rep: print("       ... (x%d)"%rep); rep=0
+        print("     "+line); last=line
+    if rep: print("       ... (x%d)"%rep)
+PY
     else
       echo "   (não achei relatório de crash em ~/Library/Logs/DiagnosticReports)"
     fi
