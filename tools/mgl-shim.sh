@@ -25,10 +25,9 @@ else SHIMSRC=""; fi
   echo "== fonte do shim: $SHIMSRC"
 
   SHIM="$(mktemp -t libmglshim).dylib"
-  echo "== compilando o shim (clang -dynamiclib -ObjC, reexportando a libmgl):"
-  clang -dynamiclib -ObjC -fobjc-arc "$SHIMSRC" -o "$SHIM" \
+  echo "== compilando o shim (clang -dynamiclib -ObjC, interpose das gl* + swizzle de NSOpenGLContext):"
+  clang -dynamiclib -ObjC "$SHIMSRC" -o "$SHIM" \
     -I"$MGLDIR/MGL/include" -I"$MGLDIR/MGL/include/GL" \
-    -Wl,-reexport_library,"$MGLDIR/build/libmgl.dylib" \
     -framework Cocoa -framework QuartzCore -framework Metal -framework OpenGL \
     -install_name @rpath/libmglshim.dylib 2>&1 | tail -25
   [[ -f $SHIM ]] || { echo "o shim NÃO compilou (ver acima)"; exit 1; }
@@ -44,10 +43,10 @@ else SHIMSRC=""; fi
 #include <math.h>
 #include <stdio.h>
 static const char* VS =
-"#version 150\n""in vec3 position;\n""in vec3 color;\n""out vec3 vcolor;\n"
+"#version 410 core\n""layout(location=0) in vec3 position;\n""layout(location=1) in vec3 color;\n""layout(location=0) out vec3 vcolor;\n"
 "void main(){ vcolor = color; gl_Position = vec4(position, 1.0); }\n";
 static const char* FS =
-"#version 150\n""in vec3 vcolor;\n""out vec4 frag_colour;\n"
+"#version 410 core\n""layout(location=0) in vec3 vcolor;\n""layout(location=0) out vec4 frag_colour;\n"
 "void main(){ frag_colour = vec4(vcolor, 1.0); }\n";
 static GLuint mkshader(GLenum type, const char* src){
     GLuint s = glCreateShader(type); glShaderSource(s, 1, &src, NULL); glCompileShader(s);
@@ -81,8 +80,7 @@ int main(void){
         glBufferData(GL_ARRAY_BUFFER,sizeof(v),v,GL_STATIC_DRAW);
         GLuint p=glCreateProgram();
         glAttachShader(p,mkshader(GL_VERTEX_SHADER,VS)); glAttachShader(p,mkshader(GL_FRAGMENT_SHADER,FS));
-        glBindAttribLocation(p,0,"position"); glBindAttribLocation(p,1,"color");
-        glBindFragDataLocation(p,0,"frag_colour"); glLinkProgram(p);
+        glLinkProgram(p);  /* locations via layout() no shader: o MGL não implementa glBindAttribLocation */
         GLint linked=0; glGetProgramiv(p,GL_LINK_STATUS,&linked);
         printf("programa: %s\n", linked?"linkou":"LINK FALHOU"); glUseProgram(p);
         glEnableVertexAttribArray(0); glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,24,(void*)0);
@@ -115,14 +113,17 @@ OBJC
   echo "$BASEOUT" | grep -E 'GL_RENDERER|GL_VERSION|shader|programa|quadros|glGetError'
   echo
   echo "== 2) COM O SHIM: deve virar MGL e desenhar na Iris Xe"
-  DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES="$SHIM" \
-    DYLD_LIBRARY_PATH="$MGLDIR/build" DYLD_FALLBACK_LIBRARY_PATH="$MGLDIR/build" "$BIN" 2> "$ERRLOG"
+  SHIMOUT=$(DYLD_INSERT_LIBRARIES="$SHIM" MGLSHIM_LIB="$MGLDIR/build/libmgl.dylib" \
+    DYLD_LIBRARY_PATH="$MGLDIR/build" DYLD_FALLBACK_LIBRARY_PATH="$MGLDIR/build" "$BIN" 2> "$ERRLOG")
   rc=$?
+  echo "$SHIMOUT" | grep -E 'GL_RENDERER|GL_VERSION|shader|programa|quadros|glGetError'
   echo "   (a sonda com o shim terminou com código $rc; 0 = normal, 139 = segfault, 134 = assert)"
   echo
   echo "== veredito:"
   base=$(echo "$BASEOUT" | awk -F': ' '/GL_RENDERER/{print $2; exit}')
+  shimr=$(echo "$SHIMOUT" | awk -F': ' '/GL_RENDERER/{print $2; exit}')
   echo "   GL_RENDERER sem shim : ${base:-?}"
+  echo "   GL_RENDERER com shim : ${shimr:-? (vazio = a sonda caiu antes de imprimir)}"
   echo "   linhas do shim no log (${ERRLOG:t}):"
   grep 'MGLSHIM:' "$ERRLOG" | sed -E 's/^.*MGLSHIM: /     /' | head
   nd=$(grep -c 'Metal device created' "$ERRLOG")
