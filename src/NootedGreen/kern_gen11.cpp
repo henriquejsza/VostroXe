@@ -1102,6 +1102,18 @@ static uint32_t gHdmiRegs = 0;      // ngreenhdmiregs
 // bit11 (P3) é seguro: só desbloqueia a entrada de clock da DDI-B, sem tocar no campo DDI_CLK_SEL (roteamento do eDP
 // intacto). Puramente ADITIVO; inerte sem o arg e no XPS 13 Plus; retenção one-way dos power wells documentada.
 static uint32_t gHdmiLight = 0;     // ngreenhdmilight
+// ngreenhdmiswing (EQ12, 04/11): apos o LightUpTMDS, re-escreve o swing TMDS do combo PHY B (PORT_TX_DW2/5/7, 4 lanes)
+// para os niveis do i915/Linux (docs/HDMI-TMDS.md) em vez do swing baixo da Apple (TX2=0x1098...), que da "green snow"
+// no monitor/cabo deste box (VBT hdmi_level_shifter=29). Opt-in, default 0; inerte no Vostro.
+static uint32_t gHdmiSwing = 0;     // ngreenhdmiswing
+static uint32_t gHdmiTile = 0xff;   // ngreenhdmitile: 0xff=off; 0=linear 1=X 4=Y/Tile4. Forca o tiling+stride do plano
+                                    // pipe B em xeD13FilterWrite (toda escrita de raWriteRegister32 a 0x71180/0x71188),
+                                    // vencendo o X-tile que o flip da Apple re-escreve. Gated por gXeD13Pipe (so apos o
+                                    // light-up do HDMI, nunca o boot-display = nao trava o boot).
+// Diagnóstico do plano pipe B: captura a ÚLTIMA escrita CRUA da Apple a 0x71180/0x71188 (antes do filtro) + o valor
+// forçado + a largura do PLANE_SIZE no momento, publicado em ngreen-hdmi13-plane2. O stride cru da Apple fica mascarado
+// nos dumps normais (o filtro reescreve), então isto é a única forma de ver a unidade/padding real por resolução.
+static volatile uint32_t gXeD13PCtlIn = 0, gXeD13PCtlOut = 0, gXeD13PStrIn = 0, gXeD13PStrOut = 0, gXeD13PW = 0;
 static char gHdmiLightDiag[220] = {};
 static volatile UInt32 gHdmiLightHits = 0;
 // ngreenhdmimodeset (27/10 — FASE 2): o FB1 (HDMI) sempre cai no ramo "Partial modeset by updating plane" da Apple
@@ -1213,6 +1225,9 @@ static void patchPortModeVtable(KernelPatcher &patcher, size_t index, mach_vm_ad
 	// =2 (30/10): XE-HDMI13, o acendimento completo pelo caminho da Apple (bloco XE-HDMI13 acima).
 	PE_parse_boot_argn("ngreenhdmilight", &gHdmiLight, sizeof(gHdmiLight));
 	if (checkKernelArgument("-ngreenhdmilight")) gHdmiLight = 1;
+	PE_parse_boot_argn("ngreenhdmiswing", &gHdmiSwing, sizeof(gHdmiSwing));
+	if (checkKernelArgument("-ngreenhdmiswing")) gHdmiSwing = 1;
+	PE_parse_boot_argn("ngreenhdmitile", &gHdmiTile, sizeof(gHdmiTile));
 	// ngreenhdmimodeset (FASE 2): 1=diagnóstico (loga state/transconf do FB1 no hook), 2=força o modeset completo do FB1.
 	PE_parse_boot_argn("ngreenhdmimodeset", &gHdmiModeset, sizeof(gHdmiModeset));
 	static const char *vt[] = { "__ZTV17AppleIntelPortHAL", "__ZTV22AppleIntelPortHALDiags" };
@@ -1707,6 +1722,13 @@ static void xeD13Publish() {
 	if (gXeD13Pre[0]) svc->setProperty("ngreen-hdmi13-pre", gXeD13Pre);
 	if (gXeD13Post[0]) svc->setProperty("ngreen-hdmi13-post", gXeD13Post);
 	if (gXeD13Late[0]) svc->setProperty("ngreen-hdmi13-late", gXeD13Late);
+	if (gXeD13PCtlIn || gXeD13PStrIn) {
+		char pl[140];
+		snprintf(pl, sizeof(pl), "ctlIn=0x%x ctlOut=0x%x strideIn=0x%x(%u) strideOut=0x%x(%u) w=%u",
+				 (unsigned)gXeD13PCtlIn, (unsigned)gXeD13PCtlOut, (unsigned)gXeD13PStrIn, (unsigned)gXeD13PStrIn,
+				 (unsigned)gXeD13PStrOut, (unsigned)gXeD13PStrOut, (unsigned)gXeD13PW);
+		svc->setProperty("ngreen-hdmi13-plane2", pl);
+	}
 }
 
 // 2 s depois do LightUpTMDS (thread_call): o pipe está varrendo? Contador de quadros em 100 ms, IIR do pipe
@@ -1759,6 +1781,20 @@ static void xeD13PostLightUp(uint32_t ret) {
 		if ((dbox & 0x01ffdfefu) != 0x01038804u) xeD13Wr(base + 0x3C, (dbox & ~0x01ffdfefu) | 0x01038804u);
 		if (xeFixEnabled() && xeD13Rd(0x4A480 + 0x800 * pipe) != 0) xeD13Wr(0x4A480 + 0x800 * pipe, 0);  // GAMMA_MODE
 	}
+	// ngreenhdmiswing: a Apple deixa o swing TMDS baixo (green snow); re-escreve PORT_TX_DW2/5/7 das 4 lanes do combo
+	// PHY B para os niveis do i915 (docs/HDMI-TMDS.md). O swing do combo PHY e ajustavel ao vivo (igual ao DP link
+	// training), entao vale escrever depois do enablePort. RMW com as mascaras da tabela XeD13Reg (so os bits de swing).
+	if (gHdmiSwing) {
+		static const uint32_t lanes[4] = {0x6c800, 0x6c900, 0x6ca00, 0x6cb00};
+		for (uint32_t i = 0; i < 4; i++) {
+			const uint32_t L = lanes[i];
+			xeD13Wr(L + 0x88, (xeD13Rd(L + 0x88) & ~0x0000b8ffu) | 0x00003098u);   // DW2 (TX2) vswing select
+			xeD13Wr(L + 0x94, (xeD13Rd(L + 0x94) & ~0xe01c0038u) | 0xa0080030u);   // DW5 (TX5) rterm/scaling
+			xeD13Wr(L + 0x9c, (xeD13Rd(L + 0x9c) & ~0x7f000000u) | 0x7f000000u);   // DW7 (TX7) nscale
+		}
+		IOLog("XeHDMI13 swing forced (i915 levels): TX2=0x%x TX4=0x%x TX5=0x%x TX7=0x%x\n",
+			  xeD13Rd(0x6c888), xeD13Rd(0x6c890), xeD13Rd(0x6c894), xeD13Rd(0x6c89c));
+	}
 	int p = snprintf(gXeD13Post, sizeof(gXeD13Post), "ret=0x%x ", ret);
 	xeD13Dump(gXeD13Post + p, sizeof(gXeD13Post) - p, "post", pipe);
 	xeD13LogLong("post", gXeD13Post);
@@ -1805,6 +1841,23 @@ static uint32_t xeD13FilterWrite(unsigned long reg, uint32_t val) {
 	switch (reg & 0xFFFFF) {
 		case 0x45404: return val | xeD13KeepCtl2();
 		case 0x45504: return xeD13KeepCtl2() ? (val & ~0x3u) : val;
+		case 0x71180:   // PLANE_CTL_1_B: ngreenhdmitile forca o tiling [12:10] em TODA escrita (vence o flip da Apple)
+			if (gHdmiTile != 0xff && gXeD13Pipe >= 1 && gXeD13Pipe <= 2) {
+				gXeD13PCtlIn = val;   // CRU da Apple (diag)
+				const uint32_t o = (val & ~(0x7u << 10)) | ((gHdmiTile & 0x7u) << 10);
+				gXeD13PCtlOut = o;
+				return o;
+			}
+			return val;
+		case 0x71188:   // PLANE_STRIDE_1_B: stride do tiling escolhido (linear/64, Y-Tile4/128; X/512 ja e o default)
+			if (gHdmiTile != 0xff && gHdmiTile != 1 && gXeD13Pipe >= 1 && gXeD13Pipe <= 2 && NGreen::callback) {
+				const uint32_t w = (NGreen::callback->readReg32(0x71190) & 0xffffu) + 1;   // PLANE_SIZE width
+				const uint32_t unit = (gHdmiTile == 0) ? 64u : 128u;
+				gXeD13PStrIn = val;   // CRU da Apple (diag): a unidade/padding real por resolução
+				gXeD13PW = w;
+				if (w >= 640 && w <= 8192) { const uint32_t o = w * 4 / unit; gXeD13PStrOut = o; return o; }
+			}
+			return val;
 	}
 	return val;
 }
